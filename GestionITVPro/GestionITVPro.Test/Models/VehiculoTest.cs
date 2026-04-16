@@ -1,8 +1,9 @@
-﻿using FluentAssertions;
+﻿namespace GestionITVPro.Test.Models;
+
+using FluentAssertions;
 using GestionITVPro.Enums;
 using GestionITVPro.Models;
-
-namespace GestionITVTest.Models;
+ 
 
 [TestFixture]
 public class VehiculoTest {
