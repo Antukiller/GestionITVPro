@@ -81,6 +81,29 @@ public class ValidadorVehiculoTest {
             var validationError = (VehiculoError.Validation)result.Error;
             validationError.Errors.Should().Contain("El modelo es obliogatorio y no puede estar vacío(2-50 car.)");
         }
+        
+        
+        [TestCase("")]
+        [TestCase("NombreExtremadamenteLargoQueSuperaLosCincuentaCaracteresPermitidos")]
+        [TestCase("S")] // Demasiado corto (menos de 2)
+        public void Validar_Marca_DeberiaRetornarFailure(string marca) {
+            var v = new Vehiculo {
+                Id = 1,
+                Modelo = "M-4",
+                Marca = marca,
+                Cilindrada = 3000,
+                Matricula = "1234LLL",
+                Motor = Motor.Gasolina,
+                DniPropietario = "23232323Q"
+            };
+            
+            var result = _validador.Validar(v);
+            
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().BeOfType<VehiculoError.Validation>();
+            var validationError = (VehiculoError.Validation)result.Error;
+            validationError.Errors.Should().Contain("La marca es obliogatoria y no puede estar vacío(2-50 car.)");
+        }
 
         [TestCase(-1)]
         [TestCase(3001)]
