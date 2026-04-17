@@ -17,6 +17,7 @@ public record Vehiculo {
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; init; } = DateTime.UtcNow;
     public bool IsDeleted { get; init; } = false;
+    public DateTime? DeletedAt { get; init; } = null;
     
     
     /// <summary>
