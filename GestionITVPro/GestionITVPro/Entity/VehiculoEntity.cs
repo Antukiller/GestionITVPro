@@ -27,7 +27,7 @@ public class VehiculoEntity {
 
     [Column(TypeName = "datetime2")] public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    [Column(TypeName = "datetime2")] public DateTime UpdateAt { get; set; } = DateTime.UtcNow;
+    [Column(TypeName = "datetime2")] public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     
     public bool IsDeleted { get; set; }
     
