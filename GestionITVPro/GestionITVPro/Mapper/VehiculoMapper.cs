@@ -15,8 +15,8 @@ public static class VehiculoMapper {
 
 
     public static Vehiculo ToModel(this VehiculoDto dto) {
-        var createdAt = DateTime.Parse(dto.CreateAt, InvariantCulture);
-        var updateAt = DateTime.Parse(dto.UpdateAt, InvariantCulture);
+        var createdAt = DateTime.Parse(dto.CreatedAt, InvariantCulture);
+        var updateAt = DateTime.Parse(dto.UpdatedAt, InvariantCulture);
         DateTime? deleteAt = string.IsNullOrEmpty(dto.DeletedAt)
             ? null
             : DateTime.Parse(dto.DeletedAt, InvariantCulture);

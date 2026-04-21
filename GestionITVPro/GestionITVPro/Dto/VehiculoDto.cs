@@ -8,8 +8,8 @@ public record VehiculoDto(
     int Cilindrada,
     string Motor,
     string DniPropietario,
-    string CreateAt,
-    string UpdateAt,
+    string CreatedAt,
+    string UpdatedAt,
     bool IsDeleted,
     string DeletedAt
 ) {

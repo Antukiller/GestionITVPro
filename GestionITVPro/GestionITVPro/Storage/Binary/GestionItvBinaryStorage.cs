@@ -11,10 +11,10 @@ using Serilog;
 
 namespace GestionITVPro.Storage.Binary;
 
-public class GestionItvBinaryStorageStorage : IGestionItvBinaryStorage {
-    private readonly ILogger _logger = Log.ForContext<GestionItvBinaryStorageStorage>();
+public class GestionItvBinaryStorage : IGestionItvBinaryStorage {
+    private readonly ILogger _logger = Log.ForContext<GestionItvBinaryStorage>();
 
-    public GestionItvBinaryStorageStorage() {
+    public GestionItvBinaryStorage() {
         _logger.Debug("Iniciando la clase GestionItvBinaryStorage");
         InitStorage();
     }
@@ -39,7 +39,7 @@ public class GestionItvBinaryStorageStorage : IGestionItvBinaryStorage {
                 writer.Write(dto.CreatedAt);
                 writer.Write(dto.UpdatedAt);
                 writer.Write(dto.IsDeleted);
-                writer.Write(dto.DeletedAt);
+                writer.Write(dto.DeletedAt ?? "");
             }
 
             return Result.Success<bool, DomainError>(true);

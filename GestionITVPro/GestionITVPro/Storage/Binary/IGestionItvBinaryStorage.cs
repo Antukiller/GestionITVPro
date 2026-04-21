@@ -7,4 +7,4 @@ namespace GestionITVPro.Storage.Binary;
 /// Contrato para persistir y cargar personas en formato binario.
 /// Hereda de <see cref="IStorage{T}" /> con T = <see cref="Vehiculo" />.
 /// </summary>
-public interface IGestionItvBinary : IStorage<Vehiculo> { }
+public interface IGestionItvBinaryStorage : IStorage<Vehiculo> { }
