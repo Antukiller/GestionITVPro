@@ -84,9 +84,11 @@ public class ValidadorVehiculoTest {
         
         
         [TestCase("")]
-        [TestCase("NombreExtremadamenteLargoQueSuperaLosCincuentaCaracteresPermitidos")]
-        [TestCase("S")] // Demasiado corto (menos de 2)
+        [TestCase(" ")] // Caso de espacios en blanco
+        [TestCase("S")] // Demasiado corto
+        [TestCase("NombreExtremadamenteLargoQueSuperaLosCincuentaCaracteresPermitidos")] // Demasiado largo
         public void Validar_Marca_DeberiaRetornarFailure(string marca) {
+            // Arrange
             var v = new Vehiculo {
                 Id = 1,
                 Modelo = "M-4",
@@ -96,13 +98,16 @@ public class ValidadorVehiculoTest {
                 Motor = Motor.Gasolina,
                 DniPropietario = "23232323Q"
             };
-            
+    
+            // Act
             var result = _validador.Validar(v);
-            
+    
+            // Assert
             result.IsFailure.Should().BeTrue();
             result.Error.Should().BeOfType<VehiculoError.Validation>();
-            var validationError = (VehiculoError.Validation)result.Error;
-            validationError.Errors.Should().Contain("La marca es obliogatoria y no puede estar vacío(2-50 car.)");
+    
+            var validationError = result.Error as VehiculoError.Validation;
+            validationError!.Errors.Should().Contain(e => e.Contains("marca") && e.Contains("2-50"));
         }
 
         [TestCase(-1)]

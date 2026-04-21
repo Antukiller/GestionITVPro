@@ -1,5 +1,4 @@
 ﻿using GestionITVPro.Error.Common;
-using GestionITVPro.Error.Vehiculo;
 
 namespace GestionITVPro.Error.Storage;
 
@@ -13,13 +12,13 @@ public abstract record StrorageError(string Message) : DomainError(Message) {
     public sealed record InvalidFormat(string Details)
         : StrorageError($"El formatp del archivo es inválido o incompatible: {Details}");
 
-    public sealed record WriteError(string Details)
+    public sealed record WriteErrors(string Details)
         : StrorageError($"Error al escribir en el almacenamiento: {Details}");
 
-    public sealed record ReadError(string Details)
+    public sealed record ReadErrors(string Details)
         : StrorageError($"Error al leer del almacenamiento: {Details}");
 
-    public sealed record AccessError(string Details)
+    public sealed record AccessErrors(string Details)
         : StrorageError($"Error de acceso al almacenamiento: {Details}");
 }
 
@@ -34,14 +33,14 @@ public static class StorageErrors {
     }
 
     public static DomainError WriteError(string details) {
-        return new StrorageError.WriteError(details);
+        return new StrorageError.WriteErrors(details);
     }
 
     public static DomainError ReadError(string details) {
-        return new StrorageError.ReadError(details);
+        return new StrorageError.ReadErrors(details);
     }
 
     public static DomainError AccessError(string details) {
-        return new StrorageError.AccessError(details);
+        return new StrorageError.AccessErrors(details);
     }
 }

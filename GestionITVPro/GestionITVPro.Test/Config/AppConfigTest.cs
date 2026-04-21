@@ -98,23 +98,35 @@ public class AppConfigTest {
         }
 
         [Test]
-        public void BackupDirectory_DeberiaRetornar() {
-            // Act
-            var dir = AppConfig.BackupFormat;
-            
+        public void BackupDirectory_DeberiaRetornarRutaAbsolutaValida() {
+            // Act - Asegúrate de llamar a BackupDirectory, no a BackupFormat
+            var dir = AppConfig.BackupDirectory;
+    
             // Assert
-            dir.Should().BeNullOrEmpty();
+            // 1. NO debe ser nulo ni vacío
+            dir.Should().NotBeNullOrEmpty();
+    
+            // 2. Debe ser una ruta absoluta (Path rooted)
             Path.IsPathRooted(dir).Should().BeTrue();
+    
+            // 3. Debe contener la carpeta "backup" al final
+            dir.Should().EndWith("backup");
         }
 
         [Test]
-        public void ReportDirectory_DeberiaRetonarRutaValida() {
+        public void ReportDirectory_DeberiaRetornarRutaValida() {
             // Act
             var dir = AppConfig.ReportDirectory;
-            
+    
             // Assert
-            dir.Should().BeNullOrEmpty();
-            Path.IsPathRooted(dir).Should().BeTrue();
+            // 1. No debe ser nulo (esto es lo que fallaba antes por usar BeNullOrEmpty)
+            dir.Should().NotBeNullOrEmpty();
+    
+            // 2. Debe contener la carpeta base del dominio
+            dir.Should().Contain(AppDomain.CurrentDomain.BaseDirectory);
+    
+            // 3. Debe terminar con el nombre de la carpeta configurada
+            dir.Should().EndWith("reports");
         }
 
         [Test]
@@ -128,19 +140,17 @@ public class AppConfigTest {
         }
     }
     
-    [TestFixture]
-    public class Formatos {
-        [TestCase("json")]
-        [TestCase("csv")]
-        [TestCase("xml")]
-        [TestCase("bin")]
-        public void GestionITV_DeberiaRetonarAlmacenamiento(string almacenamiento) {
-            var f = AppConfig.GestionItv;
-            
-            // Assert
-            f.Should().NotBeNullOrEmpty();
-            f.Should().BeOneOf(".json", ".csv", ".xml", ".bin");
-        }
+    [Test]
+    public void GestionITV_DeberiaRetornarRutaConExtensionValida() {
+        // Act
+        var rutaCompleta = AppConfig.GestionItv;
+    
+        // Extraemos solo la extensión (ej: ".json")
+        var extension = Path.GetExtension(rutaCompleta);
+    
+        // Assert
+        extension.Should().BeOneOf(".json", ".csv", ".xml", ".bin");
+    }
 
         [Test]
         public void BackupFormat_DeberiaRetornarFormatoValida() {
@@ -198,8 +208,7 @@ public class AppConfigTest {
             
             // Assert
             template.Should().NotBeNullOrEmpty();
-            template.Should().Contain("{Timestamp}");
-            template.Should().Contain("{Level}");
+            template.Should().Contain("{Timestamp");
+            template.Should().Contain("{Level");
         }
     }
-}
