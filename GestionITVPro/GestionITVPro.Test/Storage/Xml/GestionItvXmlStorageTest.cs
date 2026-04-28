@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using GestionITVPro.Error.Storage;
+using GestionITVPro.Errors.Storage;
 using GestionITVPro.Models;
 using GestionITVPro.Storage.Xml;
 
@@ -40,9 +40,9 @@ public class GestionItvXmlStorageTest {
         [Test]
         public void Salvar_ConDatosValidos_DeberiaGuardarCorrectamente() {
             // Arrange
-            var vehiculos = new List<Vehiculo> {
-                new Vehiculo { Matricula = "1234ABC", Marca = "Toyota", Modelo = "Corolla" },
-                new Vehiculo { Matricula = "5678DEF", Marca = "Ford", Modelo = "Focus" }
+            var vehiculos = new List<Cita> {
+                new Cita { Matricula = "1234ABC", Marca = "Toyota", Modelo = "Corolla" },
+                new Cita { Matricula = "5678DEF", Marca = "Ford", Modelo = "Focus" }
             };
 
             // Act
@@ -56,8 +56,8 @@ public class GestionItvXmlStorageTest {
         [Test]
         public void Cargar_ConArchivoExistente_DeberiaRetornarDatos() {
             // Arrange
-            var vehiculos = new List<Vehiculo> {
-                new Vehiculo { Matricula = "1234ABC", Marca = "Toyota", Modelo = "Corolla" }
+            var vehiculos = new List<Cita> {
+                new Cita { Matricula = "1234ABC", Marca = "Toyota", Modelo = "Corolla" }
             };
             _storage.Salvar(vehiculos, _tempPath);
 
@@ -68,13 +68,13 @@ public class GestionItvXmlStorageTest {
             resultado.IsSuccess.Should().BeTrue();
             resultado.Value.Should().HaveCount(1);
             resultado.Value.First().Matricula.Should().Be("1234ABC");
-            resultado.Value.First().Should().BeOfType<Vehiculo>();
+            resultado.Value.First().Should().BeOfType<Cita>();
         }
 
         [Test]
         public void Salvar_ListaVacia_DeberiaCrearArchivoVacio() {
             // Arrange
-            var vehiculos = new List<Vehiculo>();
+            var vehiculos = new List<Cita>();
 
             // Act
             var resultado = _storage.Salvar(vehiculos, _tempPath);
@@ -116,7 +116,7 @@ public class GestionItvXmlStorageTest {
         [Test]
         public void Salvar_EnRutaInvalida_DeberiaRetornarError() {
             // Arrange
-            var vehiculos = new List<Vehiculo>();
+            var vehiculos = new List<Cita>();
 
             // Act
             var resultado = _storage.Salvar(vehiculos, "/ruta/invalida/archivo.xml");
@@ -147,8 +147,8 @@ public class GestionItvXmlStorageTest {
         [Test]
         public void SalvarYLeer_RoundTrip_DeberiaMantenerDatos() {
             // Arrange
-            var original = new List<Vehiculo> {
-                new Vehiculo { 
+            var original = new List<Cita> {
+                new Cita { 
                     Matricula = "1111AAA", 
                     Marca = "Seat", 
                     Modelo = "Ibiza",
@@ -173,8 +173,8 @@ public class GestionItvXmlStorageTest {
         [Test]
         public void Salvar_ConVehiculoEliminado_DeberiaMantenerEstadoEliminado() {
             // Arrange
-            var vehiculos = new List<Vehiculo> {
-                new Vehiculo {
+            var vehiculos = new List<Cita> {
+                new Cita {
                     Matricula = "0000DEL",
                     IsDeleted = true,
                     DeletedAt = DateTime.UtcNow

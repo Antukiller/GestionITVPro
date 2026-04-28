@@ -1,0 +1,565 @@
+﻿using FluentAssertions;
+using GestionITVPro.Enums;
+using GestionITVPro.Error.Cita;
+using GestionITVPro.Models;
+using GestionITVPro.Repositories.Memory;
+
+namespace GestionITVPro.Test.Repositories;
+
+/// <summary>
+/// Tests para PersonasMemoryRepository.
+/// Configuración de tests: Se utiliza una nueva instancia en memoria para cada clase de test.
+/// El repositorio en memoria es ideal para tests porque:
+/// - Es extremadamente rápido (no necesita persistencia)
+/// - Se reinicia completamente en cada SetUp
+/// 
+/// Parámetros de configuración del constructor:
+/// - new PersonasMemoryRepository(true, false)
+///   - primer parámetro (dropData): true  → Borra todos los datos al crear el repositorio
+///   - segundo parámetro (seedData): false → No carga datos de semilla
+/// 
+/// Esta configuración garantiza:
+/// 1. Estado limpio en cada test (no hay datos residuales)
+/// 2. Los IDs siempre empiezan desde 1
+/// 3. Tests independientes entre sí
+/// </summary>
+[TestFixture]
+public class CitaMemoryRepositoryTest {
+    [TestFixture]
+    public class CasosPositivos {
+        [SetUp]
+        public void SetUp() {
+            // Reiniciamos el repositorio en cada test para tener independencia
+            _repository = new CitaMemoryRepository(true, false);
+        }
+        
+        private CitaMemoryRepository _repository = null!;
+
+        [Test]
+        public void Create_VehiculoValido_CrearCorrectamente() {
+            // Arrange
+            var v = new Cita {
+                Matricula = "1234-BCG",
+                Marca = "Toyota",
+                Modelo = "Corolla",
+                Cilindrada = 1800,
+                Motor = Motor.Hibrido,
+                DniPropietario = "12345678Z"
+            };
+            
+            // Act
+            var resultado = _repository.Create(v);
+            
+            // Assert
+            resultado.IsSuccess.Should().BeTrue(); // Corregido: antes tenías IsFailure
+            resultado.Value.Id.Should().Be(1);
+            resultado.Value.Matricula.Should().Be("1234-BCG");
+        }
+
+        [Test]
+        public void GetById_CuandoExiste_RetornarVehiculo() {
+            // Arrange
+            var v = new Cita {
+                Matricula = "1234-BCG", Marca = "Toyota", Modelo = "Corolla", 
+                Cilindrada = 1800, Motor = Motor.Hibrido, DniPropietario = "12345678Z"
+            };
+            _repository.Create(v);
+
+            // Act
+            var resultado = _repository.GetById(1);
+            
+            // Assert
+            resultado.Should().NotBeNull();
+            resultado!.Id.Should().Be(1);
+            resultado.Matricula.Should().Be("1234-BCG");
+        }
+
+        [Test]
+        public void GetByMatricula_CuandoExiste_RetornarVehiculo() {
+            // Arrange
+            var v = new Cita {
+                Matricula = "1234-BCG", Marca = "Toyota", Modelo = "Corolla", 
+                Cilindrada = 1800, Motor = Motor.Hibrido, DniPropietario = "12345678Z"
+            };
+            _repository.Create(v);
+
+            // Act
+            var resultado = _repository.GetByMatricula("1234-BCG");
+            
+            // Assert
+            resultado.Should().NotBeNull();
+            resultado!.Matricula.Should().Be("1234-BCG");
+        }
+
+        [Test]
+        public void GetByDniPropietario_CuandoExiste_RetornarVehiculo() {
+            // Arrange
+            var dni = "12345678Z";
+            var v = new Cita {
+                Matricula = "1234-BCG", Marca = "Toyota", Modelo = "Corolla", 
+                Cilindrada = 1800, Motor = Motor.Hibrido, DniPropietario = dni
+            };
+            _repository.Create(v);
+
+            // Act
+            var resultado = _repository.GetByDniPropietario(dni);
+            
+            // Assert
+            resultado.Should().NotBeNull();
+            resultado!.DniPropietario.Should().Be(dni);
+        }
+        
+        [Test]
+        public void Update_MismaCita_SinCambiarFecha_DebeTenerExito() {
+            // Arrange
+            var cita = new Cita { Matricula = "1234BBB", FechaItv = DateTime.Today.AddDays(5), DniPropietario = "12345678Z", Marca = "Audi", Modelo = "A3" };
+            var creada = _repository.Create(cita).Value;
+
+            // Act: Editamos algo que no sea la fecha (el modelo, por ejemplo)
+            var editada = creada with { Modelo = "A4" };
+            var result = _repository.Update(creada.Id, editada);
+
+            // Assert: No debe colisionar consigo misma
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Modelo.Should().Be("A4");
+        }
+
+        [Test]
+        public void ExistDniPropietario_CuandoExiste_RetornarTrue() {
+            // Arrange
+            var dni = "12345678Z";
+            var v = new Cita {
+                Matricula = "1234-BCG", Marca = "Toyota", Modelo = "Corolla", 
+                Cilindrada = 1800, Motor = Motor.Hibrido, DniPropietario = dni
+            };
+            _repository.Create(v);
+
+            // Act
+            var resultado = _repository.ExistsDniPropietario(dni);
+            
+            // Assert
+            resultado.Should().BeTrue();
+        }
+
+        [Test]
+        public void ExistMatricula_CuandoExiste_RetornarTrue() {
+            // Arrange
+            var mat = "1234-BCG";
+            _repository.Create(new Cita {
+                Matricula = mat, Marca = "Toyota", Modelo = "Corolla", 
+                Cilindrada = 1800, Motor = Motor.Hibrido, DniPropietario = "12345678Z"
+            });
+
+            // Act
+            var resultado = _repository.ExistsMatricula(mat);
+            
+            // Assert
+            resultado.Should().BeTrue();
+        }
+
+        [Test]
+        public void GetAll_SinParametros_RetornarTodos() {
+            // Arrange
+            _repository.Create(new Cita { Matricula = "1111-BBB", DniPropietario = "1Z", Marca="A", Modelo="A" });
+            _repository.Create(new Cita { Matricula = "2222-CCC", DniPropietario = "2Z", Marca="B", Modelo="B" });
+            
+            // Act
+            var resultado = _repository.GetAll();
+            
+            // Assert
+            resultado.Should().HaveCount(2);
+        }
+        
+        
+
+        [Test]
+        public void GetAll_ConPaginacion_RetornarPagina() {
+            // Arrange
+            for (var i = 1; i <= 5; i++)
+                _repository.Create(new Cita {
+                    Matricula = $"{i:D4}-BCG", Marca = "Marca", Modelo = "Modelo", 
+                    Cilindrada = 2000, Motor = Motor.Diesel, DniPropietario = $"{i}Z"
+                });
+            
+            // Act
+            var resultado = _repository.GetAll(1, 3);
+            
+            // Assert
+            resultado.Should().HaveCount(3);
+        }
+
+        [Test]
+        public void GetAll_SinIncluirBorrados_RetonarSoloActivos() {
+            // Arrange
+            _repository.Create(new Cita { Matricula = "1111-AAA", DniPropietario = "1Z", Marca="A", Modelo="A" });
+            var res2 = _repository.Create(new Cita { Matricula = "2222-BBB", DniPropietario = "2Z", Marca="B", Modelo="B" });
+            
+            _repository.Delete(res2.Value.Id); // Borrado lógico por defecto
+            
+            // Act 
+            var resultado = _repository.GetAll(includeDeleted: false);
+            
+            // Assert
+            resultado.Should().HaveCount(1);
+            resultado.First().Matricula.Should().Be("1111-AAA");
+        }
+
+        [Test]
+        public void Update_ConDatosValidosActualizar() {
+            // Arrange
+            var v = new Cita {
+                Matricula = "1234-BCG", Marca = "Toyota", Modelo = "Corolla", 
+                Cilindrada = 1800, Motor = Motor.Hibrido, DniPropietario = "12345678Z"
+            };
+            var creado = _repository.Create(v).Value;
+
+            var a = creado with { Marca = "Ferrari" };
+
+            // Act
+            var resultado = _repository.Update(creado.Id, a);
+            
+            // Assert
+            resultado.IsSuccess.Should().BeTrue();
+            resultado.Value.Marca.Should().Be("Ferrari"); // Corregido: antes comparabas objeto con string
+        }
+
+        [Test]
+        public void Delete_Logico_CuandoExiste_RetornarVehiculo() {
+            // Arrange
+            var res = _repository.Create(new Cita { Matricula = "1234-BCG", DniPropietario = "1Z", Marca="A", Modelo="A" });
+            
+            // Act
+            var resultado = _repository.Delete(res.Value.Id);
+            
+            // Assert
+            resultado.Should().NotBeNull();
+            resultado!.IsDeleted.Should().BeTrue();
+        }
+        
+        [Test]
+        public void Delete_Fisico_CuandoExiste_RetornarVehiculo() {
+            // Arrange
+            var res = _repository.Create(new Cita { Matricula = "1234-BCG", DniPropietario = "1Z", Marca="A", Modelo="A" });
+            int id = res.Value.Id;
+
+            // Act
+            var resultado = _repository.Delete(id, false);
+            
+            // Assert
+            resultado.Should().NotBeNull();
+            _repository.GetById(id).Should().BeNull();
+        }
+
+        [Test]
+        public void DeleteAll_CuandoHayDatos_EliminarTodos() {
+            // Arrange
+            _repository.Create(new Cita { Matricula = "1111-AAA", DniPropietario = "1Z", Marca="A", Modelo="A" });
+            _repository.Create(new Cita { Matricula = "2222-BBB", DniPropietario = "2Z", Marca="B", Modelo="B" });
+            
+            // Act
+            var resultado = _repository.DeleteAll();
+            
+            // Assert
+            resultado.Should().BeTrue();
+            _repository.GetAll().Should().BeEmpty();
+        }
+    }
+    
+    [TestFixture]
+    public class CasosNegativos {
+        [SetUp]
+        public void SetUp() {
+            _repository = new CitaMemoryRepository(true, false);
+        }
+
+        private CitaMemoryRepository _repository = null!;
+        
+        [Test]
+        public void Create_ConMatriculaExistente_RetornarFailure() {
+            // Arrange
+            var v1 = new Cita {
+                Id = 2, Matricula = "5678-DFH", Marca = "Volkswagen", Modelo = "Golf", Cilindrada = 2000,
+                Motor = Motor.Diesel, DniPropietario = "23456789D"
+            };
+            var v2 = new Cita {
+                Id = 3, Matricula = "5678-DFH", Marca = "Tesla", Modelo = "Model 3", Cilindrada = 0,
+                Motor = Motor.Electrico, DniPropietario = "34567890V"
+            };
+
+            _repository.Create(v1);
+
+            var result = _repository.Create(v2);
+
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().BeOfType<CitaError.MatriculaAlreadyExists>();
+            (result.Error as CitaError.MatriculaAlreadyExists)?.Matricula.Should().Be("5678-DFH");
+        }
+
+        [Test]
+        public void Create_CuandoSuperaLimiteDe3Vehiculos_RetornarFailure() {
+            // Arrange
+            var dni = "23456789D";
+            // Creamos los 3 primeros (el cupo máximo)
+            _repository.Create(new Cita { Matricula = "1111-AAA", DniPropietario = dni, Marca="A", Modelo="A" });
+            _repository.Create(new Cita { Matricula = "2222-BBB", DniPropietario = dni, Marca="B", Modelo="B" });
+            _repository.Create(new Cita { Matricula = "3333-CCC", DniPropietario = dni, Marca="C", Modelo="C" });
+
+            var v4 = new Cita {
+                Matricula = "4444-DDD", 
+                Marca = "Tesla", 
+                Modelo = "Model 3", 
+                DniPropietario = dni // <--- Este es el 4º vehículo para el mismo DNI
+            };
+
+            // Act
+            var result = _repository.Create(v4);
+
+            // Assert
+            result.IsFailure.Should().BeTrue(); // Aquí sí será True porque llegamos al límite
+            // Nota: Asegúrate de que el tipo de error coincida con el que lanzas en el repositorio
+            result.Error.Should().BeOfType<CitaError.Validation>(); 
+        }
+
+        [Test]
+        public void GetById_CuandoNoExiste_RetornarNull() {
+            // Act
+            var result = _repository.GetById(9999999);
+            
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public void GetByMatricula_CuandoNoExiste_RetornarFailure() {
+            // Act
+            var result = _repository.GetByMatricula("12345-BBC");
+            
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public void GetByDniPropietario_RetornarNull() {
+            // Act 
+            var result = _repository.GetByDniPropietario("33333333333333333A");
+            
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public void ExistMatricula_CuandoNoExiste_RetonarFalse() {
+            // Act
+            var result = _repository.ExistsMatricula("12345-BBB");
+            
+            // Assert
+            result.Should().BeFalse();
+        }
+
+        [Test]
+        public void ExistDniPropietario_RetornarFalse() {
+            // Act
+            var result = _repository.ExistsDniPropietario("123456787654A");
+            
+            // Assert
+            result.Should().BeFalse();
+        }
+        
+        [Test]
+        public void Create_MismaMatricula_MismoDia_DebeFallar() {
+            // Arrange: Crear la primera cita
+            var fecha = DateTime.Today.AddDays(5);
+            var cita1 = new Cita { Matricula = "1234BBB", FechaItv = fecha, DniPropietario = "12345678Z", Marca = "Audi", Modelo = "A3" };
+            _repository.Create(cita1);
+
+            // Act: Intentar crear otra para el mismo coche el mismo día
+            var citaDuplicada = cita1 with { Id = 0 }; // Nuevo objeto misma fecha
+            var result = _repository.Create(citaDuplicada);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Message.Should().Contain("ya tiene programada una cita para esa fecha");
+        }
+        
+        [Test]
+        public void Update_CuandoNoExiste_RetornarFailure() {
+            // Arrange
+            var v = new Cita { Matricula = "1111-AAA", DniPropietario = "34567890V", Marca = "A", Modelo = "A" };
+            
+            // Act
+            var result = _repository.Update(12323453, v);
+            
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().BeOfType<CitaError.NotFound>();
+            (result.Error as CitaError.NotFound)?.Id.Should().Be("12323453");
+        }
+
+        [Test]
+        public void Update_ConMatriculaEnOtro_RetornarFailure() {
+            var v1 = new Cita {
+                 Matricula = "5678-DFH", Marca = "Volkswagen", Modelo = "Golf", Cilindrada = 2000,
+                Motor = Motor.Diesel, DniPropietario = "23456789D"
+            };
+            var v2 = new Cita {
+                Matricula = "1234-DFC", Marca = "Tesla", Modelo = "Model 3", Cilindrada = 0,
+                Motor = Motor.Electrico, DniPropietario = "34567890V"
+            };
+
+            _repository.Create(v1);
+            _repository.Create(v2);
+            
+            // Act
+            var result = _repository.Update(2, v1);
+            
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().BeOfType<CitaError.MatriculaAlreadyExists>();
+            (result.Error as CitaError.MatriculaAlreadyExists)?.Matricula.Should().Be("5678-DFH");
+        }
+
+        [Test]
+        public void Update_CuandoNuevoDueñoYaTieneLimiteDe3_RetornarFailure() {
+            // Arrange
+            var dniSaturado = "23456789D";
+            var dniLibre = "99999999Z";
+
+            // 1. Creamos 3 coches para el primer dueño (llegamos al límite)
+            for (int i = 0; i < 3; i++) {
+                _repository.Create(new Cita { 
+                    Matricula = $"000{i}-AAA", DniPropietario = dniSaturado, Marca="A", Modelo="A" 
+                });
+            }
+
+            // 2. Creamos un coche para otro dueño
+            var vExtra = _repository.Create(new Cita { 
+                Matricula = "7777-BBB", DniPropietario = dniLibre, Marca="B", Modelo="B" 
+            }).Value;
+
+            // Act: Intentamos pasar el coche del dueño libre al dueño que ya tiene 3
+            var a = vExtra with { DniPropietario = dniSaturado };
+            var result = _repository.Update(vExtra.Id, a);
+
+            // Assert
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().BeOfType<CitaError.Validation>();
+            // Cambiamos "Límite alcanzado" por "límite de 3" que es lo que devuelve el repo
+            result.Error.ToString().Should().Contain("límite de 3");
+        }
+
+        [Test]
+        public void Delete_CuandoNoExiste_DeberiaRetornarNull() {
+            // Act
+            var result = _repository.Delete(123);
+            
+            // Assert
+            result.Should().BeNull();
+        }
+        
+        [Test]
+        public void Restore_CuandoNoExiste_DeberiaRetornarFailure() {
+            // Act
+            var resultado = _repository.Restore(999);
+
+            // Assert
+            resultado.IsFailure.Should().BeTrue();
+            resultado.Error.Should().BeOfType<CitaError.NotFound>();
+        }
+    }
+    
+    [TestFixture]
+    public class CasosMixtos {
+        [SetUp]
+        public void SetUp() {
+            _repository = new CitaMemoryRepository(true, false);
+        }
+
+        private CitaMemoryRepository _repository = null!;
+
+        [Test]
+        public void Restore_CuandoElimanadoLogicamente_Restaurar() {
+            var v1 = new Cita {
+                Matricula = "5678-DFH", Marca = "Volkswagen", Modelo = "Golf", Cilindrada = 2000,
+                Motor = Motor.Diesel, DniPropietario = "23456789D"
+            };
+            var c = _repository.Create(v1).Value;
+            _repository.Delete(c.Id);
+            
+            // Act
+            var result = _repository.Restore(c.Id);
+            
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            var restaurado = result.Value;
+            restaurado.IsDeleted.Should().BeFalse(); // Usa la variable 'restaurado'
+            restaurado.DeletedAt.Should().BeNull();
+            _repository.GetById(c.Id).Should().NotBeNull();
+        }
+
+        [Test]
+        public void CountVehiculos_SinEliminados_ContarSoloActivos() {
+            // Arrange
+            _repository.Create(new Cita {
+                Matricula = "5678-DFH", Marca = "Volkswagen", Modelo = "Golf", Cilindrada = 2000,
+                Motor = Motor.Diesel, DniPropietario = "23456789D"
+            });
+            var v2 = _repository.Create(new Cita {
+                Matricula = "1234-DFC", Marca = "Tesla", Modelo = "Model 3", Cilindrada = 0,
+                Motor = Motor.Electrico, DniPropietario = "34567890V"
+            }).Value;
+            _repository.Create(new Cita {
+                Matricula = "1234_VVV", Marca = "Volkswagen", Modelo = "Golf", Cilindrada = 2000,
+                Motor = Motor.Diesel, DniPropietario = "23456789D"
+            });
+            _repository.Delete(v2.Id);
+            
+            // Act
+            var result = _repository.CountCita();
+            
+            // Assert
+            result.Should().Be(2);
+            
+        }
+
+        [Test]
+        public void CountVehiculos_IncluyendoEliminados_ContarSoloActivos() {
+            // Arrange
+            _repository.Create(new Cita {
+                Matricula = "5678-DFH", Marca = "Volkswagen", Modelo = "Golf", Cilindrada = 2000,
+                Motor = Motor.Diesel, DniPropietario = "23456789D"
+            });
+            var v2 = _repository.Create(new Cita {
+                Matricula = "1234-DFC", Marca = "Tesla", Modelo = "Model 3", Cilindrada = 0,
+                Motor = Motor.Electrico, DniPropietario = "34567890V"
+            }).Value;
+            _repository.Delete(v2.Id);
+            
+            // Act
+            var result = _repository.CountCita();
+            
+            // Assert
+            result.Should().Be(1);
+        }
+
+        [Test]
+        public void DeletedAll_VaciarRepositorio() {
+            // Arrange
+            _repository.Create(new Cita {
+                Matricula = "5678-DFH", Marca = "Volkswagen", Modelo = "Golf", Cilindrada = 2000,
+                Motor = Motor.Diesel, DniPropietario = "23456789D"
+            });
+            _repository.Create(new Cita {
+                Matricula = "1234-DFC", Marca = "Tesla", Modelo = "Model 3", Cilindrada = 0,
+                Motor = Motor.Electrico, DniPropietario = "34567890V"
+            });
+            
+            // Act
+            var resultado = _repository.DeleteAll();
+            
+            // Assert
+            resultado.Should().BeTrue();
+            _repository.GetAll().Should().BeEmpty();
+        }
+    }
+}

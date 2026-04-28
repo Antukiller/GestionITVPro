@@ -290,36 +290,42 @@ var assemblies = [
   {
     "name": "GestionITVPro",
     "classes": [
-      { "name": "GestionITVPro.Config.AppConfig", "rp": "GestionITVPro_AppConfig.html", "cl": 81, "ucl": 15, "cal": 96, "tl": 119, "cb": 40, "tb": 96, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Dto.VehiculoDto", "rp": "GestionITVPro_VehiculoDto.html", "cl": 14, "ucl": 0, "cal": 14, "tl": 17, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Entity.AppDbContext", "rp": "GestionITVPro_AppDbContext.html", "cl": 7, "ucl": 6, "cal": 13, "tl": 25, "cb": 1, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Entity.VehiculoEntity", "rp": "GestionITVPro_VehiculoEntity.html", "cl": 11, "ucl": 0, "cal": 11, "tl": 36, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Error.Backup.BackupError", "rp": "GestionITVPro_BackupError.html", "cl": 0, "ucl": 11, "cal": 11, "tl": 52, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Error.Backup.BackupErrors", "rp": "GestionITVPro_BackupErrors.html", "cl": 0, "ucl": 15, "cal": 15, "tl": 52, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Error.Common.DomainError", "rp": "GestionITVPro_DomainError.html", "cl": 1, "ucl": 0, "cal": 1, "tl": 7, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Error.Report.ReportError", "rp": "GestionITVPro_ReportError.html", "cl": 0, "ucl": 7, "cal": 7, "tl": 30, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Error.Report.ReportErrors", "rp": "GestionITVPro_ReportErrors.html", "cl": 0, "ucl": 9, "cal": 9, "tl": 30, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Error.Storage.StorageError", "rp": "GestionITVPro_StorageError.html", "cl": 5, "ucl": 6, "cal": 11, "tl": 32, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Error.Storage.StorageErrors", "rp": "GestionITVPro_StorageErrors.html", "cl": 3, "ucl": 1, "cal": 4, "tl": 32, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Error.Vehiculo.VehiculoError", "rp": "GestionITVPro_VehiculoError.html", "cl": 12, "ucl": 3, "cal": 15, "tl": 60, "cb": 1, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Error.Vehiculo.VehiculoErrors", "rp": "GestionITVPro_VehiculoErrors.html", "cl": 15, "ucl": 3, "cal": 18, "tl": 60, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Extensions.MaybeExtensions", "rp": "GestionITVPro_MaybeExtensions.html", "cl": 0, "ucl": 10, "cal": 10, "tl": 26, "cb": 0, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Cache.LruCache<T1, T2>", "rp": "GestionITVPro_LruCache_2.html", "cl": 57, "ucl": 5, "cal": 62, "tl": 107, "cb": 10, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Config.AppConfig", "rp": "GestionITVPro_AppConfig.html", "cl": 50, "ucl": 15, "cal": 65, "tl": 115, "cb": 21, "tb": 50, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Dto.CitaDto", "rp": "GestionITVPro_CitaDto.html", "cl": 15, "ucl": 0, "cal": 15, "tl": 18, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Entity.AppDbContext", "rp": "GestionITVPro_AppDbContext.html", "cl": 6, "ucl": 8, "cal": 14, "tl": 30, "cb": 2, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Entity.CitaEntity", "rp": "GestionITVPro_CitaEntity.html", "cl": 12, "ucl": 0, "cal": 12, "tl": 38, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Error.Cita.CitaError", "rp": "GestionITVPro_CitaError.html", "cl": 12, "ucl": 3, "cal": 15, "tl": 62, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Error.Cita.CitaErrors", "rp": "GestionITVPro_CitaErrors.html", "cl": 15, "ucl": 3, "cal": 18, "tl": 62, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Errors.Backup.BackupError", "rp": "GestionITVPro_BackupError.html", "cl": 2, "ucl": 9, "cal": 11, "tl": 52, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Errors.Backup.BackupErrors", "rp": "GestionITVPro_BackupErrors.html", "cl": 0, "ucl": 15, "cal": 15, "tl": 52, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Errors.Common.DomainError", "rp": "GestionITVPro_DomainError.html", "cl": 1, "ucl": 0, "cal": 1, "tl": 7, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Errors.Report.ReportError", "rp": "GestionITVPro_ReportError.html", "cl": 0, "ucl": 7, "cal": 7, "tl": 29, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Errors.Report.ReportErrors", "rp": "GestionITVPro_ReportErrors.html", "cl": 0, "ucl": 9, "cal": 9, "tl": 29, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Errors.Storage.StorageError", "rp": "GestionITVPro_StorageError.html", "cl": 6, "ucl": 5, "cal": 11, "tl": 32, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Errors.Storage.StorageErrors", "rp": "GestionITVPro_StorageErrors.html", "cl": 4, "ucl": 0, "cal": 4, "tl": 32, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Extensions.MaybeExtensions", "rp": "GestionITVPro_MaybeExtensions.html", "cl": 0, "ucl": 10, "cal": 10, "tl": 28, "cb": 0, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "GestionITVPro.Factory.VehiculosFactory", "rp": "GestionITVPro_VehiculosFactory.html", "cl": 0, "ucl": 39, "cal": 39, "tl": 49, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.LruCache<T1, T2>", "rp": "GestionITVPro_LruCache_2.html", "cl": 57, "ucl": 5, "cal": 62, "tl": 108, "cb": 10, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Mapper.VehiculoMapper", "rp": "GestionITVPro_VehiculoMapper.html", "cl": 71, "ucl": 0, "cal": 71, "tl": 103, "cb": 7, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Models.Vehiculo", "rp": "GestionITVPro_Vehiculo.html", "cl": 18, "ucl": 0, "cal": 18, "tl": 45, "cb": 2, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Repositories.Ado.VehiculoAdoRepository", "rp": "GestionITVPro_VehiculoAdoRepository.html", "cl": 210, "ucl": 16, "cal": 226, "tl": 293, "cb": 29, "tb": 48, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Repositories.Binary.VehiculoBinRepository", "rp": "GestionITVPro_VehiculoBinRepository.html", "cl": 168, "ucl": 8, "cal": 176, "tl": 247, "cb": 71, "tb": 90, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Repositories.EfCore.VehiculoEfRepository", "rp": "GestionITVPro_VehiculoEfRepository.html", "cl": 127, "ucl": 42, "cal": 169, "tl": 250, "cb": 41, "tb": 58, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Repositories.Json.VehiculoJsonRepository", "rp": "GestionITVPro_VehiculoJsonRepository.html", "cl": 172, "ucl": 32, "cal": 204, "tl": 290, "cb": 64, "tb": 112, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Repositories.Memory.VehiculoMemoryRepository", "rp": "GestionITVPro_VehiculoMemoryRepository.html", "cl": 192, "ucl": 27, "cal": 219, "tl": 284, "cb": 98, "tb": 168, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Storage.Binary.GestionItvBinaryStorage", "rp": "GestionITVPro_GestionItvBinaryStorage.html", "cl": 65, "ucl": 2, "cal": 67, "tl": 101, "cb": 10, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Storage.Csv.GestionItvCsvStorage", "rp": "GestionITVPro_GestionItvCsvStorage.html", "cl": 58, "ucl": 3, "cal": 61, "tl": 96, "cb": 14, "tb": 20, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Storage.Dapper.VehiculoDapperRepository", "rp": "GestionITVPro_VehiculoDapperRepository.html", "cl": 196, "ucl": 46, "cal": 242, "tl": 296, "cb": 48, "tb": 94, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Infrastructure.DependenciesProvider", "rp": "GestionITVPro_DependenciesProvider.html", "cl": 0, "ucl": 95, "cal": 95, "tl": 181, "cb": 0, "tb": 36, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Mapper.CitaMapper", "rp": "GestionITVPro_CitaMapper.html", "cl": 78, "ucl": 0, "cal": 78, "tl": 110, "cb": 7, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Models.Cita", "rp": "GestionITVPro_Cita.html", "cl": 19, "ucl": 0, "cal": 19, "tl": 47, "cb": 2, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Models.InformeCita", "rp": "GestionITVPro_InformeCita.html", "cl": 14, "ucl": 1, "cal": 15, "tl": 60, "cb": 1, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Repositories.Ado.CitaAdoRepository", "rp": "GestionITVPro_CitaAdoRepository.html", "cl": 242, "ucl": 38, "cal": 280, "tl": 381, "cb": 40, "tb": 68, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Repositories.Binary.CitaBinRepository", "rp": "GestionITVPro_CitaBinRepository.html", "cl": 187, "ucl": 7, "cal": 194, "tl": 275, "cb": 82, "tb": 102, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Repositories.Dapper.CitaDapperRepository", "rp": "GestionITVPro_CitaDapperRepository.html", "cl": 161, "ucl": 37, "cal": 198, "tl": 299, "cb": 35, "tb": 48, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Repositories.EfCore.CitaEfRepository", "rp": "GestionITVPro_CitaEfRepository.html", "cl": 141, "ucl": 47, "cal": 188, "tl": 301, "cb": 38, "tb": 54, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Repositories.Json.CitaJsonRepository", "rp": "GestionITVPro_CitaJsonRepository.html", "cl": 182, "ucl": 34, "cal": 216, "tl": 307, "cb": 72, "tb": 118, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Repositories.Memory.CitaMemoryRepository", "rp": "GestionITVPro_CitaMemoryRepository.html", "cl": 164, "ucl": 25, "cal": 189, "tl": 292, "cb": 60, "tb": 94, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Service.Backup.BackupService", "rp": "GestionITVPro_BackupService.html", "cl": 80, "ucl": 5, "cal": 85, "tl": 125, "cb": 22, "tb": 26, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Service.Citas.CitasService", "rp": "GestionITVPro_CitasService.html", "cl": 103, "ucl": 0, "cal": 103, "tl": 157, "cb": 26, "tb": 29, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Service.ImportExport.ImportExportService", "rp": "GestionITVPro_ImportExportService.html", "cl": 19, "ucl": 0, "cal": 19, "tl": 34, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Service.Report.ReportService", "rp": "GestionITVPro_ReportService.html", "cl": 112, "ucl": 5, "cal": 117, "tl": 155, "cb": 13, "tb": 14, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Storage.Binary.GestionItvBinaryStorage", "rp": "GestionITVPro_GestionItvBinaryStorage.html", "cl": 67, "ucl": 2, "cal": 69, "tl": 103, "cb": 9, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Storage.Csv.GestionItvCsvStorage", "rp": "GestionITVPro_GestionItvCsvStorage.html", "cl": 59, "ucl": 3, "cal": 62, "tl": 96, "cb": 13, "tb": 20, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "GestionITVPro.Storage.Json.GestionItvJsonStorage", "rp": "GestionITVPro_GestionItvJsonStorage.html", "cl": 38, "ucl": 7, "cal": 45, "tl": 80, "cb": 4, "tb": 6, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "GestionITVPro.Storage.Xml.GestionItvXmlStorage", "rp": "GestionITVPro_GestionItvXmlStorage.html", "cl": 39, "ucl": 7, "cal": 46, "tl": 86, "cb": 4, "tb": 6, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Validator.ValidadorVehiculo", "rp": "GestionITVPro_ValidadorVehiculo.html", "cl": 17, "ucl": 1, "cal": 18, "tl": 114, "cb": 13, "tb": 14, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "GestionITVPro.Validator.ValidadorVehiculoExtensions", "rp": "GestionITVPro_ValidadorVehiculoExtensions.html", "cl": 35, "ucl": 0, "cal": 35, "tl": 114, "cb": 22, "tb": 26, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Validator.ValidadorCita", "rp": "GestionITVPro_ValidadorCita.html", "cl": 19, "ucl": 1, "cal": 20, "tl": 125, "cb": 15, "tb": 16, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "GestionITVPro.Validator.ValidadorVehiculoExtensions", "rp": "GestionITVPro_ValidadorVehiculoExtensions.html", "cl": 38, "ucl": 0, "cal": 38, "tl": 125, "cb": 22, "tb": 26, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Program", "rp": "GestionITVPro_Program.html", "cl": 0, "ucl": 1, "cal": 1, "tl": 3, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
 ];
@@ -335,64 +341,82 @@ var riskHotspotMetrics = [
 
 var riskHotspots = [
   {
-    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.Memory.VehiculoMemoryRepository", "reportPath": "GestionITVPro_VehiculoMemoryRepository.html", "methodName": "Restore(System.Int32)", "methodShortName": "Restore(...)", "fileIndex": 0, "line": 239,
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Infrastructure.DependenciesProvider", "reportPath": "GestionITVPro_DependenciesProvider.html", "methodName": "RegisterRepositories(Microsoft.Extensions.DependencyInjection.IServiceCollection)", "methodShortName": "RegisterRepositories(...)", "fileIndex": 0, "line": 58,
+    "metrics": [
+      { "value": 156, "exceeded": true },
+      { "value": 12, "exceeded": false },
+    ]},
+  {
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Infrastructure.DependenciesProvider", "reportPath": "GestionITVPro_DependenciesProvider.html", "methodName": "RegisterStorages(Microsoft.Extensions.DependencyInjection.IServiceCollection)", "methodShortName": "RegisterStorages(...)", "fileIndex": 0, "line": 44,
     "metrics": [
       { "value": 110, "exceeded": true },
       { "value": 10, "exceeded": false },
     ]},
   {
-    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.Memory.VehiculoMemoryRepository", "reportPath": "GestionITVPro_VehiculoMemoryRepository.html", "methodName": "Update(System.Int32,GestionITVPro.Models.Vehiculo)", "methodShortName": "Update(...)", "fileIndex": 0, "line": 112,
-    "metrics": [
-      { "value": 66, "exceeded": true },
-      { "value": 34, "exceeded": true },
-    ]},
-  {
-    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.Json.VehiculoJsonRepository", "reportPath": "GestionITVPro_VehiculoJsonRepository.html", "methodName": "Update(System.Int32,GestionITVPro.Models.Vehiculo)", "methodShortName": "Update(...)", "fileIndex": 0, "line": 108,
-    "metrics": [
-      { "value": 63, "exceeded": true },
-      { "value": 30, "exceeded": true },
-    ]},
-  {
-    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.Json.VehiculoJsonRepository", "reportPath": "GestionITVPro_VehiculoJsonRepository.html", "methodName": "Load()", "methodShortName": "Load()", "fileIndex": 0, "line": 264,
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.Json.CitaJsonRepository", "reportPath": "GestionITVPro_CitaJsonRepository.html", "methodName": "Load()", "methodShortName": "Load()", "fileIndex": 0, "line": 281,
     "metrics": [
       { "value": 59, "exceeded": true },
       { "value": 14, "exceeded": false },
     ]},
   {
-    "assembly": "GestionITVPro", "class": "GestionITVPro.Config.AppConfig", "reportPath": "GestionITVPro_AppConfig.html", "methodName": "get_RepositoryType()", "methodShortName": "get_RepositoryType()", "fileIndex": 0, "line": 43,
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.Memory.CitaMemoryRepository", "reportPath": "GestionITVPro_CitaMemoryRepository.html", "methodName": "Update(System.Int32,GestionITVPro.Models.Cita)", "methodShortName": "Update(...)", "fileIndex": 0, "line": 125,
+    "metrics": [
+      { "value": 59, "exceeded": true },
+      { "value": 38, "exceeded": true },
+    ]},
+  {
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.Json.CitaJsonRepository", "reportPath": "GestionITVPro_CitaJsonRepository.html", "methodName": "Update(System.Int32,GestionITVPro.Models.Cita)", "methodShortName": "Update(...)", "fileIndex": 0, "line": 111,
+    "metrics": [
+      { "value": 51, "exceeded": true },
+      { "value": 32, "exceeded": true },
+    ]},
+  {
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Infrastructure.DependenciesProvider", "reportPath": "GestionITVPro_DependenciesProvider.html", "methodName": "CleanDirectory(System.String)", "methodShortName": "CleanDirectory(...)", "fileIndex": 0, "line": 154,
+    "metrics": [
+      { "value": 42, "exceeded": true },
+      { "value": 6, "exceeded": false },
+    ]},
+  {
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Config.AppConfig", "reportPath": "GestionITVPro_AppConfig.html", "methodName": "get_RepositoryType()", "methodShortName": "get_RepositoryType()", "fileIndex": 0, "line": 39,
     "metrics": [
       { "value": 39, "exceeded": true },
       { "value": 14, "exceeded": false },
     ]},
   {
-    "assembly": "GestionITVPro", "class": "GestionITVPro.Config.AppConfig", "reportPath": "GestionITVPro_AppConfig.html", "methodName": "get_RepositoryType()", "methodShortName": "get_RepositoryType()", "fileIndex": 0, "line": 32,
-    "metrics": [
-      { "value": 39, "exceeded": true },
-      { "value": 14, "exceeded": false },
-    ]},
-  {
-    "assembly": "GestionITVPro", "class": "GestionITVPro.Storage.Dapper.VehiculoDapperRepository", "reportPath": "GestionITVPro_VehiculoDapperRepository.html", "methodName": "Update(System.Int32,GestionITVPro.Models.Vehiculo)", "methodShortName": "Update(...)", "fileIndex": 0, "line": 103,
-    "metrics": [
-      { "value": 34, "exceeded": true },
-      { "value": 32, "exceeded": true },
-    ]},
-  {
-    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.EfCore.VehiculoEfRepository", "reportPath": "GestionITVPro_VehiculoEfRepository.html", "methodName": "Update(System.Int32,GestionITVPro.Models.Vehiculo)", "methodShortName": "Update(...)", "fileIndex": 0, "line": 98,
-    "metrics": [
-      { "value": 32, "exceeded": true },
-      { "value": 30, "exceeded": true },
-    ]},
-  {
-    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.Binary.VehiculoBinRepository", "reportPath": "GestionITVPro_VehiculoBinRepository.html", "methodName": "Update(System.Int32,GestionITVPro.Models.Vehiculo)", "methodShortName": "Update(...)", "fileIndex": 0, "line": 102,
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.Binary.CitaBinRepository", "reportPath": "GestionITVPro_CitaBinRepository.html", "methodName": "Update(System.Int32,GestionITVPro.Models.Cita)", "methodShortName": "Update(...)", "fileIndex": 0, "line": 115,
     "metrics": [
       { "value": 24, "exceeded": false },
       { "value": 24, "exceeded": true },
     ]},
   {
-    "assembly": "GestionITVPro", "class": "GestionITVPro.Storage.Dapper.VehiculoDapperRepository", "reportPath": "GestionITVPro_VehiculoDapperRepository.html", "methodName": "Create(GestionITVPro.Models.Vehiculo)", "methodShortName": "Create(...)", "fileIndex": 0, "line": 57,
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.EfCore.CitaEfRepository", "reportPath": "GestionITVPro_CitaEfRepository.html", "methodName": "Update(System.Int32,GestionITVPro.Models.Cita)", "methodShortName": "Update(...)", "fileIndex": 0, "line": 113,
+    "metrics": [
+      { "value": 27, "exceeded": false },
+      { "value": 22, "exceeded": true },
+    ]},
+  {
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.Ado.CitaAdoRepository", "reportPath": "GestionITVPro_CitaAdoRepository.html", "methodName": "Create(GestionITVPro.Models.Cita)", "methodShortName": "Create(...)", "fileIndex": 0, "line": 107,
+    "metrics": [
+      { "value": 21, "exceeded": false },
+      { "value": 18, "exceeded": true },
+    ]},
+  {
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.Binary.CitaBinRepository", "reportPath": "GestionITVPro_CitaBinRepository.html", "methodName": "Create(GestionITVPro.Models.Cita)", "methodShortName": "Create(...)", "fileIndex": 0, "line": 74,
     "metrics": [
       { "value": 18, "exceeded": false },
       { "value": 18, "exceeded": true },
+    ]},
+  {
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Repositories.Json.CitaJsonRepository", "reportPath": "GestionITVPro_CitaJsonRepository.html", "methodName": "Create(GestionITVPro.Models.Cita)", "methodShortName": "Create(...)", "fileIndex": 0, "line": 66,
+    "metrics": [
+      { "value": 18, "exceeded": false },
+      { "value": 18, "exceeded": true },
+    ]},
+  {
+    "assembly": "GestionITVPro", "class": "GestionITVPro.Validator.ValidadorCita", "reportPath": "GestionITVPro_ValidadorCita.html", "methodName": "Validar(GestionITVPro.Models.Cita)", "methodShortName": "Validar(...)", "fileIndex": 0, "line": 93,
+    "metrics": [
+      { "value": 16, "exceeded": false },
+      { "value": 16, "exceeded": true },
     ]},
 ];
 

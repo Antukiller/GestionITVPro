@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
 using GestionITVPro.Enums;
-using GestionITVPro.Error.Storage;
+using GestionITVPro.Errors.Storage;
 using GestionITVPro.Models;
 using GestionITVPro.Storage.Json;
 
@@ -41,14 +41,14 @@ public class GestionItvJsonStorageTest {
         [Test]
         public void Salvar_ConDatosValido_GuardarCorrectamente() {
             // Arrange
-            var v = new List<Vehiculo> {
-                new Vehiculo {
+            var v = new List<Cita> {
+                new Cita {
                     Id = 1, Matricula = "1234-BBB", Marca = "BMW", Modelo = "M-4", Cilindrada = 3000,
                     Motor = Motor.Diesel,
                     DniPropietario = "23232323Q"
                 },
 
-                new Vehiculo {
+                new Cita {
                     Id = 2, Matricula = "2345-BBC", Marca = "Toyota", Modelo = "Sandero", Cilindrada = 0,
                     Motor = Motor.Electrico,
                     DniPropietario = "18981710V"
@@ -66,8 +66,8 @@ public class GestionItvJsonStorageTest {
         [Test]
         public void Cargar_ConArchivoExistente_RetornarDatos() {
             // Arrange
-            var v = new List<Vehiculo> {
-                new Vehiculo {
+            var v = new List<Cita> {
+                new Cita {
                     Id = 1, Matricula = "1234-BBB", Marca = "BMW", Modelo = "M-4", Cilindrada = 3000,
                     Motor = Motor.Diesel,
                     DniPropietario = "23232323Q"
@@ -82,13 +82,13 @@ public class GestionItvJsonStorageTest {
             result.IsSuccess.Should().BeTrue();
             result.Value.Should().HaveCount(1);
             result.Value.First().Matricula.Should().Be("1234-BBB");
-            result.Value.First().Should().BeOfType<Vehiculo>();
+            result.Value.First().Should().BeOfType<Cita>();
         }
 
         [Test]
         public void Salvar_ListaVacia_CrearArhivoVacio() {
             // Arrange
-            var v = new List<Vehiculo>();
+            var v = new List<Cita>();
 
             // Act 
             var result = _storage.Salvar(v, _tempPath);
@@ -132,7 +132,7 @@ public class GestionItvJsonStorageTest {
         [Test]
         public void Salvar_EnRutaInvalida_DeberiaRetornarError() {
             // Arrange
-            var vehiculos = new List<Vehiculo>();
+            var vehiculos = new List<Cita>();
 
             // Act
             var resultado = _storage.Salvar(vehiculos, "/ruta/invalida/archivo.json");
@@ -163,8 +163,8 @@ public class GestionItvJsonStorageTest {
         [Test]
         public void SalvarYLeer_RoundTrip_DeberiaMantenerDatos() {
             // Arrange
-            var v = new List<Vehiculo> {
-                new Vehiculo {
+            var v = new List<Cita> {
+                new Cita {
                     Id = 1, Matricula = "1234-BBB", Marca = "BMW", Modelo = "M-4", Cilindrada = 3000,
                     Motor = Motor.Diesel,
                     DniPropietario = "23232323Q"
@@ -180,7 +180,7 @@ public class GestionItvJsonStorageTest {
             loadResult.IsSuccess.Should().BeTrue();
             loadResult.Value.Should().HaveCount(1);
 
-            var vehiculo = loadResult.Value.First() as Vehiculo;
+            var vehiculo = loadResult.Value.First() as Cita;
             vehiculo.Should().NotBeNull();
             vehiculo!.Matricula.Should().Be("1234-BBB");
             vehiculo.Marca.Should().Be("BMW");
@@ -191,8 +191,8 @@ public class GestionItvJsonStorageTest {
         [Test]
         public void Salvar_ConEstudianteEliminado_DeberiaMantenerEstadoEliminado() {
             // Arrange
-            var v = new List<Vehiculo> {
-                new Vehiculo {
+            var v = new List<Cita> {
+                new Cita {
                     Id = 1, Matricula = "1234-BBB", Marca = "Eliminada",
                     IsDeleted = true, DeletedAt = DateTime.UtcNow
                 }

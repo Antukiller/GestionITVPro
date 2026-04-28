@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using FluentAssertions;
 using GestionITVPro.Enums;
-using GestionITVPro.Error.Storage;
+using GestionITVPro.Errors.Storage;
 using GestionITVPro.Models;
 using GestionITVPro.Storage.Csv;
 
@@ -42,14 +42,14 @@ public class GestionItvCsvStorageTest {
         [Test]
         public void Salvar_ConDatosValidos_DeberiaGuardarCorrectamente() {
             // Arrange
-            var vehiculos = new List<Vehiculo> {
-                new Vehiculo {
+            var vehiculos = new List<Cita> {
+                new Cita {
                     Id = 1, Matricula = "1234-BBB", Marca = "BMW", Modelo = "M-4", Cilindrada = 3000,
                     Motor = Motor.Diesel,
                     DniPropietario = "23232323Q"
                 },
 
-                new Vehiculo {
+                new Cita {
                     Id = 2, Matricula = "2345-BBC", Marca = "Toyota", Modelo = "Sandero", Cilindrada = 0,
                     Motor = Motor.Electrico,
                     DniPropietario = "18981710V"
@@ -67,8 +67,8 @@ public class GestionItvCsvStorageTest {
         [Test]
         public void Cargar_ConArchivoExistente_DeberiaRetornarDatos() {
             // Arrange
-            var personas = new List<Vehiculo> {
-                new Vehiculo {
+            var personas = new List<Cita> {
+                new Cita {
                     Id = 1, Matricula = "1234-BBB", Marca = "BMW", Modelo = "M-4", Cilindrada = 3000,
                     Motor = Motor.Diesel,
                     DniPropietario = "23232323Q"
@@ -83,8 +83,8 @@ public class GestionItvCsvStorageTest {
             resultado.IsSuccess.Should().BeTrue();
             resultado.Value.Should().HaveCount(1);
             resultado.Value.First().Matricula.Should().Be("1234-BBB");
-            resultado.Value.First().Should().BeOfType<Vehiculo>();
-            (resultado.Value.First() as Vehiculo)!.Cilindrada.Should().Be(3000);
+            resultado.Value.First().Should().BeOfType<Cita>();
+            (resultado.Value.First() as Cita)!.Cilindrada.Should().Be(3000);
         }
     }
 
@@ -139,7 +139,7 @@ public class GestionItvCsvStorageTest {
         [Test]
         public void Salvar_EnRutaInvalida_DeberiaRetornarError() {
             // Arrange
-            var personas = new List<Vehiculo>();
+            var personas = new List<Cita>();
 
             // Act
             var resultado = _storage.Salvar(personas, "/ruta/invalida/archivo.csv");
@@ -170,14 +170,14 @@ public class GestionItvCsvStorageTest {
         [Test]
         public void SalvarYLeer_RoundTrip_DeberiaMantenerDatos() {
             // Arrange
-            var original = new List<Vehiculo> {
-                new Vehiculo {
+            var original = new List<Cita> {
+                new Cita {
                     Id = 1, Matricula = "1234-BBB", Marca = "BMW", Modelo = "M-4", Cilindrada = 3000,
                     Motor = Motor.Diesel,
                     DniPropietario = "23232323Q"
                 },
 
-                new Vehiculo {
+                new Cita {
                     Id = 2, Matricula = "2345-BBC", Marca = "Toyota", Modelo = "Sandero", Cilindrada = 0,
                     Motor = Motor.Electrico,
                     DniPropietario = "18981710V"
@@ -192,17 +192,17 @@ public class GestionItvCsvStorageTest {
             resultado.IsSuccess.Should().BeTrue();
             resultado.Value.Should().HaveCount(2);
 
-            var estudiante = resultado.Value.First() as Vehiculo;
+            var estudiante = resultado.Value.First() as Cita;
             estudiante!.Matricula.Should().Be("1234-BBB");
 
-            var docente = resultado.Value.Last() as Vehiculo;
+            var docente = resultado.Value.Last() as Cita;
             docente!.Matricula.Should().Be("2345-BBC");
         }
 
         [Test]
         public void Salvar_ListaVacia_DeberiaCrearArchivoVacio() {
             // Arrange
-            var personas = new List<Vehiculo>();
+            var personas = new List<Cita>();
 
             // Act
             var resultado = _storage.Salvar(personas, _tempPath);

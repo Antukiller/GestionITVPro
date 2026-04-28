@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using GestionITVPro.Cache;
 
 namespace GestionITVPro.Test.Cache;
 
