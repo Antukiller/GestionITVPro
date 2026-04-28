@@ -1,7 +1,6 @@
-﻿using GestionITVPro.Error.Common;
-using GestionITVPro.Error.Vehiculo;
+﻿using GestionITVPro.Errors.Common;
 
-namespace GestionITVPro.Error.Report;
+namespace GestionITVPro.Errors.Report;
 
 public abstract record ReportError(string Message) : DomainError(Message) {
     public sealed record GenerationError(string Details)

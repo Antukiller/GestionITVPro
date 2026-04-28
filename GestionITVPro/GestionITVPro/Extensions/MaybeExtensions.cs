@@ -1,4 +1,6 @@
-﻿namespace GestionITVPro.Extensions;
+﻿using GestionITVPro.Errors.Common;
+
+namespace GestionITVPro.Extensions;
 
 using C = CSharpFunctionalExtensions;
 
@@ -6,7 +8,7 @@ public static class MaybeExtensions
 {
     public static C.Result<T, TError> ToResult<T, TError>(this C.Maybe<T> maybe, TError error)
         where T : class
-        where TError : GestionITVPro.Error.Common.DomainError 
+        where TError : DomainError 
     { 
         return maybe.HasValue
             ? C.Result.Success<T, TError>(maybe.Value)
@@ -15,7 +17,7 @@ public static class MaybeExtensions
 
     public static C.Result<T, TError> ToResult<T, TError>(this C.Maybe<T> maybe, Func<TError> errorFactory)
         where T : class
-        where TError : GestionITVPro.Error.Common.DomainError 
+        where TError : DomainError 
     {
         return maybe.HasValue
             ? C.Result.Success<T, TError>(maybe.Value)

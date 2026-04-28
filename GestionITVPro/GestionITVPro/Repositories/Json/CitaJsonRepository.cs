@@ -1,9 +1,8 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text.Json;
+﻿using System.Text.Json;
 using CSharpFunctionalExtensions;
 using GestionITVPro.Entity;
-using GestionITVPro.Error.Common;
-using GestionITVPro.Error.Vehiculo;
+using GestionITVPro.Error.Cita;
+using GestionITVPro.Errors.Common;
 using GestionITVPro.Factory;
 using GestionITVPro.Mapper;
 using GestionITVPro.Models;
@@ -13,7 +12,7 @@ using Serilog;
 
 namespace GestionITVPro.Repositories.Json;
 
-public class VehiculoJsonRepository : IVehiculoRepository {
+public class CitaJsonRepository : ICitaRepository {
     private readonly Dictionary<string, int> _matriculaIndex = new();
     private readonly Dictionary<string, List<int>> _dniPropietario = new(StringComparer.OrdinalIgnoreCase);
 
@@ -25,11 +24,11 @@ public class VehiculoJsonRepository : IVehiculoRepository {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    private readonly ILogger _logger = Log.ForContext<VehiculoJsonRepository>();
+    private readonly ILogger _logger = Log.ForContext<CitaJsonRepository>();
     private readonly Dictionary<int, CitaEntity> _porId = new();
     private int _idCounter;
 
-    public VehiculoJsonRepository(string filePath, bool dropData = false, bool seeData = false) {
+    public CitaJsonRepository(string filePath, bool dropData = false, bool seeData = false) {
         _filePath = filePath;
         EnsureDirectory();
         
@@ -66,99 +65,96 @@ public class VehiculoJsonRepository : IVehiculoRepository {
 
     public Result<Cita, DomainError> Create(Cita model) {
         _logger.Debug("Creando nuevo vehiculo {Matricula}", model.Matricula);
-        
-        var citaMismoDia = _porId.Values.Any(c =>
-            c.Matricula == model.Matricula &&
-            c.FechaItv.Date == model.FechaCita.Date && 
-            !c.IsDeleted);
-
-        if (citaMismoDia) {
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["EL vehiculo ya tiene programada una cita para esa fecha"]));
-        }
+        var matricula = model.Matricula ?? "";
         var dni = model.DniPropietario ?? "";
-        // 1. Validar Matrícula (Existencia única)
-        if (ExistsMatricula(model.Matricula ?? "")) {
-            _logger.Warning("No se puede crear: Matricula {Matricula} ya existe", model.Matricula);
-            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(model.Matricula ?? ""));
+
+        // 1. REGLA: Cita mismo día (Usar el error de MatriculaAlreadyExists para consistencia)
+        bool citaExisteMismoDia = _porId.Values.Any(v => 
+            v.Matricula == matricula && 
+            v.FechaItv.Date == model.FechaItv.Date && 
+            !v.IsDeleted);
+
+        if (citaExisteMismoDia) {
+            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(matricula));
         }
-        
-        // 2. REGLA DE NEGOCIO: Máximo 3 vehículos por DNI
-        // Accedemos directamente al "cajón" del DNI en el diccionario
-        if (_dniPropietario.TryGetValue(dni, out var listaVehiculos) && listaVehiculos.Count >= 3) {
+
+        // 2. INTEGRIDAD: Matrícula única
+        if (ExistsMatricula(matricula)) {
+            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(matricula));
+        }
+
+        // 3. REGLA: Límite de 3
+        if (_dniPropietario.TryGetValue(dni, out var lista) && lista.Count >= 3) {
             return Result.Failure<Cita, DomainError>(
-                 CitaErrors.Validation(["Límite alcanzado: Este propietario ya tiene 3 vehículos registrados."]));
+                CitaErrors.Validation(["alcanzado el límite de 3 vehículos"]));
         }
-        
-        // 3. Preparar la entidad
+
+        // Preparar entidad e índices...
         model = model with {
             Id = ++_idCounter,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            IsDeleted = false,
-            DeletedAt = null
+            IsDeleted = false
         };
-        
-        // 4. Persistencia en Memoria
+
         var entity = model.ToEntity();
         _porId[entity.Id] = entity;
         _matriculaIndex[entity.Matricula] = entity.Id;
-        
-        // Actualizar el índice de DNI (la lista dentro del diccionario)
-        if (!_dniPropietario.ContainsKey(dni)) {
-            _dniPropietario[dni] = new List<int>();
-        }
+
+        if (!_dniPropietario.ContainsKey(dni)) _dniPropietario[dni] = new List<int>();
         _dniPropietario[dni].Add(entity.Id);
-        
+
         Save();
-        _logger.Information("Vehiculo creado con Matricula {Matricula}", entity.Matricula);
         return Result.Success<Cita, DomainError>(entity.ToModel()!);
     }
 
     public Result<Cita, DomainError> Update(int id, Cita model) {
-        if (!_porId.TryGetValue(id, out var actual)) return Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
+        if (!_porId.TryGetValue(id, out var actual)) 
+            return Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
 
-        var nuevoDni = model.DniPropietario ?? "";
-        var nuevaMatricula = string.IsNullOrWhiteSpace(model.Matricula) ? (actual.Matricula ?? "") : model.Matricula;
+        var nuevaMatricula = model.Matricula ?? actual.Matricula;
+        var nuevoDni = model.DniPropietario ?? actual.DniPropietario;
 
-        // Validación Matrícula
-        if (nuevaMatricula != actual.Matricula && ExistsMatricula(nuevaMatricula)) 
+        // 1. Matrícula duplicada
+        if (nuevaMatricula != actual.Matricula && ExistsMatricula(nuevaMatricula))
             return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(nuevaMatricula));
 
-        // REGLA DE NEGOCIO: Límite de 3 (USANDO _dniPropietario, NO _matriculaIndex)
-        if (actual.DniPropietario != nuevoDni) {
-            if (_dniPropietario.TryGetValue(nuevoDni, out var listaDestino) && listaDestino.Count >= 3) {
-                return Result.Failure<Cita, DomainError>(CitaErrors.Validation(["Límite de 3 vehículos alcanzado"]));
-            }
-        }
-        
-        var citaMismoDia = _porId.Values.Any(c =>
-            c.Id != id &&
-            c.Matricula == model.Matricula &&
-            c.FechaItv.Date == model.FechaCita.Date &&
-            !c.IsDeleted);
+        // 2. Cita mismo día
+        bool otraCitaEseDia = _porId.Values.Any(v => 
+            v.Id != id && 
+            v.Matricula == nuevaMatricula && 
+            v.FechaItv.Date == model.FechaItv.Date && 
+            !v.IsDeleted);
 
-        if (citaMismoDia) {
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["El vehiculo ya tiene otra cita prgramada para ese día."]));
+        if (otraCitaEseDia)
+            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(nuevaMatricula));
+
+        // 3. Límite de 3 (Si cambia de dueño)
+        if (nuevoDni != actual.DniPropietario) {
+            if (_dniPropietario.TryGetValue(nuevoDni, out var lista) && lista.Count >= 3)
+                return Result.Failure<Cita, DomainError>(CitaErrors.Validation(["límite de 3 vehículos"]));
         }
 
-        var entity = (model with { Id = id, Matricula = nuevaMatricula, UpdatedAt = DateTime.UtcNow }).ToEntity();
+        // Actualizar datos y sincronizar índices...
+        var entity = model.ToEntity();
+        entity.Id = id;
+        entity.UpdatedAt = DateTime.UtcNow;
 
-        // Sincronizar índices
+        // Sincronización de índices (Matrícula)
         if (actual.Matricula != entity.Matricula) {
-            _matriculaIndex.Remove(actual.Matricula ?? "");
+            _matriculaIndex.Remove(actual.Matricula);
             _matriculaIndex[entity.Matricula] = id;
         }
 
+        // Sincronización de índices (DNI)
         if (actual.DniPropietario != entity.DniPropietario) {
-            if (_dniPropietario.TryGetValue(actual.DniPropietario ?? "", out var listaVieja)) listaVieja.Remove(id);
+            if (_dniPropietario.TryGetValue(actual.DniPropietario, out var vieja)) vieja.Remove(id);
             if (!_dniPropietario.ContainsKey(entity.DniPropietario)) _dniPropietario[entity.DniPropietario] = new List<int>();
             _dniPropietario[entity.DniPropietario].Add(id);
         }
 
         _porId[id] = entity;
-        Save(); // <--- CRUCIAL
+        Save();
         return Result.Success<Cita, DomainError>(entity.ToModel()!);
     }
 
@@ -235,7 +231,7 @@ public class VehiculoJsonRepository : IVehiculoRepository {
         }
     }
 
-    public int CountVehiculos(bool includeDeleted = false) {
+    public int CountCita(bool includeDeleted = false) {
         var query = includeDeleted
             ? _porId.Values.AsEnumerable()
             : _porId.Values.Where(a => !a.IsDeleted);

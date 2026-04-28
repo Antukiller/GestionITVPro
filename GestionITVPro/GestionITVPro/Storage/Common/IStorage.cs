@@ -1,5 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
-using GestionITVPro.Error.Common;
+using GestionITVPro.Errors.Common;
 
 namespace GestionITVPro.Storage.Common;
 

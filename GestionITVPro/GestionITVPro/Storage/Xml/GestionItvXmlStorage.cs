@@ -1,8 +1,8 @@
 ﻿using CSharpFunctionalExtensions;
 using GestionITVPro.Config;
 using GestionITVPro.Dto;
-using GestionITVPro.Error.Common;
-using GestionITVPro.Error.Storage;
+using GestionITVPro.Errors.Common;
+using GestionITVPro.Errors.Storage;
 using GestionITVPro.Mapper;
 using GestionITVPro.Models;
 
@@ -28,12 +28,12 @@ public class GestionItvXmlStorage : IGestionItvXmlStorage {
         InitStorage();
     }
 
-    public Result<bool, DomainError> Salvar(IEnumerable<Vehiculo> items, string path) {
+    public Result<bool, DomainError> Salvar(IEnumerable<Cita> items, string path) {
         try {
             _logger.Debug("Guardando los items en el archivo XML '{path}'", path);
             
             var dtos = items.Select(v => v.ToDto()).ToList();
-            var serializer = new XmlSerializer(typeof(List<VehiculoDto>));
+            var serializer = new XmlSerializer(typeof(List<CitaDto>));
 
             using var streamWriter = new StreamWriter(path, false, new UTF8Encoding(false));
             using var xmlWriter = XmlWriter.Create(streamWriter, _xmlWriterSettings);
@@ -48,30 +48,30 @@ public class GestionItvXmlStorage : IGestionItvXmlStorage {
         }
     }
 
-    public Result<IEnumerable<Vehiculo>, DomainError> Cargar(string path) {
+    public Result<IEnumerable<Cita>, DomainError> Cargar(string path) {
         _logger.Debug("Cargando los items del archivo XML '{path}'", path);
 
         if (!File.Exists(path)) {
             _logger.Warning("El archivo XML '{path}' no existe", path);
-            return Result.Failure<IEnumerable<Vehiculo>, DomainError>(StorageErrors.FileNotFound(path));
+            return Result.Failure<IEnumerable<Cita>, DomainError>(StorageErrors.FileNotFound(path));
         }
 
         try {
-            var serializer = new XmlSerializer(typeof(List<VehiculoDto>));
+            var serializer = new XmlSerializer(typeof(List<CitaDto>));
             
             using var stream = File.OpenRead(path);
-            var dtos = serializer.Deserialize(stream) as List<VehiculoDto>;
+            var dtos = serializer.Deserialize(stream) as List<CitaDto>;
 
             if (dtos == null) {
-                return Result.Failure<IEnumerable<Vehiculo>, DomainError>(
+                return Result.Failure<IEnumerable<Cita>, DomainError>(
                     StorageErrors.InvalidFormat("No se pudieron deserializar los DTOs desde XML."));
             }
 
-            return Result.Success<IEnumerable<Vehiculo>, DomainError>(dtos.Select(dto => dto.ToModel()));
+            return Result.Success<IEnumerable<Cita>, DomainError>(dtos.Select(dto => dto.ToModel()));
         }
         catch (Exception ex) {
             _logger.Error(ex, "Error al cargar los items del archivo XML '{path}'", path);
-            return Result.Failure<IEnumerable<Vehiculo>, DomainError>(StorageErrors.ReadError(ex.Message));
+            return Result.Failure<IEnumerable<Cita>, DomainError>(StorageErrors.ReadError(ex.Message));
         }
     }
 

@@ -1,6 +1,6 @@
-﻿using GestionITVPro.Error.Common;
+﻿using GestionITVPro.Errors.Common;
 
-namespace GestionITVPro.Error.Backup;
+namespace GestionITVPro.Errors.Backup;
 
 /// <summary>
 /// Contenedor de errores específicos para el dominio de Backup

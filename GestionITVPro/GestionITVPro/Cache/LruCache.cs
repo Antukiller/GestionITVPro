@@ -1,7 +1,6 @@
-﻿using GestionITVPro.Cache;
-using Serilog;
+﻿using Serilog;
 
-namespace GestionITVPro;
+namespace GestionITVPro.Cache;
 
 /// <summary>
 ///     Implementación de cache basada en el algoritmo LRU (Least Recently Used).

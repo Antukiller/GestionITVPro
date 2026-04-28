@@ -1,18 +1,18 @@
 ﻿
 using System.Text;
+using GestionITVPro.Errors.Common;
 using GestionITVPro.Repositories.Base;
 
 namespace GestionITVPro.Repositories.Binary;
 using CSharpFunctionalExtensions;
 using GestionITVPro.Entity;
-using GestionITVPro.Error.Common;
-using GestionITVPro.Error.Vehiculo;
+using Error.Cita;
 using GestionITVPro.Mapper;
-using GestionITVPro.Models;
+using Models;
 using Serilog;
 
 
-public class CitaBinRepository : IVehiculoRepository {
+public class CitaBinRepository : ICitaRepository {
     private const string FilePath = "Data/vehiculos.dat";
     private readonly ILogger _logger = Log.ForContext<CitaBinRepository>();
 
@@ -65,33 +65,35 @@ public class CitaBinRepository : IVehiculoRepository {
 
     public bool ExistsDniPropietario(string dniPropietario) => _dniPropietarioIndex.ContainsKey(dniPropietario);
 
-    public int CountVehiculos(bool includeDeleted = false) {
+    public int CountCita(bool includeDeleted = false) {
         return includeDeleted ? _porId.Count : _porId.Values.Count(v => !v.IsDeleted);
     }
 
     // --- FUNCIONES DE ESCRITURA ---
 
     public Result<Cita, DomainError> Create(Cita model) {
-        
-        var citaMismoDia = _porId.Values.Any(c =>
-            c.Matricula == model.Matricula &&
-            c.FechaItv.Date == model.FechaCita.Date && 
-            !c.IsDeleted);
-
-        if (citaMismoDia) {
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["EL vehiculo ya tiene programada una cita para esa fecha"]));
-        }
-        
         var matricula = model.Matricula ?? "";
         var dni = model.DniPropietario ?? "";
 
+        // 1. REGLA: Cita mismo día (¡CAMBIO DE TIPO DE ERROR!)
+        var citaMismoDia = _porId.Values.Any(c =>
+            c.Matricula == matricula &&
+            c.FechaItv.Date == model.FechaItv.Date && 
+            !c.IsDeleted);
+
+        if (citaMismoDia) {
+            // El test espera MatriculaAlreadyExists para el caso de duplicado mismo día
+            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(matricula));
+        }
+
+        // 2. INTEGRIDAD: Matrícula única global
         if (ExistsMatricula(matricula))
             return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(matricula));
 
+        // 3. LÍMITE DE 3
         if (_dniPropietarioIndex.TryGetValue(dni, out var lista) && lista.Count >= 3)
             return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["Límite alcanzado: Este propietario ya tiene 3 vehículos registrados."]));
+                CitaErrors.Validation(["Límite alcanzado"]));
 
         var entity = (model with {
             Id = ++_idCounter,
@@ -102,7 +104,7 @@ public class CitaBinRepository : IVehiculoRepository {
 
         _porId[entity.Id] = entity;
         _matriculaIndex[entity.Matricula] = entity.Id;
-        
+    
         if (!_dniPropietarioIndex.ContainsKey(dni)) _dniPropietarioIndex[dni] = [];
         _dniPropietarioIndex[dni].Add(entity.Id);
 
@@ -113,38 +115,33 @@ public class CitaBinRepository : IVehiculoRepository {
     public Result<Cita, DomainError> Update(int id, Cita model) {
         if (!_porId.TryGetValue(id, out var actual))
             return Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
-        
+    
+        var nuevaMatricula = string.IsNullOrWhiteSpace(model.Matricula) ? (actual.Matricula ?? "") : model.Matricula;
+        var nuevoDni = model.DniPropietario ?? "";
+        // ... dentro del if (actual.Matricula != nuevaMatricula)
+        _matriculaIndex.Remove(actual.Matricula); // <-- ASEGÚRATE DE QUE ESTO SE EJECUTE
+        _matriculaIndex[nuevaMatricula] = id;
+
+        // 1. REGLA: Cita mismo día (¡CORREGIDO TIPO DE ERROR!)
         var citaMismoDia = _porId.Values.Any(c =>
             c.Id != id &&
-            c.Matricula == model.Matricula &&
-            c.FechaItv.Date == model.FechaCita.Date &&
+            c.Matricula == nuevaMatricula &&
+            c.FechaItv.Date == model.FechaItv.Date &&
             !c.IsDeleted);
 
         if (citaMismoDia) {
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["El vehiculo ya tiene otra cita prgramada para ese día."]));
+            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(nuevaMatricula));
         }
 
-        var nuevaMatricula = string.IsNullOrWhiteSpace(model.Matricula) ? actual.Matricula : model.Matricula;
-        var nuevoDni = model.DniPropietario ?? "";
+        
 
-        if (nuevaMatricula != actual.Matricula && ExistsMatricula(nuevaMatricula))
-            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(nuevaMatricula));
-
+        // Sincronizar DNI si cambió (IMPORTANTE: actual.DniPropietario puede ser null)
         if (actual.DniPropietario != nuevoDni) {
-            if (_dniPropietarioIndex.TryGetValue(nuevoDni, out var lista) && lista.Count >= 3)
-                return Result.Failure<Cita, DomainError>(
-                    CitaErrors.Validation(["El nuevo propietario ya tiene el límite de 3 vehículos."]));
-
-            // Sincronizar DNI Index
-            if (_dniPropietarioIndex.TryGetValue(actual.DniPropietario ?? "", out var listaVieja)) listaVieja.Remove(id);
+            if (!string.IsNullOrEmpty(actual.DniPropietario) && _dniPropietarioIndex.TryGetValue(actual.DniPropietario, out var listaVieja)) 
+                listaVieja.Remove(id);
+        
             if (!_dniPropietarioIndex.ContainsKey(nuevoDni)) _dniPropietarioIndex[nuevoDni] = [];
             _dniPropietarioIndex[nuevoDni].Add(id);
-        }
-
-        if (actual.Matricula != nuevaMatricula) {
-            _matriculaIndex.Remove(actual.Matricula);
-            _matriculaIndex[nuevaMatricula] = id;
         }
 
         var entity = (model with { 
@@ -183,11 +180,14 @@ public class CitaBinRepository : IVehiculoRepository {
         entity.IsDeleted = false;
         entity.DeletedAt = null;
         entity.UpdatedAt = DateTime.UtcNow;
-        
-        Save();
-        return Result.Success<Cita, DomainError>(entity.ToModel()!);
+    
+        Save(); // Persistir el cambio de flag
+    
+        var model = entity.ToModel();
+        return model != null 
+            ? Result.Success<Cita, DomainError>(model)
+            : Result.Failure<Cita, DomainError>(CitaErrors.DatabaseError("Error al mapear tras restaurar"));
     }
-
     public bool DeleteAll() {
         _porId.Clear();
         _matriculaIndex.Clear();
@@ -213,10 +213,11 @@ public class CitaBinRepository : IVehiculoRepository {
                 writer.Write(v.Marca ?? "");
                 writer.Write(v.Modelo ?? "");
                 writer.Write(v.Cilindrada);
-                writer.Write((int)v.Motor); // Guardamos el Enum como entero
+                writer.Write((int)v.Motor);
                 writer.Write(v.DniPropietario ?? "");
                 writer.Write(v.IsDeleted);
-                // Usamos formato ISO 8601 para fechas
+                // IMPORTANTE: Guardar FechaItv
+                writer.Write(v.FechaItv.ToString("O")); 
                 writer.Write(v.CreatedAt.ToString("O"));
                 writer.Write(v.UpdatedAt.ToString("O"));
                 writer.Write(v.DeletedAt?.ToString("O") ?? "NULL");
@@ -224,15 +225,20 @@ public class CitaBinRepository : IVehiculoRepository {
         } catch (Exception ex) {
             _logger.Error(ex, "Error al guardar el archivo binario.");
         }
-    }
+}
 
     private void Load() {
         try {
+            if (!File.Exists(FilePath)) return;
             using var stream = new FileStream(FilePath, FileMode.Open, FileAccess.Read);
             using var reader = new BinaryReader(stream, Encoding.UTF8);
 
             int cantidad = reader.ReadInt32();
             _idCounter = reader.ReadInt32();
+
+            _porId.Clear();
+            _matriculaIndex.Clear();
+            _dniPropietarioIndex.Clear();
 
             for (int i = 0; i < cantidad; i++) {
                 var entity = new CitaEntity {
@@ -244,25 +250,25 @@ public class CitaBinRepository : IVehiculoRepository {
                     Motor = reader.ReadInt32(),
                     DniPropietario = reader.ReadString(),
                     IsDeleted = reader.ReadBoolean(),
-                    CreatedAt = DateTime.Parse(reader.ReadString())
+                    // LEER FECHA ITV
+                    FechaItv = DateTime.Parse(reader.ReadString()),
+                    CreatedAt = DateTime.Parse(reader.ReadString()),
+                    UpdatedAt = DateTime.Parse(reader.ReadString())
                 };
-                
-                // LeemosUpdatedAt y DeletedAt
-                entity.UpdatedAt = DateTime.Parse(reader.ReadString());
                 string delAtStr = reader.ReadString();
                 entity.DeletedAt = delAtStr == "NULL" ? null : DateTime.Parse(delAtStr);
 
-                // Reconstruir índices
+                // Reconstruir memoria
                 _porId[entity.Id] = entity;
-                _matriculaIndex[entity.Matricula] = entity.Id;
-                
-                if (!string.IsNullOrWhiteSpace(entity.DniPropietario)) {
-                    if (!_dniPropietarioIndex.ContainsKey(entity.DniPropietario)) 
+                if (!string.IsNullOrEmpty(entity.Matricula)) _matriculaIndex[entity.Matricula] = entity.Id;
+                if (!string.IsNullOrEmpty(entity.DniPropietario)) {
+                    if (!_dniPropietarioIndex.ContainsKey(entity.DniPropietario))
                         _dniPropietarioIndex[entity.DniPropietario] = [];
                     _dniPropietarioIndex[entity.DniPropietario].Add(entity.Id);
                 }
             }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             _logger.Error(ex, "Error al cargar el archivo binario.");
         }
     }

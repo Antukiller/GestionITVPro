@@ -5,8 +5,8 @@ using System.Text.Json.Serialization;
 using CSharpFunctionalExtensions;
 using GestionITVPro.Config;
 using GestionITVPro.Dto;
-using GestionITVPro.Error.Common;
-using GestionITVPro.Error.Storage;
+using GestionITVPro.Errors.Common;
+using GestionITVPro.Errors.Storage;
 using GestionITVPro.Mapper;
 using GestionITVPro.Models;
 using Serilog;
@@ -31,7 +31,7 @@ public class GestionItvJsonStorage : IGestionItvJsonStorage {
     
     
         
-    public Result<bool, DomainError> Salvar(IEnumerable<Vehiculo> items, string path) {
+    public Result<bool, DomainError> Salvar(IEnumerable<Cita> items, string path) {
         try {
             _logger.Debug("Guardando los items en el archivo '{path}'", path);
             var dtos = items.Select(v => v.ToDto()).ToList();
@@ -46,28 +46,28 @@ public class GestionItvJsonStorage : IGestionItvJsonStorage {
     }
     
 
-    public Result<IEnumerable<Vehiculo>, DomainError> Cargar(string path) {
+    public Result<IEnumerable<Cita>, DomainError> Cargar(string path) {
         _logger.Debug("Cargando los items del archivo '{path}'", path);
 
         if (!Path.Exists(path)) {
             _logger.Warning("El archivo '{path}' no existe", path);
-            return Result.Failure<IEnumerable<Vehiculo>, DomainError>(StorageErrors.FileNotFound(path));
+            return Result.Failure<IEnumerable<Cita>, DomainError>(StorageErrors.FileNotFound(path));
         }
 
         try {
             var json = File.ReadAllText(path, Encoding.UTF8);
-            var dtos = JsonSerializer.Deserialize<List<VehiculoDto>>(json, _options);
+            var dtos = JsonSerializer.Deserialize<List<CitaDto>>(json, _options);
 
             if (dtos == null)
-                return Result.Failure<IEnumerable<Vehiculo>, DomainError>(
+                return Result.Failure<IEnumerable<Cita>, DomainError>(
                     StorageErrors.InvalidFormat("No se pudieron deserializar los DTOs."));
 
-            return Result.Success<IEnumerable<Vehiculo>, DomainError>(dtos.Select(dtos => dtos.ToModel()));
+            return Result.Success<IEnumerable<Cita>, DomainError>(dtos.Select(dtos => dtos.ToModel()));
             
         }
         catch (Exception ex) {
             _logger.Debug(ex, "Error al cargar los items del archivo '{path}'", path);
-            return Result.Failure<IEnumerable<Vehiculo>, DomainError>(StorageErrors.ReadError(ex.Message));
+            return Result.Failure<IEnumerable<Cita>, DomainError>(StorageErrors.ReadError(ex.Message));
         }
     }
 

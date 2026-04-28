@@ -2,8 +2,8 @@
 using CSharpFunctionalExtensions;
 using GestionITVPro.Config;
 using GestionITVPro.Dto;
-using GestionITVPro.Error.Common;
-using GestionITVPro.Error.Storage;
+using GestionITVPro.Errors.Common;
+using GestionITVPro.Errors.Storage;
 using GestionITVPro.Mapper;
 using GestionITVPro.Models;
 using Serilog;
@@ -19,7 +19,7 @@ public class GestionItvBinaryStorage : IGestionItvBinaryStorage {
         InitStorage();
     }
     
-    public Result<bool, DomainError> Salvar(IEnumerable<Vehiculo> items, string path) {
+    public Result<bool, DomainError> Salvar(IEnumerable<Cita> items, string path) {
         try {
             _logger.Debug("Guardando los items en archivo binario '{path0}'", path);
             using var stream = File.Create(path);
@@ -36,6 +36,7 @@ public class GestionItvBinaryStorage : IGestionItvBinaryStorage {
                 writer.Write(dto.Cilindrada);
                 writer.Write(dto.Motor);
                 writer.Write(dto.DniPropietario);
+                writer.Write(dto.FechaItv);
                 writer.Write(dto.CreatedAt);
                 writer.Write(dto.UpdatedAt);
                 writer.Write(dto.IsDeleted);
@@ -50,12 +51,12 @@ public class GestionItvBinaryStorage : IGestionItvBinaryStorage {
         }
     }
 
-    public Result<IEnumerable<Vehiculo>, DomainError> Cargar(string path) {
+    public Result<IEnumerable<Cita>, DomainError> Cargar(string path) {
         _logger.Debug("Cargando los items del archivo binario '{path}'", path);
 
         if (!File.Exists(path)) {
             _logger.Warning("El archivo '{path}' no existe.", path);
-            return Result.Failure<IEnumerable<Vehiculo>, DomainError>(StorageErrors.FileNotFound(path));
+            return Result.Failure<IEnumerable<Cita>, DomainError>(StorageErrors.FileNotFound(path));
         }
 
         try {
@@ -64,15 +65,16 @@ public class GestionItvBinaryStorage : IGestionItvBinaryStorage {
 
 
             var count = reader.ReadInt32();
-            var vehiculos = new List<Vehiculo>();
+            var vehiculos = new List<Cita>();
 
             for (var i = 0; i < count; i++) {
-                var dto = new VehiculoDto(
+                var dto = new CitaDto(
                     reader.ReadInt32(),
                     reader.ReadString(),
                     reader.ReadString(),
                     reader.ReadString(),
                     reader.ReadInt32(),
+                    reader.ReadString(),
                     reader.ReadString(),
                     reader.ReadString(),
                     reader.ReadString(),
@@ -83,12 +85,12 @@ public class GestionItvBinaryStorage : IGestionItvBinaryStorage {
                 vehiculos.Add(dto.ToModel());
             }
 
-            return Result.Success<IEnumerable<Vehiculo>, DomainError>(vehiculos);
+            return Result.Success<IEnumerable<Cita>, DomainError>(vehiculos);
         }
     
         catch (Exception ex) {
             _logger.Error(ex, "Error al cargar los items del archivo binario '{path}'", path);
-            return Result.Failure<IEnumerable<Vehiculo>, DomainError>(StorageErrors.InvalidFormat(ex.Message));
+            return Result.Failure<IEnumerable<Cita>, DomainError>(StorageErrors.InvalidFormat(ex.Message));
         }
     }
 

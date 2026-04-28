@@ -9,7 +9,7 @@ namespace GestionITVPro.Service.Citas;
 /// <summary>
 ///     Define el contrato para la gestión de citas en el sistema.
 /// </summary>
-public interface ICitaService {
+public interface ICitasService {
     int TotalCitas { get; }
     
     IEnumerable<Cita> GetAll(int page = 1, int pageSize = 10, bool includeDeleted = true);

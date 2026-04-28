@@ -11,7 +11,7 @@ namespace GestionITVPro.Repositories.Base;
 ///     que tienen restricciones de dominio (Matricula única). Las demás operaciones
 ///     (GetById, Delete) usan null/bool que es más simple e idiomático en .NET.
 /// </summary>
-public interface IVehiculoRepository {
+public interface ICitaRepository {
     /// <summary>
     ///     Obtiene todos los vehiculos de forma paginada.
     /// </summary>
@@ -59,7 +59,7 @@ public interface IVehiculoRepository {
     /// <summary>
     ///     Obtiene el número total de vehiculos registrados.
     /// </summary>
-    int CountVehiculos(bool includeDeleted = false);
+    int CountCita(bool includeDeleted = false);
     
     /// <summary>
     ///     Restaura un vehiculo eliminado lógicamente (IsDeleted = false, DeletedAt = null).

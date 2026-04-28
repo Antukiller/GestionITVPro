@@ -1,60 +1,62 @@
-﻿using GestionITVPro.Error.Common;
+﻿using GestionITVPro.Errors.Common;
 
-namespace GestionITVPro.Error.Vehiculo;
+namespace GestionITVPro.Error.Cita;
 
 
 /// <summary>
 /// Contenedor de errores específicos para el dominio de Vehículos.
 /// </summary>
 
-public abstract record VehiculoError(string Message) : DomainError(Message) {
+public abstract record CitaError(string Message) : DomainError(Message) {
     public sealed record NotFound(string Id)
-        : VehiculoError($"No se ha encontrado ninguna persona con el idetificador: {Id}");
+        // Antes decía 'persona', ahora 'cita' o 'identificador' para ser precisos
+        : CitaError($"No se encontró la cita con ID {Id}");
 
     public sealed record Validation(IEnumerable<string> Errors)
-        : VehiculoError(
-            $"Se han detectado errores de validdación en la entidad: {Environment.NewLine} {string.Join($"{Environment.NewLine}", Errors)}");
+        : CitaError(
+            $"Se han detectado errores: {string.Join(", ", Errors)}. alcanzado el límite de 3 vehículos.");
 
     public sealed record MatriculaAlreadyExists(string Matricula)
-        : VehiculoError($"Conflicto de integridad: La matrícula {Matricula} ya está registrado en el sistema.");
+        // Cambiamos el orden: "programada una cita" en lugar de "una cita programada"
+        : CitaError($"La matrícula {Matricula} ya tiene programada una cita para esa fecha.");
 
     public sealed record DniPropiestarioAlreadyExists(string DniPropietario)
-        : VehiculoError(
+        : CitaError(
             $"Conflicto de integridad: El DNI del propietario {DniPropietario} ya está registrado en el sistema.");
 
     public sealed record Database(string Details)
-        : VehiculoError($"Error de base de datos: {Details}");
+        : CitaError($"Error de base de datos: {Details}");
 
     public sealed record StorageError(string Details)
-        : VehiculoError($"Error de almacenamiento: {Details}");
+        : CitaError($"Error de almacenamiento: {Details}");
 }
 
 /// <summary>
 /// Factory para crear errores de dominio de Vehículo.
 /// </summary>
-public static class VehiculoErrors {
+public static class CitaErrors {
     public static DomainError NotFound(string id) {
-        return new VehiculoError.NotFound(id);
+        return new CitaError.NotFound(id);
     }
 
     public static DomainError Validation(IEnumerable<string> errors) {
-        return new VehiculoError.Validation(errors);
+        return new CitaError.Validation(errors);
     }
 
     public static DomainError MatriculaAlreadyExists(string matricula) {
-        return new VehiculoError.MatriculaAlreadyExists(matricula);
+        return new CitaError.MatriculaAlreadyExists(matricula);
     }
 
     public static DomainError DniPropiestarioAlreadyExists(string dniPropietario) {
-        return new VehiculoError.DniPropiestarioAlreadyExists(dniPropietario);
+        return new CitaError.DniPropiestarioAlreadyExists(dniPropietario);
     }
 
     public static DomainError DatabaseError(string details) {
-        return new VehiculoError.Database(details);
+        return new CitaError.Database(details);
     }
 
     public static DomainError StorageError(string details) {
-        return new VehiculoError.StorageError(details);
+        return new CitaError.StorageError(details);
     }
 }
 

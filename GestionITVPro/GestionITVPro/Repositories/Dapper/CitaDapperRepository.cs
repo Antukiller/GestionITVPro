@@ -2,26 +2,26 @@
 using CSharpFunctionalExtensions;
 using Dapper;
 using GestionITVPro.Entity;
-using GestionITVPro.Error.Common;
-using GestionITVPro.Error.Vehiculo;
+using GestionITVPro.Error.Cita;
+using GestionITVPro.Errors.Common;
 using GestionITVPro.Factory;
 using GestionITVPro.Mapper;
 using GestionITVPro.Models;
 using GestionITVPro.Repositories.Base;
 using Serilog;
 
-namespace GestionITVPro.Storage.Dapper;
+namespace GestionITVPro.Repositories.Dapper;
 
-public class VehiculoDapperRepository : IVehiculoRepository {
+public class CitaDapperRepository : ICitaRepository {
     private readonly IDbConnection _connection;
-    private readonly ILogger _logger = Log.ForContext<VehiculoDapperRepository>();
+    private readonly ILogger _logger = Log.ForContext<CitaDapperRepository>();
     private Action? _onDispose;
 
 
-    public VehiculoDapperRepository(IDbConnection connection, Action? onDispose = null, bool dropData = false,
+    public CitaDapperRepository(IDbConnection connection, Action? onDispose = null, bool dropData = false,
         bool seeData = false) {
         _connection = connection;
-        _onDispose = _onDispose;
+        _onDispose = onDispose;
         EnsureTable(dropData);
 
         if (seeData && CountTotal() == 0) Seed();
@@ -30,8 +30,8 @@ public class VehiculoDapperRepository : IVehiculoRepository {
     public IEnumerable<Cita> GetAll(int page = 1, int pageSize = 10, bool includeDeleted = true) {
         try {
             var sql = includeDeleted
-                ? "SELECT * FROM Vehiculos ORDER BY Id LIMIT @PageSize OFFSET @Offset"
-                : "SELECT * FROM Vehiculos WHERE IsDeleted = 0 ORDER BY Id LIMIT @PageSize OFFSET @Offset";
+                ? "SELECT * FROM Citas ORDER BY Id LIMIT @PageSize OFFSET @Offset"
+                : "SELECT * FROM Citas WHERE IsDeleted = 0 ORDER BY Id LIMIT @PageSize OFFSET @Offset";
             var entities = _connection
                 .Query<CitaEntity>(sql, new { PageSize = pageSize, Offset = (page - 1) * pageSize }).ToList();
             return entities.Select(e => e.ToModel()!).ToList();
@@ -44,7 +44,7 @@ public class VehiculoDapperRepository : IVehiculoRepository {
 
     public Cita? GetById(int id) {
         try {
-            var sql = "SELECT * FROM Vehiculos WHERE Id = @Id";
+            var sql = "SELECT * FROM Citas WHERE Id = @Id";
             var entity = _connection.QueryFirstOrDefault<CitaEntity>(sql, new { Id = id });
             return entity.ToModel();
         }
@@ -55,116 +55,94 @@ public class VehiculoDapperRepository : IVehiculoRepository {
     }
 
     public Result<Cita, DomainError> Create(Cita model) {
-        
-        if (ExisteCitaMismoDia(model.Matricula ?? "", model.FechaCita)) {
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["El vehículo ya tiene una cita programada para esa fecha."]));
-        }
-        if (ExistsMatricula(model.Matricula ?? ""))
-            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(model.Matricula ?? ""));
-        if (ContarVehiculosPorDni(model.DniPropietario ?? "") >= 3 )
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["El propietario ya tiene el límite de 3 vehículos"]));
+        var dni = model.DniPropietario ?? "";
+        var matricula = model.Matricula ?? "";
 
-        model = model with {
-            Id = 0,
-            Marca = string.IsNullOrWhiteSpace(model.Marca)
-                ? $"{(model.Matricula ?? "").ToLower()}@BMW"
-                : model.Marca,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            IsDeleted = false,
-            DeletedAt = null
-        };
-        var entity = model.ToEntity();
+        // 1. REGLA: Límite de 3 (Dapper usa tu método privado ContarCitaPorDni)
+        if (ContarCitaPorDni(dni) >= 3) {
+            return Result.Failure<Cita, DomainError>(
+                CitaErrors.Validation(["Límite alcanzado: Este propietario ya tiene 3 vehículos registrados."]));
+        }
+
+        // 2. REGLA: Cita mismo día
+        if (ExisteCitaMismoDia(matricula, model.FechaItv)) {
+            return Result.Failure<Cita, DomainError>(
+                CitaErrors.MatriculaAlreadyExists(matricula));
+        }
+
+        // 3. INTEGRIDAD: Matrícula única
+        if (ExistsMatricula(matricula)) {
+            return Result.Failure<Cita, DomainError>(
+                CitaErrors.MatriculaAlreadyExists(matricula));
+        }
+
+        const string sql = @"
+            INSERT INTO Citas (Matricula, Marca, Modelo, Cilindrada, Motor, DniPropietario, FechaItv, CreatedAt, UpdatedAt, IsDeleted)
+            VALUES (@Matricula, @Marca, @Modelo, @Cilindrada, @Motor, @DniPropietario, @FechaItv, @CreatedAt, @UpdatedAt, @IsDeleted);
+            SELECT last_insert_rowid();";
 
         try {
-            var sql =
-                @"INSERT INTO Vehiculos (Matricula, Marca, Modelo, Cilindrada, Motor, DniPropietario, FechaItv, CreatedAt, UpdatedAt, IsDeleted, DeletedAt)
-                VALUES (@Matricula, @Marca, @Modelo, @Cilindrada, @Motor, @DniPropietario,@FechaItv, @CreatedAt, @UpdatedAt, @IsDeleted, @DeletedAt);
-                SELECT last_insert_rowid();";
-
-            entity.Id = _connection.ExecuteScalar<int>(sql, new {
-                Matricula = entity.Matricula ?? "",
-                entity.Marca,
-                entity.Modelo,
-                entity.Cilindrada,
-                entity.Motor,
-                DniPropietario = entity.DniPropietario ?? "",
-                FechaItv = entity.FechaItv.ToString("yyyy-MM-dd"),
-                entity.CreatedAt,
-                entity.UpdatedAt,
-                entity.IsDeleted,
-                entity.DeletedAt
+            // Usamos la conexión inyectada _connection, no un método CreateConnection
+            var id = _connection.QuerySingle<int>(sql, new {
+                Matricula = matricula,
+                model.Marca,
+                model.Modelo,
+                model.Cilindrada,
+                Motor = (int)model.Motor,
+                DniPropietario = dni,
+                FechaItv = model.FechaItv.ToString("yyyy-MM-dd HH:mm:ss"),
+                CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
+                UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
+                IsDeleted = 0
             });
-            return Result.Success<Cita, DomainError>(GetById(entity.Id)!);
+
+            var creado = GetById(id);
+            return creado != null 
+                ? Result.Success<Cita, DomainError>(creado)
+                : Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
         }
         catch (Exception ex) {
-            _logger.Error(ex, "Erro al crear el vehículo");
+            _logger.Error(ex, "Error en Dapper Create");
             return Result.Failure<Cita, DomainError>(CitaErrors.DatabaseError(ex.Message));
-            throw;
         }
     }
 
     public Result<Cita, DomainError> Update(int id, Cita model) {
         var existing = GetById(id);
-        if (existing == null)
-            return Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
+        if (existing == null) return Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
         
-        if ((model.Matricula ?? "") != (existing.Matricula ?? "") && ExistsMatricula(model.Matricula ?? ""))
-            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(model.Matricula ?? ""));
+        // 1. Matrícula duplicada
+        if (model.Matricula != existing.Matricula && ExistsMatricula(model.Matricula))
+            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(model.Matricula));
         
-        var newDniPropietario = string.IsNullOrWhiteSpace(model.DniPropietario) ? existing.DniPropietario ?? "" : model.DniPropietario;
-        if (newDniPropietario != (existing.DniPropietario ?? "") && ExistsDniPropietario(newDniPropietario))
-            return Result.Failure<Cita, DomainError>(CitaErrors.DniPropiestarioAlreadyExists(newDniPropietario));
-        
-        model = model with {
-            Id = 0,
-            Marca = string.IsNullOrWhiteSpace(model.Marca)
-                ? $"{(model.Matricula ?? "").ToLower()}@BMW"
-                : model.Marca,
-            DniPropietario = newDniPropietario,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            IsDeleted = false,
-            DeletedAt = null
-        };
-        var entity = model.ToEntity();
-        entity.Id = id;
-        entity.UpdatedAt = DateTime.UtcNow;
+        // 2. Límite de 3
+        if (model.DniPropietario != existing.DniPropietario && ContarCitaPorDni(model.DniPropietario) >= 3)
+            return Result.Failure<Cita, DomainError>(CitaErrors.Validation(["El nuevo propietario ya tiene el límite de 3 vehículos."]));
 
-        try {
-            var sql =
-                @"UPDATE Vehiculos SET
-                  Matricula = @Matricula, Marca = @Marca, Modelo = @Modelo, Cilindrada = @Cilindrada, Motor = @Motor, DniPropietario = @DniPropietario, 
-                  FechaItv = @FechaItv, CreatedAt = @CreatedAt, UpdatedAt = @UpdatedAt, IsDeleted = @IsDeleted, DeletedAt = @DeletedAt
-                WHERE Id = @Id";
+        // 3. Cita mismo día
+        if (ExisteCitaMismoDia(model.Matricula, model.FechaItv, id))
+            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(model.Matricula));
 
-            entity.Id = _connection.ExecuteScalar<int>(sql, new {
-                Id = id,
-                Matricula = entity.Matricula ?? "",
-                entity.Marca,
-                entity.Modelo,
-                entity.Cilindrada,
-                entity.Motor,
-                DniPropietario = entity.DniPropietario ?? "",
-                FechaItv = entity.FechaItv.ToString("yyyy-MM-dd"),
-                entity.CreatedAt,
-                entity.UpdatedAt,
-                entity.IsDeleted,
-                entity.DeletedAt
-            });
-            var a = GetById(id);
-            return a != null
-                ? Result.Success<Cita, DomainError>(a)
-                : Result.Failure<Cita, DomainError>(CitaErrors.DatabaseError("Error al recuperar tras actualizar"));
+        const string sql = @"
+            UPDATE Citas SET
+                Matricula = @Matricula, Marca = @Marca, Modelo = @Modelo, 
+                Cilindrada = @Cilindrada, Motor = @Motor, DniPropietario = @DniPropietario, 
+                FechaItv = @FechaItv, UpdatedAt = @UpdatedAt
+            WHERE Id = @Id AND IsDeleted = 0";
 
-        }
-        catch (Exception ex) {
-            _logger.Error(ex, "Erro al crear el vehículo");
-            return Result.Failure<Cita, DomainError>(CitaErrors.DatabaseError(ex.Message));
-            
-        }
+        _connection.Execute(sql, new {
+            Id = id,
+            model.Matricula,
+            model.Marca,
+            model.Modelo,
+            model.Cilindrada,
+            Motor = (int)model.Motor,
+            model.DniPropietario,
+            FechaItv = model.FechaItv.ToString("yyyy-MM-dd HH:mm:ss"),
+            UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")
+        });
+
+        return Result.Success<Cita, DomainError>(GetById(id)!);
     }
 
     public Cita? Delete(int id, bool isLogical = true) {
@@ -175,12 +153,12 @@ public class VehiculoDapperRepository : IVehiculoRepository {
 
             if (isLogical) {
                 var sql =
-                    "UPDATE Vehiculos SET IsDeleted = 1, DeletedAt = @DeletedAt, UpdatedAt = @UpdatedAt WHERE Id = @Id";
+                    "UPDATE Citas SET IsDeleted = 1, DeletedAt = @DeletedAt, UpdatedAt = @UpdatedAt WHERE Id = @Id";
                 _connection.Execute(sql, new { Id = id, DeletedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
                 return GetById(id);
             }
             else {
-                var sql = "DELETE FROM Vehiculos WHERE Id = @Id";
+                var sql = "DELETE FROM Citas WHERE Id = @Id";
                 _connection.Execute(sql, new { Id = id });
                 return existing;
             }
@@ -193,7 +171,7 @@ public class VehiculoDapperRepository : IVehiculoRepository {
 
     public Cita? GetByMatricula(string matricula) {
         try {
-            var sql = "SELECT * FROM Vehiculos WHERE Matricula = @Matricula ";
+            var sql = "SELECT * FROM Citas WHERE Matricula = @Matricula ";
             var entity = _connection.QueryFirstOrDefault<CitaEntity>(sql, new { Matricula = matricula });
             return entity.ToModel();
         }
@@ -205,7 +183,7 @@ public class VehiculoDapperRepository : IVehiculoRepository {
 
     public bool ExistsMatricula(string matricula) {
         try {
-            var sql = "SELECT COUNT(1) FROM Vehiculos WHERE Matricula = @Matricula";
+            var sql = "SELECT COUNT(1) FROM Citas WHERE Matricula = @Matricula";
             return _connection.ExecuteScalar<int>(sql, new { Matricula = matricula }) > 0;
         }
         catch (Exception ex) {
@@ -215,18 +193,18 @@ public class VehiculoDapperRepository : IVehiculoRepository {
     }
 
     public Cita? GetByDniPropietario(string dniPropietario) {
-        var sql = "SELECT * FROM Vehiculos WHERE DniPropietario = @DniPropietario AND IsDeleted = 0 LIMIT 1";
+        var sql = "SELECT * FROM Citas WHERE DniPropietario = @DniPropietario AND IsDeleted = 0 LIMIT 1";
         return _connection.QueryFirstOrDefault<CitaEntity>(sql, new { DniPropietario = dniPropietario })?.ToModel();
     }
 
     public bool ExistsDniPropietario(string dniPropietario) {
-        var sql = "SELECT COUNT(1) FROM Vehiculos WHERE DniPropietario = @DniPropietario AND IsDeleted = 0";
+        var sql = "SELECT COUNT(1) FROM Citas WHERE DniPropietario = @DniPropietario AND IsDeleted = 0";
         return _connection.ExecuteScalar<int>(sql, new { DniPropietario = dniPropietario }) > 0;
     }
 
     public bool DeleteAll() {
         try {
-            _connection.Execute("DELETE FROM Vehiculos");
+            _connection.Execute("DELETE FROM Citas");
             return true;
         }
         catch (Exception Ex) {
@@ -235,11 +213,11 @@ public class VehiculoDapperRepository : IVehiculoRepository {
         }
     }
 
-    public int CountVehiculos(bool includeDeleted = false) {
+    public int CountCita(bool includeDeleted = false) {
         try {
             var sql = includeDeleted
-                ? "SELECT COUNT(1) FROM Vehiculos"
-                : "SELECT COUNT(1) FROM Vehiculos WHERE IsDeleted = 0";
+                ? "SELECT COUNT(1) FROM Citas"
+                : "SELECT COUNT(1) FROM Citas WHERE IsDeleted = 0";
             return _connection.ExecuteScalar<int>(sql);
         }
         catch {
@@ -252,7 +230,7 @@ public class VehiculoDapperRepository : IVehiculoRepository {
             var existing = GetById(id);
             if (existing == null)
                 return Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
-            var sql = "UPDATE Vehiculos SET IsDeleted = 0, DeletedAt = NULL, UpdatedAt = @UpdatedAt WHERE Id = @Id";
+            var sql = "UPDATE Citas SET IsDeleted = 0, DeletedAt = NULL, UpdatedAt = @UpdatedAt WHERE Id = @Id";
             _connection.Execute(sql, new { Id = id, UpdatedAt = DateTime.UtcNow });
             
             _logger.Information("Vehiculo con Id {Id} restaurada correctamente", id);
@@ -268,10 +246,10 @@ public class VehiculoDapperRepository : IVehiculoRepository {
         if (_connection.State != ConnectionState.Open)
             _connection.Open();
 
-        if (dropData) _connection.Execute("DROP TABLE IF EXISTS Vehiculos");
+        if (dropData) _connection.Execute("DROP TABLE IF EXISTS Citas");
 
         _connection.Execute(@"
-            CREATE TABLE IF NOT EXISTS Vehiculos (
+            CREATE TABLE IF NOT EXISTS Citas (
                 Id INTEGER PRIMARY KEY,
                 Matricula TEXT NOT NULL UNIQUE,
                 Marca TEXT NOT NULL,
@@ -289,11 +267,12 @@ public class VehiculoDapperRepository : IVehiculoRepository {
     
     
     private bool ExisteCitaMismoDia(string matricula, DateTime fecha, int? excluirId = null) {
-        var sql = @"SELECT COUNT(1) FROM Vehiculos 
-                WHERE Matricula = @Matricula 
-                AND date(FechaItv) = date(@Fecha) 
-                AND IsDeleted = 0";
-    
+        // CAMBIADO: "Vehiculos" por "Citas"
+        var sql = @"SELECT COUNT(1) FROM Citas 
+            WHERE Matricula = @Matricula 
+            AND date(FechaItv) = date(@Fecha) 
+            AND IsDeleted = 0";
+
         if (excluirId.HasValue) sql += " AND Id <> @Id";
 
         return _connection.ExecuteScalar<int>(sql, new { 
@@ -304,12 +283,12 @@ public class VehiculoDapperRepository : IVehiculoRepository {
     }
 
     private int CountTotal() {
-        return _connection.ExecuteScalar<int>("SELECT COUNT(1) FROM Vehiculos");
+        return _connection.ExecuteScalar<int>("SELECT COUNT(1) FROM Citas");
     }
 
-    private int ContarVehiculosPorDni(string dni) =>
+    private int ContarCitaPorDni(string dni) =>
         _connection.ExecuteScalar<int>(
-            "SELECT COUNT(1) FROM Vehiculos WHERE DniPropietario = @DniPropietario AND IsDeleted = 0",
+            "SELECT COUNT(1) FROM Citas WHERE DniPropietario = @DniPropietario AND IsDeleted = 0",
             new { DniPropietario = dni });
 
 

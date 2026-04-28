@@ -1,6 +1,6 @@
 ﻿namespace GestionITVPro.Dto;
 
-public record VehiculoDto(
+public record CitaDto(
     int Id,
     string Matricula,
     string Marca,
@@ -14,5 +14,5 @@ public record VehiculoDto(
     bool IsDeleted,
     string DeletedAt
 ) {
-    public VehiculoDto() : this(0, "", "", "", 0, "", "","", "", "", false, "") { }
+    public CitaDto() : this(0, "", "", "", 0, "", "","", "", "", false, "") { }
 }

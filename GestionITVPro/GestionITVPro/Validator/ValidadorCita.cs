@@ -1,9 +1,10 @@
 ﻿using System.Text.RegularExpressions;
 using CSharpFunctionalExtensions;
 using GestionITVPro.Enums;
-using GestionITVPro.Error.Common;
-using GestionITVPro.Error.Vehiculo;
+using GestionITVPro.Error.Cita;
+using GestionITVPro.Errors.Common;
 using GestionITVPro.Models;
+using GestionITVPro.Validator.Common;
 
 namespace GestionITVPro.Validator;
 
@@ -25,6 +26,12 @@ public static class ValidadorVehiculoExtensions {
         Motor.Diesel or Motor.Electrico or Motor.Gasolina or Motor.Hibrido => true,
         _ => false // Cualquier otra cosa (o valor nulo/extraño) es falso
     };
+    
+    public static bool IsValidFechaCita(this DateTime fecha) {
+        // La cita no puede ser anterior a "hoy" (comparando solo la fecha sin hora)
+        // O si permites citas para el mismo día, que no sea anterior a DateTime.Today
+        return fecha.Date >= DateTime.Today;
+    }
     
     /*
     public static bool IsValidMotor2(this Vehiculo Entity) {
@@ -82,7 +89,7 @@ public static class ValidadorVehiculoExtensions {
     
 }
 
-public class ValidadorVehiculo : IValidador<Cita> {
+public class ValidadorCita : IValidador<Cita> {
     public Result<Cita, DomainError> Validar(Cita v) {
         var errores = new List<string>();
         
@@ -101,11 +108,15 @@ public class ValidadorVehiculo : IValidador<Cita> {
         if (!v.DniPropietario.IsValidDniPropietario())
             errores.Add("El DNI no es válido (8 números y letra correcta)");
         
+        // NUEVA VALIDACIÓN DE FECHA
+        if (!v.FechaItv.IsValidFechaCita())
+            errores.Add("La fecha de la cita no puede ser anterior al día de hoy.");
+        
         if (!v.Matricula.IsValidMatricula())
             errores.Add("La matrícula no es válida (4 números-3 letras)");
         
         if (errores.Any()) {
-            return Result.Failure<Cita, DomainError>(new VehiculoError.Validation(errores));
+            return Result.Failure<Cita, DomainError>(new CitaError.Validation(errores));
         }
 
         return Result.Success<Cita, DomainError>(v);

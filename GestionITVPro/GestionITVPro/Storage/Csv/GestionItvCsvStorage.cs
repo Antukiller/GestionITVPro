@@ -2,9 +2,8 @@
 using CSharpFunctionalExtensions;
 using GestionITVPro.Config;
 using GestionITVPro.Dto;
-using GestionITVPro.Error.Common;
-using GestionITVPro.Error.Storage;
-using GestionITVPro.Error.Vehiculo;
+using GestionITVPro.Errors.Common;
+using GestionITVPro.Errors.Storage;
 using GestionITVPro.Mapper;
 using GestionITVPro.Models;
 using Serilog;
@@ -23,7 +22,7 @@ public class GestionItvCsvStorage : IGestionItvCsvStorage {
         InitStorage(dataFolder);
     }
 
-    public Result<bool, DomainError> Salvar(IEnumerable<Vehiculo> items, string path) {
+    public Result<bool, DomainError> Salvar(IEnumerable<Cita> items, string path) {
         try {
             _logger.Debug("Guardando los tems en el archivo '{path}'", path);
             using var writer = new StreamWriter(path, false, new UTF8Encoding(false));
@@ -33,7 +32,7 @@ public class GestionItvCsvStorage : IGestionItvCsvStorage {
             foreach (var v in items ) {
                 var dto = v.ToDto();
                 writer.WriteLine(
-                    $"{dto.Id};{EscapeCsvField(dto.Matricula)};{EscapeCsvField(dto.Marca)};{EscapeCsvField(dto.Modelo)};{dto.Cilindrada};{EscapeCsvField(dto.Motor)};{EscapeCsvField(dto.DniPropietario)};{dto.CreatedAt};{dto.UpdatedAt};{dto.IsDeleted};{EscapeCsvField(dto.DeletedAt ?? "")}");
+                    $"{dto.Id};{EscapeCsvField(dto.Matricula)};{EscapeCsvField(dto.Marca)};{EscapeCsvField(dto.Modelo)};{dto.Cilindrada};{EscapeCsvField(dto.Motor)};{EscapeCsvField(dto.DniPropietario)};{dto.FechaItv};{dto.CreatedAt};{dto.UpdatedAt};{dto.IsDeleted};{EscapeCsvField(dto.DeletedAt ?? "")}");
             }
 
             return Result.Success<bool, DomainError>(true);
@@ -45,19 +44,19 @@ public class GestionItvCsvStorage : IGestionItvCsvStorage {
     }
     
 
-    public Result<IEnumerable<Vehiculo>, DomainError> Cargar(string path) {
+    public Result<IEnumerable<Cita>, DomainError> Cargar(string path) {
         _logger.Debug("Cargando los items del archivo '{path}'", path);
 
         if (!Path.Exists(path)) {
             _logger.Warning("El archivo '{path}' no existe.", path);
-            return Result.Failure<IEnumerable<Vehiculo>, DomainError>(StorageErrors.FileNotFound(path));
+            return Result.Failure<IEnumerable<Cita>, DomainError>(StorageErrors.FileNotFound(path));
         }
 
         try {
             var v = File.ReadLines(path, Encoding.UTF8)
                 .Skip(1)
                 .Select(linea => linea.Split(";"))
-                .Select(campo => new VehiculoDto(
+                .Select(campo => new CitaDto(
                     int.Parse(campo[0]),
                     campo[1],
                     campo[2],
@@ -67,14 +66,15 @@ public class GestionItvCsvStorage : IGestionItvCsvStorage {
                     campo[6],
                     campo[7],
                     campo[8],
-                    bool.TryParse(campo[9], out var isDele) && isDele,
-                    string.IsNullOrEmpty(campo[10]) ? null : campo[10]
+                    campo[9],
+                    bool.TryParse(campo[10], out var isDele) && isDele,
+                    string.IsNullOrEmpty(campo[11]) ? null : campo[11]
                 ).ToModel());
-            return Result.Success<IEnumerable<Vehiculo>, DomainError>(v);
+            return Result.Success<IEnumerable<Cita>, DomainError>(v);
         }
         catch (Exception ex) {
             _logger.Error(ex, "Error al cargar los items del archivo '{path}'", path);
-            return Result.Failure<IEnumerable<Vehiculo>, DomainError>(StorageErrors.InvalidFormat(ex.Message));
+            return Result.Failure<IEnumerable<Cita>, DomainError>(StorageErrors.InvalidFormat(ex.Message));
             
         }
     }

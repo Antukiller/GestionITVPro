@@ -3,9 +3,8 @@ using System.Data;
 using CSharpFunctionalExtensions;
 using GestionITVPro.Config;
 using GestionITVPro.Entity;
-using GestionITVPro.Enums;
-using GestionITVPro.Error.Common;
-using GestionITVPro.Error.Vehiculo;
+using GestionITVPro.Error.Cita;
+using GestionITVPro.Errors.Common;
 using GestionITVPro.Factory;
 using GestionITVPro.Mapper;
 using GestionITVPro.Models;
@@ -15,16 +14,16 @@ using Serilog;
 
 namespace GestionITVPro.Repositories.Ado;
 
-public class VehiculoAdoRepository : IVehiculoRepository {
-    private static readonly Lazy<VehiculoAdoRepository> Lazy = new(() => new VehiculoAdoRepository());
-    public static VehiculoAdoRepository Instance => Lazy.Value;
+public class CitaAdoRepository : ICitaRepository {
+    private static readonly Lazy<CitaAdoRepository> Lazy = new(() => new CitaAdoRepository());
+    public static CitaAdoRepository Instance => Lazy.Value;
     
-    private readonly ILogger _logger = Log.ForContext<VehiculoAdoRepository>();
+    private readonly ILogger _logger = Log.ForContext<CitaAdoRepository>();
     private readonly string _connectionString = AppConfig.ConnectionString;
     
-    public VehiculoAdoRepository() : this(AppConfig.DropData, AppConfig.SeedData) { }
+    public CitaAdoRepository() : this(AppConfig.DropData, AppConfig.SeedData) { }
 
-    public VehiculoAdoRepository(bool dropData, bool seedData) {
+    public CitaAdoRepository(bool dropData, bool seedData) {
         _logger.Debug("Iniciando Repositorio Ado");
         EnsureDataFolder();
         
@@ -32,7 +31,7 @@ public class VehiculoAdoRepository : IVehiculoRepository {
             EnsureTable();
         }
 
-        if (seedData && CountVehiculos(true) == 0) {
+        if (seedData && CountCita(true) == 0) {
             _logger.Information("Sembrando datos iniciales...");
             foreach (var vehiculo in VehiculosFactory.Seed()) {
                 Create(vehiculo);
@@ -54,8 +53,8 @@ public class VehiculoAdoRepository : IVehiculoRepository {
         connection.Open();
         using var command = connection.CreateCommand();
         command.CommandText = @"
-            DROP TABLE IF EXISTS Vehiculos;
-            CREATE TABLE Vehiculos (
+            DROP TABLE IF EXISTS Citas;
+            CREATE TABLE Citas (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 Matricula TEXT NOT NULL UNIQUE,
                 Marca TEXT NOT NULL,
@@ -78,7 +77,7 @@ public class VehiculoAdoRepository : IVehiculoRepository {
         using var connection = CreateConnection();
         connection.Open();
         
-        string sql = "SELECT * FROM Vehiculos ";
+        string sql = "SELECT * FROM Citas ";
         if (!includeDeleted) sql += "WHERE IsDeleted = 0 ";
         sql += "ORDER BY Id LIMIT @Limit OFFSET @Offset";
 
@@ -98,81 +97,134 @@ public class VehiculoAdoRepository : IVehiculoRepository {
         using var connection = CreateConnection();
         connection.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT * FROM Vehiculos WHERE Id = @Id";
+        command.CommandText = "SELECT * FROM Citas WHERE Id = @Id";
         command.Parameters.AddWithValue("@Id", id);
         using var reader = command.ExecuteReader();
         return reader.Read() ? MapReaderToEntity(reader).ToModel() : null;
     }
 
-    public Result<Cita, DomainError> Create(Cita cita) {
-        _logger.Debug("Creando vehículo: {Matricula}", cita.Matricula);
+   public Result<Cita, DomainError> Create(Cita model)
+    {
+        var dni = model.DniPropietario ?? "";
+        var matricula = model.Matricula ?? "";
 
-        if (ExisteCitaMismoDia(cita.Matricula, cita.FechaCita)) {
+        // 1. REGLA: Límite de 3 (Validar PRIMERO para los tests)
+        if (!ValidarLimiteVehiculos(dni))
+        {
+            _logger.Warning("Límite alcanzado para DNI {Dni}", dni);
             return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["El vehiculo ya tiene una cita programada para este día"]));
+                CitaErrors.Validation(["Límite alcanzado: Este propietario ya tiene 3 vehículos registrados."]));
         }
 
-        if (ExistsMatricula(cita.Matricula))
-            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(cita.Matricula));
+        // 2. REGLA: Cita mismo día
+        if (ExisteCitaMismoDia(matricula, model.FechaItv))
+        {
+            return Result.Failure<Cita, DomainError>(
+                CitaErrors.MatriculaAlreadyExists(matricula));
+        }
 
-        if (!ValidarLimiteVehiculos(cita.DniPropietario))
-            return Result.Failure<Cita, DomainError>(CitaErrors.Validation(["El propietario ya tiene 3 vehículos."]));
+        // 3. INTEGRIDAD: Matrícula única
+        if (ExistsMatricula(matricula))
+        {
+            return Result.Failure<Cita, DomainError>(
+                CitaErrors.MatriculaAlreadyExists(matricula));
+        }
 
-        var entity = cita.ToEntity();
-        entity.CreatedAt = DateTime.UtcNow;
-        entity.UpdatedAt = DateTime.UtcNow;
-
-        using var connection = CreateConnection();
+        using var connection = CreateConnection(); // Usamos tu método local
         connection.Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = @"
-            INSERT INTO Vehiculos (Matricula, Marca, Modelo, Cilindrada, Motor, DniPropietario, CreatedAt, UpdatedAt, IsDeleted)
-            VALUES (@Matricula, @Marca, @Modelo, @Cilindrada, @Motor, @DniPropietario, @CreatedAt, @UpdatedAt, 0);
+
+        const string sql = @"
+            INSERT INTO Citas (
+                Matricula, Marca, Modelo, Cilindrada, Motor, 
+                DniPropietario, FechaItv, CreatedAt, UpdatedAt, 
+                IsDeleted, DeletedAt
+            ) VALUES (
+                @Matricula, @Marca, @Modelo, @Cilindrada, @Motor, 
+                @DniPropietario, @FechaItv, @CreatedAt, @UpdatedAt, 
+                @IsDeleted, @DeletedAt
+            );
             SELECT last_insert_rowid();";
-        
-        AddParameters(command, entity);
-        var id = Convert.ToInt32(command.ExecuteScalar());
-        
-        return Result.Success<Cita, DomainError>(GetById(id)!);
+
+        using var command = new SqliteCommand(sql, connection);
+
+        // Añadimos TODOS los parámetros para evitar el error "Must add values..."
+        command.Parameters.AddWithValue("@Matricula", matricula);
+        command.Parameters.AddWithValue("@Marca", model.Marca ?? "");
+        command.Parameters.AddWithValue("@Modelo", model.Modelo ?? "");
+        command.Parameters.AddWithValue("@Cilindrada", model.Cilindrada);
+        command.Parameters.AddWithValue("@Motor", (int)model.Motor);
+        command.Parameters.AddWithValue("@DniPropietario", dni);
+        command.Parameters.AddWithValue("@FechaItv", model.FechaItv.ToString("yyyy-MM-dd HH:mm:ss"));
+        command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
+        command.Parameters.AddWithValue("@UpdatedAt", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
+        command.Parameters.AddWithValue("@IsDeleted", 0);
+        command.Parameters.AddWithValue("@DeletedAt", DBNull.Value);
+
+        try
+        {
+            var id = Convert.ToInt32(command.ExecuteScalar());
+            var creado = GetById(id);
+            return creado != null 
+                ? Result.Success<Cita, DomainError>(creado)
+                : Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Error al crear cita en ADO");
+            // Si salta un error de restricción de base de datos que no pillamos antes
+            if (ex.Message.Contains("UNIQUE")) 
+                return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(matricula));
+                
+            return Result.Failure<Cita, DomainError>(CitaErrors.Validation([ex.Message]));
+        }
     }
 
     public Result<Cita, DomainError> Update(int id, Cita cita) {
-        var existing = GetById(id);
-        if (existing == null) return Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
+    var existing = GetById(id);
+    if (existing == null) return Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
 
-        // Validar matrícula si cambia
-        if (cita.Matricula != existing.Matricula && ExistsMatricula(cita.Matricula))
-            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(cita.Matricula));
+    // 1. Validar matrícula si cambia
+    if (cita.Matricula != existing.Matricula && ExistsMatricula(cita.Matricula))
+        return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(cita.Matricula));
 
-        // Validar límite si cambia de dueño
-        if (cita.DniPropietario != existing.DniPropietario && !ValidarLimiteVehiculos(cita.DniPropietario))
-            return Result.Failure<Cita, DomainError>(CitaErrors.Validation(["El nuevo propietario ya tiene 3 vehículos."]));
-        
-        // 1. Nueva restricción: Validar que no choque con OTRA cita (excluyendo el ID actual)
-        if (ExisteCitaMismoDia(cita.Matricula, cita.FechaCita, id)) {
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["El vehículo ya tiene otra cita programada para este día."]));
-        }
-
-        var entity = cita.ToEntity();
-        entity.Id = id;
-        entity.UpdatedAt = DateTime.UtcNow;
-
-        using var connection = CreateConnection();
-        connection.Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = @"
-            UPDATE Vehiculos SET 
-                Matricula = @Matricula, Marca = @Marca, Modelo = @Modelo, 
-                Cilindrada = @Cilindrada, Motor = @Motor, DniPropietario = @DniPropietario, 
-                UpdatedAt = @UpdatedAt 
-            WHERE Id = @Id";
-        
-        AddParameters(command, entity);
-        command.ExecuteNonQuery();
-
-        return Result.Success<Cita, DomainError>(GetById(id)!);
+    // 2. Validar límite si cambia de dueño
+    if (cita.DniPropietario != existing.DniPropietario && !ValidarLimiteVehiculos(cita.DniPropietario))
+        return Result.Failure<Cita, DomainError>(CitaErrors.Validation(["El nuevo propietario ya tiene el límite de 3 vehículos."]));
+    
+    // 3. Validar cita mismo día (Cambiamos el tipo de error a MatriculaAlreadyExists para consistencia)
+    if (ExisteCitaMismoDia(cita.Matricula, cita.FechaItv, id)) {
+        return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(cita.Matricula));
     }
+
+    using var connection = CreateConnection();
+    connection.Open();
+    using var command = connection.CreateCommand();
+    command.CommandText = @"
+        UPDATE Citas SET 
+            Matricula = @Matricula, 
+            Marca = @Marca, 
+            Modelo = @Modelo, 
+            Cilindrada = @Cilindrada, 
+            Motor = @Motor, 
+            DniPropietario = @DniPropietario, 
+            FechaItv = @FechaItv,
+            UpdatedAt = @UpdatedAt 
+        WHERE Id = @Id AND IsDeleted = 0"; // Aseguramos que no actualizamos algo borrado
+    
+    // En lugar de AddParameters genérico, ponemos los específicos del UPDATE
+    command.Parameters.AddWithValue("@Id", id);
+    command.Parameters.AddWithValue("@Matricula", cita.Matricula);
+    command.Parameters.AddWithValue("@Marca", cita.Marca);
+    command.Parameters.AddWithValue("@Modelo", cita.Modelo);
+    command.Parameters.AddWithValue("@Cilindrada", cita.Cilindrada);
+    command.Parameters.AddWithValue("@Motor", (int)cita.Motor);
+    command.Parameters.AddWithValue("@DniPropietario", cita.DniPropietario);
+    command.Parameters.AddWithValue("@FechaItv", cita.FechaItv.ToString("yyyy-MM-dd HH:mm:ss"));
+    command.Parameters.AddWithValue("@UpdatedAt", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
+
+    command.ExecuteNonQuery();
+    return Result.Success<Cita, DomainError>(GetById(id)!);
+}
 
     public Cita? Delete(int id, bool isLogical = true) {
         var existing = GetById(id);
@@ -183,10 +235,10 @@ public class VehiculoAdoRepository : IVehiculoRepository {
         using var command = connection.CreateCommand();
 
         if (isLogical) {
-            command.CommandText = "UPDATE Vehiculos SET IsDeleted = 1, DeletedAt = @DeletedAt WHERE Id = @Id";
+            command.CommandText = "UPDATE Citas SET IsDeleted = 1, DeletedAt = @DeletedAt WHERE Id = @Id";
             command.Parameters.AddWithValue("@DeletedAt", DateTime.UtcNow.ToString("o"));
         } else {
-            command.CommandText = "DELETE FROM Vehiculos WHERE Id = @Id";
+            command.CommandText = "DELETE FROM Citas WHERE Id = @Id";
         }
         
         command.Parameters.AddWithValue("@Id", id);
@@ -202,7 +254,7 @@ public class VehiculoAdoRepository : IVehiculoRepository {
         using var connection = CreateConnection();
         connection.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE Vehiculos SET IsDeleted = 0, DeletedAt = NULL, UpdatedAt = @UpdatedAt WHERE Id = @Id";
+        command.CommandText = "UPDATE Citas SET IsDeleted = 0, DeletedAt = NULL, UpdatedAt = @UpdatedAt WHERE Id = @Id";
         command.Parameters.AddWithValue("@Id", id);
         command.Parameters.AddWithValue("@UpdatedAt", DateTime.UtcNow.ToString("o"));
         command.ExecuteNonQuery();
@@ -214,7 +266,7 @@ public class VehiculoAdoRepository : IVehiculoRepository {
         using var connection = CreateConnection();
         connection.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT COUNT(1) FROM Vehiculos WHERE Matricula = @Matricula";
+        command.CommandText = "SELECT COUNT(1) FROM Citas WHERE Matricula = @Matricula";
         command.Parameters.AddWithValue("@Matricula", matricula);
         return Convert.ToInt32(command.ExecuteScalar()) > 0;
     }
@@ -223,7 +275,7 @@ public class VehiculoAdoRepository : IVehiculoRepository {
         using var connection = CreateConnection();
         connection.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT * FROM Vehiculos WHERE Matricula = @Matricula";
+        command.CommandText = "SELECT * FROM Citas WHERE Matricula = @Matricula";
         command.Parameters.AddWithValue("@Matricula", matricula);
         using var reader = command.ExecuteReader();
         return reader.Read() ? MapReaderToEntity(reader).ToModel() : null;
@@ -233,7 +285,7 @@ public class VehiculoAdoRepository : IVehiculoRepository {
         using var connection = CreateConnection();
         connection.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT * FROM Vehiculos WHERE DniPropietario = @Dni AND IsDeleted = 0 LIMIT 1";
+        command.CommandText = "SELECT * FROM Citas WHERE DniPropietario = @Dni AND IsDeleted = 0 LIMIT 1";
         command.Parameters.AddWithValue("@Dni", dniPropietario);
         using var reader = command.ExecuteReader();
         return reader.Read() ? MapReaderToEntity(reader).ToModel() : null;
@@ -243,16 +295,16 @@ public class VehiculoAdoRepository : IVehiculoRepository {
         using var connection = CreateConnection();
         connection.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT COUNT(1) FROM Vehiculos WHERE DniPropietario = @Dni AND IsDeleted = 0";
+        command.CommandText = "SELECT COUNT(1) FROM Citas WHERE DniPropietario = @Dni AND IsDeleted = 0";
         command.Parameters.AddWithValue("@Dni", dniPropietario);
         return Convert.ToInt32(command.ExecuteScalar()) > 0;
     }
 
-    public int CountVehiculos(bool includeDeleted = false) {
+    public int CountCita(bool includeDeleted = false) {
         using var connection = CreateConnection();
         connection.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = includeDeleted ? "SELECT COUNT(*) FROM Vehiculos" : "SELECT COUNT(*) FROM Vehiculos WHERE IsDeleted = 0";
+        command.CommandText = includeDeleted ? "SELECT COUNT(*) FROM Citas" : "SELECT COUNT(*) FROM Citas WHERE IsDeleted = 0";
         return Convert.ToInt32(command.ExecuteScalar());
     }
 
@@ -260,7 +312,7 @@ public class VehiculoAdoRepository : IVehiculoRepository {
         using var connection = CreateConnection();
         connection.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM Vehiculos";
+        command.CommandText = "DELETE FROM Citas";
         return command.ExecuteNonQuery() >= 0;
     }
 
@@ -270,7 +322,7 @@ public class VehiculoAdoRepository : IVehiculoRepository {
         using var connection = CreateConnection();
         connection.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT COUNT(*) FROM Vehiculos WHERE DniPropietario = @Dni AND IsDeleted = 0";
+        command.CommandText = "SELECT COUNT(*) FROM Citas WHERE DniPropietario = @Dni AND IsDeleted = 0";
         command.Parameters.AddWithValue("@Dni", dni);
         return Convert.ToInt32(command.ExecuteScalar()) < 3;
     }
@@ -297,9 +349,10 @@ public class VehiculoAdoRepository : IVehiculoRepository {
             Cilindrada = reader.GetInt32("Cilindrada"),
             Motor = reader.GetInt32("Motor"),
             DniPropietario = reader.GetString("DniPropietario"),
+            // Uso de GetString y DateTime.Parse para mayor compatibilidad con el formato guardado
             FechaItv = DateTime.Parse(reader.GetString(reader.GetOrdinal("FechaItv"))),
-            CreatedAt = DateTime.Parse(reader.GetString("CreatedAt")),
-            UpdatedAt = DateTime.Parse(reader.GetString("UpdatedAt")),
+            CreatedAt = DateTime.Parse(reader.GetString(reader.GetOrdinal("CreatedAt"))),
+            UpdatedAt = DateTime.Parse(reader.GetString(reader.GetOrdinal("UpdatedAt"))),
             IsDeleted = reader.GetInt32("IsDeleted") == 1,
             DeletedAt = reader.IsDBNull("DeletedAt") ? null : DateTime.Parse(reader.GetString("DeletedAt"))
         };
@@ -311,7 +364,7 @@ public class VehiculoAdoRepository : IVehiculoRepository {
         using var command = connection.CreateCommand();
     
         // Comparamos solo la parte de la fecha (YYYY-MM-DD)
-        string sql = @"SELECT COUNT(1) FROM Vehiculos 
+        string sql = @"SELECT COUNT(1) FROM Citas 
                    WHERE Matricula = @Matricula 
                    AND date(FechaItv) = date(@Fecha) 
                    AND IsDeleted = 0";

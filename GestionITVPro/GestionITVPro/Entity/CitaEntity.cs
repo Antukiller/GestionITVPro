@@ -8,7 +8,7 @@ namespace GestionITVPro.Entity;
 /// </summary>
 
 [Table("Vehiculo")]
-public class VehiculoEntity {
+public class CitaEntity {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
@@ -24,6 +24,8 @@ public class VehiculoEntity {
     [Required] public int Motor { get; set; }
 
     [Required] [MaxLength(50)] public string DniPropietario { get; set; } = string.Empty;
+    
+    [Column(TypeName = "dateTime2")] public DateTime FechaItv { get; set; }
 
     [Column(TypeName = "datetime2")] public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

@@ -5,7 +5,7 @@ namespace GestionITVPro.Models;
 /// <summary>
 /// Clase base inmutable para cualquier vehículo resgistrado en el sistema.
 /// </summary>
-public record Vehiculo {
+public record Cita {
     
     public int Id {get; init;}
     public string Matricula { get; init; } = string.Empty;
@@ -15,7 +15,7 @@ public record Vehiculo {
     public Motor Motor { get; init; } 
     public string DniPropietario { get; init; }  = string.Empty;
 
-    public DateTime FechaCita { get; init; } = DateTime.UtcNow;
+    public DateTime FechaItv { get; init; } = DateTime.UtcNow;
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; init; } = DateTime.UtcNow;
     public bool IsDeleted { get; init; } = false;
@@ -33,7 +33,7 @@ public record Vehiculo {
     /// </summary>
     /// <param name="other">Instancia de vehículo a comparar</param>
     /// <returns>True si las matrículas coinciden</returns>
-    public virtual bool Equals(Vehiculo? other) {
+    public virtual bool Equals(Cita? other) {
         return other != null && string.Equals(Matricula,  other.Matricula, StringComparison.OrdinalIgnoreCase);
     }
     

@@ -1,4 +1,4 @@
-﻿namespace GestionITVPro.Error.Common;
+﻿namespace GestionITVPro.Errors.Common;
 
 
 /// <summary>

@@ -1,6 +1,6 @@
-﻿using GestionITVPro.Error.Common;
+﻿using GestionITVPro.Errors.Common;
 
-namespace GestionITVPro.Error.Storage;
+namespace GestionITVPro.Errors.Storage;
 
 /// <summary>
 /// Contenedor de errores específicos para el subdominio de Almacenamiento (Storage).

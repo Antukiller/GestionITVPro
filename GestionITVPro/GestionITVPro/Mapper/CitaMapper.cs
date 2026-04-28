@@ -1,23 +1,21 @@
-﻿using System.Runtime.InteropServices.JavaScript;
-using GestionITVPro.Entity;
-using Microsoft.VisualBasic;
+﻿using GestionITVPro.Entity;
 
 namespace GestionITVPro.Mapper;
 
 using System.Globalization;
 using GestionITVPro.Dto;
 using GestionITVPro.Enums;
-using GestionITVPro.Models;
+using Models;
 
 
-public static class VehiculoMapper {
+public static class CitaMapper {
     // Formato fecha con hora para CreateAt, UpdateAt y DeleteAt.
     private const string DateFormat = "d";
     private const string DateTimeFormat = "s";
     private static readonly CultureInfo InvariantCulture = CultureInfo.InvariantCulture;
 
 
-    public static Cita ToModel(this VehiculoDto dto) {
+    public static Cita ToModel(this CitaDto dto) {
         var createdAt = DateTime.Parse(dto.CreatedAt, InvariantCulture);
         var updateAt = DateTime.Parse(dto.UpdatedAt, InvariantCulture);
         DateTime? deleteAt = string.IsNullOrEmpty(dto.DeletedAt)
@@ -32,7 +30,7 @@ public static class VehiculoMapper {
             Cilindrada = dto.Cilindrada,
             Motor = Enum.TryParse(dto.Motor, out Motor tipo) ? tipo : Motor.Gasolina,
             DniPropietario = dto.DniPropietario,
-            FechaCita = fechaItv,
+            FechaItv = fechaItv,
             CreatedAt = createdAt,
             UpdatedAt = updateAt,
             IsDeleted = dto.IsDeleted,
@@ -42,10 +40,10 @@ public static class VehiculoMapper {
     
     
     
-    public static VehiculoDto ToDto(this Cita cita) {
+    public static CitaDto ToDto(this Cita cita) {
         // 1. Añadimos el 'new VehiculoDto'
         // 2. Usamos el formato ISO que definiste arriba para las fechas
-        return new VehiculoDto(
+        return new CitaDto(
             cita.Id,
             cita.Matricula,
             cita.Marca,
@@ -53,11 +51,13 @@ public static class VehiculoMapper {
             cita.Cilindrada,
             cita.Motor.ToString(),
             cita.DniPropietario,
-            cita.FechaCita.ToString(DateFormat, InvariantCulture),
+            cita.FechaItv.ToString(DateFormat, InvariantCulture),
             cita.CreatedAt.ToString(DateTimeFormat, InvariantCulture), // Usa tu constante IsoFormat
             cita.UpdatedAt.ToString(DateTimeFormat, InvariantCulture),
             cita.IsDeleted,
-            cita.DeletedAt?.ToString(DateTimeFormat, InvariantCulture)
+            cita.DeletedAt.HasValue 
+                ? cita.DeletedAt.Value.ToString(DateTimeFormat, InvariantCulture) 
+                : string.Empty
         );
     }
 
@@ -72,7 +72,7 @@ public static class VehiculoMapper {
             Cilindrada = entity.Cilindrada,
             Motor = (Motor)entity.Motor,
             DniPropietario = entity.DniPropietario,
-            FechaCita = entity.FechaItv,
+            FechaItv = entity.FechaItv,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsDeleted = entity.IsDeleted,
@@ -99,12 +99,12 @@ public static class VehiculoMapper {
             Cilindrada = model.Cilindrada,
             Motor = (int)model.Motor,
             DniPropietario = model.DniPropietario,
-            FechaItv = model.FechaCita,
+            FechaItv = model.FechaItv,
             CreatedAt = model.CreatedAt,
             UpdatedAt = model.UpdatedAt,
             IsDeleted = model.IsDeleted,
             DeletedAt = model.DeletedAt
-
+            
         };
     }
 }

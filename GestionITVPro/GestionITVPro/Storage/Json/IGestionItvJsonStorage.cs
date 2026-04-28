@@ -5,6 +5,6 @@ namespace GestionITVPro.Storage.Json;
 
 /// <summary>
 /// Contrato para persistir y cargar personas en formato Json.
-/// Hereda de <see cref="IStorage{T}"/> con T = <see cref="Vehiculo"/>.
+/// Hereda de <see cref="IStorage{T}"/> con T = <see cref="Cita"/>.
 /// </summary>
-public interface IGestionItvJsonStorage : IStorage<Vehiculo> { }
+public interface IGestionItvJsonStorage : IStorage<Cita> { }
