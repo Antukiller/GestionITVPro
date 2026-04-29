@@ -196,7 +196,7 @@ public class CitaEfRepositoryTests {
             });
             
             // Act 
-            var r = _repository.GetAll();
+            var r = _repository.GetAll(null, null, null, null, null);
             
             // Assert
             r.Should().HaveCount(2);
@@ -213,7 +213,7 @@ public class CitaEfRepositoryTests {
                 });
             
             // Act
-            var r = _repository.GetAll(1, 3);
+            var r = _repository.GetAll(null, null, null, null, null, 1, 3);
             
             // Assert
             r.Should().HaveCount(3);
@@ -234,7 +234,7 @@ public class CitaEfRepositoryTests {
             _repository.Delete(v2.Id);
             
             // Act
-            var r = _repository.GetAll(includeDeleted: false);
+            var r = _repository.GetAll(null, null, null, null, null, includeDeleted: false);
             
             // Assert
             r.Should().HaveCount(1);
@@ -332,7 +332,7 @@ public class CitaEfRepositoryTests {
             
             // Assert
             r.Should().BeTrue();
-            _repository.GetAll().Should().BeEmpty();
+            _repository.GetAll(null, null, null, null, null).Should().BeEmpty();
         }
         
         [Test]
@@ -704,7 +704,7 @@ public class CitaEfRepositoryTests {
             
             // Assert
             r.Should().BeTrue();
-            _repository.GetAll().Should().BeEmpty();
+            _repository.GetAll(null, null, null, null, null).Should().BeEmpty();
         }
     }
 

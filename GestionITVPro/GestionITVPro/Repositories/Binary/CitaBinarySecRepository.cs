@@ -34,31 +34,57 @@ public class CitaBinRepository : ICitaRepository {
 
     // --- FUNCIONES DE CONSULTA ---
 
-    public IEnumerable<Cita> GetAll(int page = 1, int pageSize = 10, bool includeDeleted = true) {
-        var query = includeDeleted
-            ? _porId.Values.AsEnumerable()
-            : _porId.Values.Where(v => !v.IsDeleted);
+    public IEnumerable<Cita> GetAll(string? marca, string? dniPropietario, string? matricula, DateTime? desde, DateTime? hasta,
+        int page = 1, int pageSize = 10, bool includeDeleted = true) {
+        var query = _porId.Values.AsQueryable();
+        if (!includeDeleted) {
+            query = query.Where(c => !c.IsDeleted);
+        }
+
+        if (!string.IsNullOrWhiteSpace(marca)) {
+            query = query.Where(c => c.Marca.Contains(marca, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(dniPropietario)) {
+            query = query.Where(c => c.DniPropietario == dniPropietario);
+        }
+
+        if (desde.HasValue) {
+            query = query.Where(c => c.FechaInspeccion >= desde.Value);
+        }
+
+        if (hasta.HasValue) {
+            query = query.Where(c => c.FechaInspeccion <= hasta.Value);
+        }
 
         return query
-            .OrderBy(v => v.Id)
+            .OrderBy(c => c.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToModel();
+            .Select(c => c.ToModel()!);
     }
 
     public Cita? GetById(int id) {
         return _porId.TryGetValue(id, out var entity) ? entity.ToModel() : null;
     }
-
-    public Cita? GetByMatricula(string matricula) {
-        return _matriculaIndex.TryGetValue(matricula, out var id) ? GetById(id) : null;
-    }
+    
 
     public bool ExistsMatricula(string matricula) => _matriculaIndex.ContainsKey(matricula);
 
+    public Cita? GetByMatricula(string matricula) {
+        // CORRECCIÓN: Usar _porId y filtrar por !IsDeleted
+        return _porId.Values
+            .FirstOrDefault(c => c.Matricula.Equals(matricula, StringComparison.OrdinalIgnoreCase) && !c.IsDeleted)
+            ?.ToModel();
+    }
+    
     public Cita? GetByDniPropietario(string dniPropietario) {
-        if (_dniPropietarioIndex.TryGetValue(dniPropietario, out var ids) && ids.Count > 0) {
-            return GetById(ids[0]);
+        if (_dniPropietarioIndex.TryGetValue(dniPropietario, out var ids)) {
+            // CORRECCIÓN: Buscar el primer ID de la lista que NO esté borrado
+            var idNoBorrado = ids.FirstOrDefault(id => _porId.ContainsKey(id) && !_porId[id].IsDeleted);
+        
+            // Si FirstOrDefault no encuentra nada (devuelve 0), retornamos null
+            return idNoBorrado != 0 ? GetById(idNoBorrado) : null;
         }
         return null;
     }

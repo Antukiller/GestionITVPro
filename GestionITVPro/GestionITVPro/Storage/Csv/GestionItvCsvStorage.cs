@@ -27,12 +27,12 @@ public class GestionItvCsvStorage : IGestionItvCsvStorage {
             _logger.Debug("Guardando los tems en el archivo '{path}'", path);
             using var writer = new StreamWriter(path, false, new UTF8Encoding(false));
             writer.WriteLine(
-                "Id;Matricula;Modelo;Marca;Cilindrada;Motor;DniPropietario;CreatedAt;UpdatedAt;IsDeleted;DeletedAt");
+                "Id;Matricula;Modelo;Marca;Cilindrada;Motor;DniPropietario;FechaItv;FechaInspeccion;CreatedAt;UpdatedAt;IsDeleted;DeletedAt");
 
             foreach (var v in items ) {
                 var dto = v.ToDto();
                 writer.WriteLine(
-                    $"{dto.Id};{EscapeCsvField(dto.Matricula)};{EscapeCsvField(dto.Marca)};{EscapeCsvField(dto.Modelo)};{dto.Cilindrada};{EscapeCsvField(dto.Motor)};{EscapeCsvField(dto.DniPropietario)};{dto.FechaItv};{dto.CreatedAt};{dto.UpdatedAt};{dto.IsDeleted};{EscapeCsvField(dto.DeletedAt ?? "")}");
+                    $"{dto.Id};{EscapeCsvField(dto.Matricula)};{EscapeCsvField(dto.Marca)};{EscapeCsvField(dto.Modelo)};{dto.Cilindrada};{EscapeCsvField(dto.Motor)};{EscapeCsvField(dto.DniPropietario)};{dto.FechaItv};{dto.FechaInspeccion};{dto.CreatedAt};{dto.UpdatedAt};{dto.IsDeleted};{EscapeCsvField(dto.DeletedAt ?? "")}");
             }
 
             return Result.Success<bool, DomainError>(true);
@@ -67,8 +67,9 @@ public class GestionItvCsvStorage : IGestionItvCsvStorage {
                     campo[7],
                     campo[8],
                     campo[9],
-                    bool.TryParse(campo[10], out var isDele) && isDele,
-                    string.IsNullOrEmpty(campo[11]) ? null : campo[11]
+                    campo[10],
+                    bool.TryParse(campo[11], out var isDele) && isDele,
+                    string.IsNullOrEmpty(campo[12]) ? null : campo[12]
                 ).ToModel());
             return Result.Success<IEnumerable<Cita>, DomainError>(v);
         }

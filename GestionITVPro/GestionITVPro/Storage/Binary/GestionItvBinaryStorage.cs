@@ -37,6 +37,7 @@ public class GestionItvBinaryStorage : IGestionItvBinaryStorage {
                 writer.Write(dto.Motor);
                 writer.Write(dto.DniPropietario);
                 writer.Write(dto.FechaItv);
+                writer.Write(dto.FechaInspeccion);
                 writer.Write(dto.CreatedAt);
                 writer.Write(dto.UpdatedAt);
                 writer.Write(dto.IsDeleted);
@@ -74,6 +75,7 @@ public class GestionItvBinaryStorage : IGestionItvBinaryStorage {
                     reader.ReadString(),
                     reader.ReadString(),
                     reader.ReadInt32(),
+                    reader.ReadString(),
                     reader.ReadString(),
                     reader.ReadString(),
                     reader.ReadString(),

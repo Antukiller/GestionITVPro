@@ -19,17 +19,25 @@ public class CitasService(
     private readonly ILogger _logger = Log.ForContext<CitasService>();
 
 
-    public int TotalCitas => repository.GetAll(1, int.MaxValue).Count();
+    public int TotalCitas => repository.GetAll(null, null, null, null, null, 1, int.MaxValue).Count();
+
+
+    public IEnumerable<Cita> GetAll(string? marca, string? dniPropietario, string? matricula, 
+        DateTime? desde, DateTime? hasta, int page, int pageSize, bool includeDeleted) 
+    {
+        // Asegúrate de que estás pasando el parámetro includeDeleted al repositorio
+        var resultados = repository.GetAll(marca, dniPropietario, matricula, desde, hasta, page, pageSize, includeDeleted);
     
-    public IEnumerable<Cita> GetAll(int page = 1, int pageSize = 10, bool includeDeleted = true) {
-        return repository.GetAll(page, pageSize, includeDeleted);
+        // Si el repositorio binario/memoria no implementa la paginación internamente, 
+        // asegúrate de no estar haciendo un doble Skip/Take aquí.
+        return resultados;
     }
 
     public IEnumerable<Cita> GetCitasOrderBy(TipoOrdenamiento ordenamiento, int page = 1, int pageSize = 10, bool includeDeleted = true) 
     {
         // 1. Obtenemos todas las citas del repositorio (sin paginar aún)
         // Usamos int.MaxValue para traer todas y poder ordenar el conjunto completo
-        var citas = repository.GetAll(1, int.MaxValue, includeDeleted);
+        var citas = repository.GetAll(null, null, null, null, null, 1, int.MaxValue, includeDeleted);
 
         // 2. Aplicamos el ordenamiento según el Enum
         var listaOrdenada = AplicarOrdenamientoCitas(citas, ordenamiento);

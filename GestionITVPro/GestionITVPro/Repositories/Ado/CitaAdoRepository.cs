@@ -63,6 +63,7 @@ public class CitaAdoRepository : ICitaRepository {
                 Motor INTEGER NOT NULL,
                 DniPropietario TEXT NOT NULL,
                 FechaItv TEXT NOT NULL,
+                FechaInspeccion TEXT NOT NULL,
                 CreatedAt TEXT NOT NULL,
                 UpdatedAt TEXT NOT NULL,
                 IsDeleted INTEGER NOT NULL DEFAULT 0,
@@ -71,27 +72,50 @@ public class CitaAdoRepository : ICitaRepository {
         command.ExecuteNonQuery();
     }
 
-    public IEnumerable<Cita> GetAll(int page = 1, int pageSize = 10, bool includeDeleted = true) {
-        _logger.Debug("GetAll: pag {Page}, size {Size}", page, pageSize);
-        var entities = new List<CitaEntity>();
-        using var connection = CreateConnection();
-        connection.Open();
-        
-        string sql = "SELECT * FROM Citas ";
-        if (!includeDeleted) sql += "WHERE IsDeleted = 0 ";
-        sql += "ORDER BY Id LIMIT @Limit OFFSET @Offset";
+   public IEnumerable<Cita> GetAll(string? marca, string? dniPropietario, string? matricula, 
+    DateTime? desde, DateTime? hasta, int page = 1, int pageSize = 10, bool includeDeleted = true) {
+    var lista = new List<Cita>();
+
+    try {
+        using var connection = CreateConnection(); // Corregido: Crear conexión local
+        connection.Open(); // IMPORTANTE: Abrir conexión
+
+        const string sql = @"
+            SELECT * FROM Citas 
+            WHERE (@Marca IS NULL OR Marca LIKE '%' || @Marca || '%')
+              AND (@Dni IS NULL OR DniPropietario = @Dni)
+              AND (@Matricula IS NULL OR Matricula = @Matricula)
+              AND (@Desde IS NULL OR date(FechaItv) >= date(@Desde))
+              AND (@Hasta IS NULL OR date(FechaItv) <= date(@Hasta))
+              AND (@IncludeDeleted = 1 OR IsDeleted = 0)
+            ORDER BY Id 
+            LIMIT @Limit OFFSET @Offset";
 
         using var command = connection.CreateCommand();
         command.CommandText = sql;
+
+        // Parámetros
+        command.Parameters.AddWithValue("@Marca", (object?)marca ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Dni", (object?)dniPropietario ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Matricula", (object?)matricula ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Desde", desde?.ToString("yyyy-MM-dd") ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@Hasta", hasta?.ToString("yyyy-MM-dd") ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@IncludeDeleted", includeDeleted ? 1 : 0);
         command.Parameters.AddWithValue("@Limit", pageSize);
         command.Parameters.AddWithValue("@Offset", (page - 1) * pageSize);
 
         using var reader = command.ExecuteReader();
         while (reader.Read()) {
-            entities.Add(MapReaderToEntity(reader));
+            // Usamos el método MapReaderToEntity que ya tienes abajo para no repetir código
+            lista.Add(MapReaderToEntity(reader).ToModel()!);
         }
-        return entities.ToModel();
     }
+    catch (Exception ex) {
+        _logger.Error(ex, "Error en GetAll ADO.NET");
+    }
+
+    return lista;
+}
 
     public Cita? GetById(int id) {
         using var connection = CreateConnection();
@@ -136,11 +160,11 @@ public class CitaAdoRepository : ICitaRepository {
         const string sql = @"
             INSERT INTO Citas (
                 Matricula, Marca, Modelo, Cilindrada, Motor, 
-                DniPropietario, FechaItv, CreatedAt, UpdatedAt, 
+                DniPropietario, FechaItv, FechaInspeccion, CreatedAt, UpdatedAt, 
                 IsDeleted, DeletedAt
             ) VALUES (
                 @Matricula, @Marca, @Modelo, @Cilindrada, @Motor, 
-                @DniPropietario, @FechaItv, @CreatedAt, @UpdatedAt, 
+                @DniPropietario, @FechaItv, @FechaInspeccion, @CreatedAt, @UpdatedAt, 
                 @IsDeleted, @DeletedAt
             );
             SELECT last_insert_rowid();";
@@ -155,6 +179,7 @@ public class CitaAdoRepository : ICitaRepository {
         command.Parameters.AddWithValue("@Motor", (int)model.Motor);
         command.Parameters.AddWithValue("@DniPropietario", dni);
         command.Parameters.AddWithValue("@FechaItv", model.FechaItv.ToString("yyyy-MM-dd HH:mm:ss"));
+        command.Parameters.AddWithValue("@FechaInspeccion", model.FechaInspeccion.ToString("yyyy-MM-dd HH:mm:ss"));
         command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
         command.Parameters.AddWithValue("@UpdatedAt", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
         command.Parameters.AddWithValue("@IsDeleted", 0);
@@ -208,6 +233,7 @@ public class CitaAdoRepository : ICitaRepository {
             Motor = @Motor, 
             DniPropietario = @DniPropietario, 
             FechaItv = @FechaItv,
+            FechaInspeccion = @FechaInspeccion,
             UpdatedAt = @UpdatedAt 
         WHERE Id = @Id AND IsDeleted = 0"; // Aseguramos que no actualizamos algo borrado
     
@@ -220,6 +246,7 @@ public class CitaAdoRepository : ICitaRepository {
     command.Parameters.AddWithValue("@Motor", (int)cita.Motor);
     command.Parameters.AddWithValue("@DniPropietario", cita.DniPropietario);
     command.Parameters.AddWithValue("@FechaItv", cita.FechaItv.ToString("yyyy-MM-dd HH:mm:ss"));
+    command.Parameters.AddWithValue("@FechaInspeccion", cita.FechaInspeccion.ToString("yyyy-MM-dd HH:mm:ss"));
     command.Parameters.AddWithValue("@UpdatedAt", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
 
     command.ExecuteNonQuery();
@@ -335,6 +362,7 @@ public class CitaAdoRepository : ICitaRepository {
         command.Parameters.AddWithValue("@Cilindrada", entity.Cilindrada);
         command.Parameters.AddWithValue("@Motor", (int)entity.Motor);
         command.Parameters.AddWithValue("@FechaItv", entity.FechaItv.ToString("yyyy-MM-dd"));
+        command.Parameters.AddWithValue("@FechaInspeccion", entity.FechaInspeccion.ToString("yyyy-MM-dd"));
         command.Parameters.AddWithValue("@DniPropietario", entity.DniPropietario);
         command.Parameters.AddWithValue("@CreatedAt", entity.CreatedAt.ToString("o"));
         command.Parameters.AddWithValue("@UpdatedAt", entity.UpdatedAt.ToString("o"));
@@ -342,19 +370,21 @@ public class CitaAdoRepository : ICitaRepository {
 
     private CitaEntity MapReaderToEntity(SqliteDataReader reader) {
         return new CitaEntity {
-            Id = reader.GetInt32("Id"),
-            Matricula = reader.GetString("Matricula"),
-            Marca = reader.GetString("Marca"),
-            Modelo = reader.GetString("Modelo"),
-            Cilindrada = reader.GetInt32("Cilindrada"),
-            Motor = reader.GetInt32("Motor"),
-            DniPropietario = reader.GetString("DniPropietario"),
-            // Uso de GetString y DateTime.Parse para mayor compatibilidad con el formato guardado
+            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+            Matricula = reader.GetString(reader.GetOrdinal("Matricula")),
+            Marca = reader.GetString(reader.GetOrdinal("Marca")),
+            Modelo = reader.GetString(reader.GetOrdinal("Modelo")),
+            Cilindrada = reader.GetInt32(reader.GetOrdinal("Cilindrada")),
+            Motor = reader.GetInt32(reader.GetOrdinal("Motor")),
+            DniPropietario = reader.GetString(reader.GetOrdinal("DniPropietario")),
             FechaItv = DateTime.Parse(reader.GetString(reader.GetOrdinal("FechaItv"))),
+            FechaInspeccion = DateTime.Parse(reader.GetString(reader.GetOrdinal("FechaInspeccion"))),
             CreatedAt = DateTime.Parse(reader.GetString(reader.GetOrdinal("CreatedAt"))),
             UpdatedAt = DateTime.Parse(reader.GetString(reader.GetOrdinal("UpdatedAt"))),
-            IsDeleted = reader.GetInt32("IsDeleted") == 1,
-            DeletedAt = reader.IsDBNull("DeletedAt") ? null : DateTime.Parse(reader.GetString("DeletedAt"))
+            IsDeleted = reader.GetInt32(reader.GetOrdinal("IsDeleted")) == 1,
+            DeletedAt = reader.IsDBNull(reader.GetOrdinal("DeletedAt")) 
+                ? null 
+                : DateTime.Parse(reader.GetString(reader.GetOrdinal("DeletedAt")))
         };
     }
     

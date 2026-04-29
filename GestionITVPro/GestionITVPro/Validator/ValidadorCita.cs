@@ -32,6 +32,13 @@ public static class ValidadorVehiculoExtensions {
         // O si permites citas para el mismo día, que no sea anterior a DateTime.Today
         return fecha.Date >= DateTime.Today;
     }
+
+    public static bool IsWithinNext30Days(this DateTime fechaInspeccion) {
+        var hoy = DateTime.Today;
+        var limite = hoy.AddDays(30);
+
+        return fechaInspeccion.Date >= hoy && fechaInspeccion.Date <= limite;
+    }
     
     /*
     public static bool IsValidMotor2(this Vehiculo Entity) {
@@ -108,9 +115,13 @@ public class ValidadorCita : IValidador<Cita> {
         if (!v.DniPropietario.IsValidDniPropietario())
             errores.Add("El DNI no es válido (8 números y letra correcta)");
         
-        // NUEVA VALIDACIÓN DE FECHA
-        if (!v.FechaItv.IsValidFechaCita())
-            errores.Add("La fecha de la cita no puede ser anterior al día de hoy.");
+        if (v.FechaItv.Date > DateTime.Today)
+            errores.Add("La fecha de matriculación no puede ser futura.");
+
+        // 2. Para la Fecha de la Cita (FechaInspeccion):
+        // El enunciado dice: Entre hoy y +30 días.
+        if (!v.FechaInspeccion.IsWithinNext30Days())
+            errores.Add("La fecha de inspección debe estar entre hoy y los próximos 30 días.");
         
         if (!v.Matricula.IsValidMatricula())
             errores.Add("La matrícula no es válida (4 números-3 letras)");

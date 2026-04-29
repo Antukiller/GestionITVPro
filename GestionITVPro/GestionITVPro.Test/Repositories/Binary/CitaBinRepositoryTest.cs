@@ -148,24 +148,40 @@ public class CitaBinRepositoryTest {
         var dni = "88888888X";
         var v1 = _repository.Create(new Cita { Matricula = "AAA-111", DniPropietario = dni, Marca="A", Modelo="A" }).Value;
         var v2 = _repository.Create(new Cita { Matricula = "BBB-222", DniPropietario = dni, Marca="B", Modelo="B" }).Value;
-        _repository.Delete(v1.Id, isLogical: true); // Marcamos uno como borrado
+    
+        // Marcamos el primero como borrado lógico
+        _repository.Delete(v1.Id, isLogical: true); 
 
         // Act & Assert
-        // 1. Probar GetAll sin incluir borrados (Líneas rojas en imagen)
-        var activos = _repository.GetAll(page: 1, pageSize: 10, includeDeleted: false);
+    
+        // 1. Probar GetAll sin incluir borrados
+        // Orden: marca, dniPropietario, matricula, desde, hasta, page, pageSize, includeDeleted
+        var activos = _repository.GetAll(
+            marca: null, 
+            dniPropietario: null, 
+            matricula: null, 
+            desde: null, 
+            hasta: null, 
+            page: 1, 
+            pageSize: 10, 
+            includeDeleted: false
+        );
+    
         activos.Should().HaveCount(1);
         activos.First().Matricula.Should().Be("BBB-222");
 
-        // 2. Probar GetByMatricula (Línea roja en imagen)
+        // 2. Probar GetByMatricula
         var buscadoMat = _repository.GetByMatricula("BBB-222");
         buscadoMat.Should().NotBeNull();
         buscadoMat!.Id.Should().Be(v2.Id);
 
-        // 3. Probar GetByDniPropietario (Línea roja en imagen)
+        // 3. Probar GetByDniPropietario
         var buscadoDni = _repository.GetByDniPropietario(dni);
         buscadoDni.Should().NotBeNull();
-        // Al ser un índice de lista, devuelve el primero activo
+        // Verifica que el DNI coincide y que, al estar bien implementado, 
+        // te devuelva uno que no esté borrado (v2)
         buscadoDni!.DniPropietario.Should().Be(dni);
+        buscadoDni.IsDeleted.Should().BeFalse();
     }
     
     

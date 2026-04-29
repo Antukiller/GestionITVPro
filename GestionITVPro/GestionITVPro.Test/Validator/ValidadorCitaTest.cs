@@ -60,13 +60,34 @@ public class ValidadorCitaTest {
                 Cilindrada = 3000,
                 Motor = Motor.Gasolina,
                 DniPropietario = "12345678Z",
-                FechaItv = DateTime.Today.AddDays(7) // Cita para dentro de una semana
+                FechaItv = new DateTime(2020, 02, 29),
             };
     
             var result = _validador.Validar(v);
             result.IsSuccess.Should().BeTrue();
         }
+        
+        [Test]
+        public void Validar_FechaInspeccion_RetonarSuccess() {
+            var v = new Cita {
+                Id = 1,
+                Matricula = "1234BBB",
+                Modelo = "M-4",
+                Marca = "BMW",
+                Cilindrada = 3000,
+                Motor = Motor.Gasolina,
+                DniPropietario = "12345678Z",
+                FechaItv = DateTime.Today,
+                FechaInspeccion = DateTime.Today.AddDays(29)
+                
+            };
+
+            var result = _validador.Validar(v);
+            result.IsSuccess.Should().BeTrue();
+        }
+        
     }
+}
     
     
     [TestFixture]
@@ -189,7 +210,7 @@ public class ValidadorCitaTest {
         }
         
         [Test]
-        public void Validar_FechaPasada_DeberiaRetornarFailure() {
+        public void Validar_FechaFutura_DeberiaRetornarFailure() {
             // Arrange: Una fecha de ayer
             var v = new Cita {
                 Id = 1,
@@ -199,8 +220,9 @@ public class ValidadorCitaTest {
                 Cilindrada = 3000,
                 Motor = Motor.Gasolina,
                 DniPropietario = "12345678Z",
-                FechaItv = DateTime.Today.AddDays(-1) 
+                FechaItv = DateTime.Today.AddDays(30) 
             };
+            
     
             // Act
             var result = _validador.Validar(v);
@@ -208,7 +230,26 @@ public class ValidadorCitaTest {
             // Assert
             result.IsFailure.Should().BeTrue();
             var validationError = (CitaError.Validation)result.Error;
-            validationError.Errors.Should().Contain("La fecha de la cita no puede ser anterior al día de hoy.");
+            validationError.Errors.Should().Contain("La fecha de matriculación no puede ser futura.");
+        }
+
+        [Test]
+        public void Valida_FechaInspeccionFutura_RetornarFailure() {
+            var v = new Cita {
+                Id = 1,
+                Matricula = "1234BBB",
+                Modelo = "M-4",
+                Marca = "BMW",
+                Cilindrada = 3000,
+                Motor = Motor.Gasolina,
+                DniPropietario = "12345678Z",
+                FechaItv = DateTime.Today,
+                FechaInspeccion = DateTime.Today.AddDays(31)
+            };
+            var result = _validador.Validar(v);
+
+            result.IsFailure.Should().BeTrue();
+            var error = (CitaError.Validation)result.Error;
+            error.Errors.Should().Contain("La fecha de inspección debe estar entre hoy y los próximos 30 días.");
         }
     }
-}

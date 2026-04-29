@@ -27,18 +27,40 @@ public class CitaDapperRepository : ICitaRepository {
         if (seeData && CountTotal() == 0) Seed();
     }
 
-    public IEnumerable<Cita> GetAll(int page = 1, int pageSize = 10, bool includeDeleted = true) {
+
+    public IEnumerable<Cita> GetAll(string? marca, string? dniPropietario, string? matricula, 
+        DateTime? desde, DateTime? hasta, int page = 1, int pageSize = 10, bool includeDeleted = true) 
+    {
+        // CAMBIO: Usamos date() para que la comparación de strings funcione como fechas
+        const string sql = @"
+        SELECT * FROM Citas 
+        WHERE (@Marca IS NULL OR Marca LIKE '%' || @Marca || '%')
+          AND (@Dni IS NULL OR DniPropietario = @Dni)
+          AND (@Matricula IS NULL OR Matricula = @Matricula)
+          AND (@Desde IS NULL OR date(FechaItv) >= date(@Desde))
+          AND (@Hasta IS NULL OR date(FechaItv) <= date(@Hasta))
+          AND (@IncludeDeleted = 1 OR IsDeleted = 0)
+        ORDER BY Id 
+        LIMIT @Limit OFFSET @Offset";
+
         try {
-            var sql = includeDeleted
-                ? "SELECT * FROM Citas ORDER BY Id LIMIT @PageSize OFFSET @Offset"
-                : "SELECT * FROM Citas WHERE IsDeleted = 0 ORDER BY Id LIMIT @PageSize OFFSET @Offset";
-            var entities = _connection
-                .Query<CitaEntity>(sql, new { PageSize = pageSize, Offset = (page - 1) * pageSize }).ToList();
-            return entities.Select(e => e.ToModel()!).ToList();
+            var parameters = new {
+                Marca = string.IsNullOrWhiteSpace(marca) ? null : marca,
+                Dni = string.IsNullOrWhiteSpace(dniPropietario) ? null : dniPropietario,
+                Matricula = string.IsNullOrWhiteSpace(matricula) ? null : matricula,
+                Desde = desde?.ToString("yyyy-MM-dd"), // Formato simplificado para date()
+                Hasta = hasta?.ToString("yyyy-MM-dd"),
+                IncludeDeleted = includeDeleted ? 1 : 0,
+                Limit = pageSize,
+                Offset = (page - 1) * pageSize
+            };
+
+            var entidades = _connection.Query<CitaEntity>(sql, parameters);
+            return entidades.Select(e => e.ToModel()!);
         }
         catch (Exception ex) {
-            _logger.Error(ex, "Error al obtener vehiculos");
-            return [];
+            _logger.Error(ex, "Error en GetAll Dapper");
+            return Enumerable.Empty<Cita>();
         }
     }
 
@@ -77,27 +99,31 @@ public class CitaDapperRepository : ICitaRepository {
         }
 
         const string sql = @"
-            INSERT INTO Citas (Matricula, Marca, Modelo, Cilindrada, Motor, DniPropietario, FechaItv, CreatedAt, UpdatedAt, IsDeleted)
-            VALUES (@Matricula, @Marca, @Modelo, @Cilindrada, @Motor, @DniPropietario, @FechaItv, @CreatedAt, @UpdatedAt, @IsDeleted);
+            INSERT INTO Citas (
+                Matricula, Marca, Modelo, Cilindrada, Motor, 
+                DniPropietario, FechaItv, FechaInspeccion, CreatedAt, UpdatedAt, IsDeleted
+            ) VALUES (
+                @Matricula, @Marca, @Modelo, @Cilindrada, @Motor, 
+                @DniPropietario, @FechaItv, @FechaInspeccion, @CreatedAt, @UpdatedAt, @IsDeleted
+            );
             SELECT last_insert_rowid();";
 
         try {
-            // Usamos la conexión inyectada _connection, no un método CreateConnection
             var id = _connection.QuerySingle<int>(sql, new {
-                Matricula = matricula,
+                Matricula = model.Matricula,
                 model.Marca,
                 model.Modelo,
                 model.Cilindrada,
                 Motor = (int)model.Motor,
-                DniPropietario = dni,
+                DniPropietario = model.DniPropietario,
                 FechaItv = model.FechaItv.ToString("yyyy-MM-dd HH:mm:ss"),
+                FechaInspeccion = model.FechaInspeccion.ToString("yyyy-MM-dd HH:mm:ss"), // AÑADIDO
                 CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
                 UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
                 IsDeleted = 0
             });
 
-            var creado = GetById(id);
-            return creado != null 
+            return GetById(id) is { } creado 
                 ? Result.Success<Cita, DomainError>(creado)
                 : Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
         }
@@ -127,7 +153,7 @@ public class CitaDapperRepository : ICitaRepository {
             UPDATE Citas SET
                 Matricula = @Matricula, Marca = @Marca, Modelo = @Modelo, 
                 Cilindrada = @Cilindrada, Motor = @Motor, DniPropietario = @DniPropietario, 
-                FechaItv = @FechaItv, UpdatedAt = @UpdatedAt
+                FechaItv = @FechaItv, FechaInspeccion = @FechaInspeccion, UpdatedAt = @UpdatedAt
             WHERE Id = @Id AND IsDeleted = 0";
 
         _connection.Execute(sql, new {
@@ -139,6 +165,7 @@ public class CitaDapperRepository : ICitaRepository {
             Motor = (int)model.Motor,
             model.DniPropietario,
             FechaItv = model.FechaItv.ToString("yyyy-MM-dd HH:mm:ss"),
+            FechaInspeccion = model.FechaInspeccion.ToString("yyyy-MM-dd HH:mm:ss"), // AÑADIDO
             UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")
         });
 
@@ -243,21 +270,20 @@ public class CitaDapperRepository : ICitaRepository {
     }
 
     private void EnsureTable(bool dropData) {
-        if (_connection.State != ConnectionState.Open)
-            _connection.Open();
-
+        if (_connection.State != ConnectionState.Open) _connection.Open();
         if (dropData) _connection.Execute("DROP TABLE IF EXISTS Citas");
 
         _connection.Execute(@"
             CREATE TABLE IF NOT EXISTS Citas (
-                Id INTEGER PRIMARY KEY,
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
                 Matricula TEXT NOT NULL UNIQUE,
                 Marca TEXT NOT NULL,
-                Modelo TEXT NOT NULl,
+                Modelo TEXT NOT NULL,
                 Cilindrada INTEGER,
                 Motor INTEGER,
                 DniPropietario TEXT NOT NULL,
-                FechaItv TEXT NOT NULl,
+                FechaItv TEXT NOT NULL,
+                FechaInspeccion TEXT NOT NULL, -- AÑADIDO
                 CreatedAt TEXT NOT NULL,
                 UpdatedAt TEXT NOT NULL,
                 IsDeleted INTEGER DEFAULT 0,

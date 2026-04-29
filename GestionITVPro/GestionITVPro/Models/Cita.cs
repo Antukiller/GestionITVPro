@@ -15,6 +15,8 @@ public record Cita {
     public Motor Motor { get; init; } 
     public string DniPropietario { get; init; }  = string.Empty;
 
+    public DateTime FechaInspeccion { get; init; } = DateTime.UtcNow;
+
     public DateTime FechaItv { get; init; } = DateTime.UtcNow;
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; init; } = DateTime.UtcNow;

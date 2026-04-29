@@ -15,7 +15,7 @@ public interface ICitaRepository {
     /// <summary>
     ///     Obtiene todos los vehiculos de forma paginada.
     /// </summary>
-    IEnumerable<Cita> GetAll(int page = 1, int pageSize = 10, bool includeDeleted = true);
+    IEnumerable<Cita> GetAll( string? marca, string? dniPropietario, string? matricula, DateTime? desde, DateTime? hasta,  int page = 1, int pageSize = 10, bool includeDeleted = true );
     
 
     /// <summary>

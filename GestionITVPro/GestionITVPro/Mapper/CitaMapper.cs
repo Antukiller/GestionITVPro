@@ -22,6 +22,7 @@ public static class CitaMapper {
             ? null
             : DateTime.Parse(dto.DeletedAt, InvariantCulture);
         var fechaItv = DateTime.Parse(dto.FechaItv, InvariantCulture);
+        var fechaInspeccion = DateTime.Parse(dto.FechaInspeccion, InvariantCulture);
         return new Cita {
             Id = dto.Id,
             Matricula = dto.Matricula,
@@ -31,6 +32,7 @@ public static class CitaMapper {
             Motor = Enum.TryParse(dto.Motor, out Motor tipo) ? tipo : Motor.Gasolina,
             DniPropietario = dto.DniPropietario,
             FechaItv = fechaItv,
+            FechaInspeccion = fechaInspeccion,
             CreatedAt = createdAt,
             UpdatedAt = updateAt,
             IsDeleted = dto.IsDeleted,
@@ -52,6 +54,7 @@ public static class CitaMapper {
             cita.Motor.ToString(),
             cita.DniPropietario,
             cita.FechaItv.ToString(DateFormat, InvariantCulture),
+            cita.FechaInspeccion.ToString(DateFormat, InvariantCulture),
             cita.CreatedAt.ToString(DateTimeFormat, InvariantCulture), // Usa tu constante IsoFormat
             cita.UpdatedAt.ToString(DateTimeFormat, InvariantCulture),
             cita.IsDeleted,
@@ -73,6 +76,7 @@ public static class CitaMapper {
             Motor = (Motor)entity.Motor,
             DniPropietario = entity.DniPropietario,
             FechaItv = entity.FechaItv,
+            FechaInspeccion = entity.FechaInspeccion,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsDeleted = entity.IsDeleted,
@@ -100,6 +104,7 @@ public static class CitaMapper {
             Motor = (int)model.Motor,
             DniPropietario = model.DniPropietario,
             FechaItv = model.FechaItv,
+            FechaInspeccion = model.FechaInspeccion,
             CreatedAt = model.CreatedAt,
             UpdatedAt = model.UpdatedAt,
             IsDeleted = model.IsDeleted,

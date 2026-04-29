@@ -48,24 +48,37 @@ public class CitaMemoryRepository : ICitaRepository {
 
         }
     }
-    
-    
-    /// <inheritdoc/>
-    public IEnumerable<Cita> GetAll(int page = 1, int pageSize = 10, bool includeDeleted = true) {
-        _logger.Debug("Obteniendo vehiculos con paginación: página {Page}, tamaño {PageSize}, incluir borrados: {IncludeDeleted}",page, pageSize, includeDeleted);
 
-        var query = includeDeleted
-            ? _porId.Values.AsEnumerable()
-            : _porId.Values.Where(a => !a.IsDeleted);
+    public IEnumerable<Cita> GetAll(string? marca, string? dniPropietario, string? matricula, DateTime? desde, DateTime? hasta,
+        int page = 1, int pageSize = 10, bool includeDeleted = true) {
+        var query = _porId.Values.AsQueryable();
+        if (!includeDeleted) {
+            query = query.Where(c => !c.IsDeleted);
+        }
+
+        if (!string.IsNullOrWhiteSpace(marca)) {
+            query = query.Where(c => c.Marca.Contains(marca, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(dniPropietario)) {
+            query = query.Where(c => c.DniPropietario == dniPropietario);
+        }
+
+        if (desde.HasValue) {
+            query = query.Where(c => c.FechaInspeccion >= desde.Value);
+        }
+
+        if (hasta.HasValue) {
+            query = query.Where(c => c.FechaInspeccion <= hasta.Value);
+        }
 
         return query
-            .OrderBy(a => a.Id)
+            .OrderBy(c => c.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToModel();
+            .Select(c => c.ToModel()!);
     }
-    
-    
+
     public Cita? GetById(int id) {
         _logger.Debug("Obteniendo vehiculo con id {Id}", id);
         return _porId.GetValueOrDefault(id).ToModel();

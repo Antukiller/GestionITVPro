@@ -26,6 +26,8 @@ public class CitaEntity {
     [Required] [MaxLength(50)] public string DniPropietario { get; set; } = string.Empty;
     
     [Column(TypeName = "dateTime2")] public DateTime FechaItv { get; set; }
+    
+    [Column(TypeName = "dateTime2")] public DateTime FechaInspeccion { get; init; }
 
     [Column(TypeName = "datetime2")] public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

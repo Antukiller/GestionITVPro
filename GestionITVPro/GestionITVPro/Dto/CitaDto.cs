@@ -9,10 +9,11 @@ public record CitaDto(
     string Motor,
     string DniPropietario,
     string FechaItv,
+    string FechaInspeccion,
     string CreatedAt,
     string UpdatedAt,
     bool IsDeleted,
     string DeletedAt
 ) {
-    public CitaDto() : this(0, "", "", "", 0, "", "","", "", "", false, "") { }
+    public CitaDto() : this(0, "", "", "", 0, "", "","","", "", "", false, "") { }
 }

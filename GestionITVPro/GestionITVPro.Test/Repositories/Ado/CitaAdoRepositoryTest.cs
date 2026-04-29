@@ -101,7 +101,7 @@ public class CitaAdoRepositoryTest {
         // Assert
         recuperado.Should().NotBeNull();
         recuperado!.IsDeleted.Should().BeTrue();
-        _repository.GetAll(includeDeleted: false).Should().BeEmpty();
+        _repository.GetAll(null, null, null, null, null, includeDeleted: false).Should().BeEmpty();
     }
 
     [Test]

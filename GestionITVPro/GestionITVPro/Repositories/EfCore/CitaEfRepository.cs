@@ -34,23 +34,40 @@ public class CitaEfRepository : ICitaRepository {
         }
     }
 
-    public IEnumerable<Cita> GetAll(int page = 1, int pageSize = 10, bool includeDeleted = true) {
-        try {
-            var query = includeDeleted
-                ? _context.Citas.AsQueryable()
-                : _context.Citas.Where(v => !v.IsDeleted);
-
-            var entities = query
-                .OrderBy(v => v.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize);
-
-            return entities.ToModel();
+    public IEnumerable<Cita> GetAll(string? marca, string? dniPropietario, string? matricula, DateTime? desde, DateTime? hasta,
+        int page = 1, int pageSize = 10, bool includeDeleted = true) {
+        var query = _context.Citas.AsQueryable();
+        if (!includeDeleted) {
+            query = query.Where(c => !c.IsDeleted);
         }
-        catch (Exception ex) {
-            _logger.Error(ex, "Error al obtener vehiculos");
-            return Enumerable.Empty<Cita>();
+
+        if (!string.IsNullOrWhiteSpace(marca)) {
+            query = query.Where(c => c.Marca.Contains(marca.ToLower()));
         }
+
+        if (!string.IsNullOrWhiteSpace(matricula)) {
+            query = query.Where(c => c.Matricula.Contains(matricula));
+        }
+
+        if (!string.IsNullOrWhiteSpace(dniPropietario)) {
+            query = query.Where(c => c.DniPropietario == dniPropietario);
+        }
+
+        if (desde.HasValue) {
+            query = query.Where(c => c.FechaInspeccion >= desde.Value);
+        }
+
+        if (hasta.HasValue) {
+            query = query.Where(c => c.FechaInspeccion <= hasta.Value);
+        }
+
+        var entidades = query
+            .OrderBy(c => c.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList(); // Aquí es donde la consulta viaja a la base de datos
+        // 2. Mapeamos a modelo en memoria (C#)
+        return entidades.Select(e => e.ToModel()!);
     }
 
     public Cita? GetById(int id) {

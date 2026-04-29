@@ -187,12 +187,20 @@ public class CitaJsonRepositoryTest {
         [Test]
         public void GetAll_SinParametros_RetornarTodos() {
             // Arrange
-            _repository.Create(new Cita { Matricula = "1111-BBB", DniPropietario = "1Z", Marca="A", Modelo="A" });
-            _repository.Create(new Cita { Matricula = "2222-CCC", DniPropietario = "2Z", Marca="B", Modelo="B" });
-            
+            _repository.Create(new Cita { Matricula = "1111-BBB", DniPropietario = "1Z", Marca = "A", Modelo = "A" });
+            _repository.Create(new Cita { Matricula = "2222-CCC", DniPropietario = "2Z", Marca = "B", Modelo = "B" });
+    
             // Act
-            var resultado = _repository.GetAll();
-            
+            // Pasamos null en los filtros (marca, dni, matricula, desde, hasta)
+            // para que la consulta no filtre nada y devuelva la lista completa.
+            var resultado = _repository.GetAll(
+                marca: null, 
+                dniPropietario: null, 
+                matricula: null, 
+                desde: null, 
+                hasta: null
+            );
+    
             // Assert
             resultado.Should().HaveCount(2);
         }
@@ -205,10 +213,18 @@ public class CitaJsonRepositoryTest {
                     Matricula = $"{i:D4}-BCG", Marca = "Marca", Modelo = "Modelo", 
                     Cilindrada = 2000, Motor = Motor.Diesel, DniPropietario = $"{i}Z"
                 });
-            
-            // Act
-            var resultado = _repository.GetAll(1, 3);
-            
+    
+            // Act - page: 1, pageSize: 3
+            var resultado = _repository.GetAll(
+                marca: null, 
+                dniPropietario: null, 
+                matricula: null, 
+                desde: null, 
+                hasta: null, 
+                page: 1, 
+                pageSize: 3
+            );
+    
             // Assert
             resultado.Should().HaveCount(3);
         }
@@ -218,12 +234,19 @@ public class CitaJsonRepositoryTest {
             // Arrange
             _repository.Create(new Cita { Matricula = "1111-AAA", DniPropietario = "1Z", Marca="A", Modelo="A" });
             var res2 = _repository.Create(new Cita { Matricula = "2222-BBB", DniPropietario = "2Z", Marca="B", Modelo="B" });
-            
-            _repository.Delete(res2.Value.Id); // Borrado lógico por defecto
-            
+    
+            _repository.Delete(res2.Value.Id); // Borrado lógico (IsDeleted = true)
+    
             // Act 
-            var resultado = _repository.GetAll(includeDeleted: false);
-            
+            var resultado = _repository.GetAll(
+                marca: null, 
+                dniPropietario: null, 
+                matricula: null, 
+                desde: null, 
+                hasta: null, 
+                includeDeleted: false
+            );
+    
             // Assert
             resultado.Should().HaveCount(1);
             resultado.First().Matricula.Should().Be("1111-AAA");
@@ -280,13 +303,22 @@ public class CitaJsonRepositoryTest {
             // Arrange
             _repository.Create(new Cita { Matricula = "1111-AAA", DniPropietario = "1Z", Marca="A", Modelo="A" });
             _repository.Create(new Cita { Matricula = "2222-BBB", DniPropietario = "2Z", Marca="B", Modelo="B" });
-            
+    
             // Act
             var resultado = _repository.DeleteAll();
-            
+    
             // Assert
             resultado.Should().BeTrue();
-            _repository.GetAll().Should().BeEmpty();
+    
+            // Al pasar null en los filtros, estamos pidiendo "todo lo que haya".
+            // Como hemos hecho DeleteAll, la lista resultante debe estar vacía.
+            _repository.GetAll(
+                marca: null, 
+                dniPropietario: null, 
+                matricula: null, 
+                desde: null, 
+                hasta: null
+            ).Should().BeEmpty();
         }
     }
     
@@ -589,21 +621,15 @@ public class CitaJsonRepositoryTest {
         [Test]
         public void DeletedAll_VaciarRepositorio() {
             // Arrange
-            _repository.Create(new Cita {
-                Matricula = "5678-DFH", Marca = "Volkswagen", Modelo = "Golf", Cilindrada = 2000,
-                Motor = Motor.Diesel, DniPropietario = "23456789D"
-            });
-            _repository.Create(new Cita {
-                Matricula = "1234-DFC", Marca = "Tesla", Modelo = "Model 3", Cilindrada = 0,
-                Motor = Motor.Electrico, DniPropietario = "34567890V"
-            });
-            
+            _repository.Create(new Cita { Matricula = "5678-DFH", Marca = "Volkswagen", Modelo = "Golf", DniPropietario = "1Z" });
+            _repository.Create(new Cita { Matricula = "1234-DFC", Marca = "Tesla", Modelo = "Model 3", DniPropietario = "2Z" });
+    
             // Act
-            var resultado = _repository.DeleteAll();
-            
+            _repository.DeleteAll();
+    
             // Assert
-            resultado.Should().BeTrue();
-            _repository.GetAll().Should().BeEmpty();
+            var resultado = _repository.GetAll(null, null, null, null, null);
+            resultado.Should().BeEmpty();
         }
     }
 }

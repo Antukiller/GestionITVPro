@@ -12,7 +12,16 @@ namespace GestionITVPro.Service.Citas;
 public interface ICitasService {
     int TotalCitas { get; }
     
-    IEnumerable<Cita> GetAll(int page = 1, int pageSize = 10, bool includeDeleted = true);
+    // 1. GetAll evolucionado con filtros de búsqueda
+    IEnumerable<Cita> GetAll(
+        string? marca = null, 
+        string? dniPropietario = null, 
+        string? matricula = null, 
+        DateTime? desde = null, 
+        DateTime? hasta = null,
+        int page = 1, 
+        int pageSize = 10, 
+        bool includeDeleted = true);
     
     IEnumerable<Cita> GetCitasOrderBy(
         TipoOrdenamiento ordenamiento, 
