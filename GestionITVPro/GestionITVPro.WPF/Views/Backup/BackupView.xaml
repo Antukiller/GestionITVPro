@@ -1,0 +1,113 @@
+﻿<Page x:Class="GestionITVPro.WPF.Views.Backup.BackupView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d"
+      d:DesignHeight="500" d:DesignWidth="850"
+      Title="Umbrella Corp. - Data Management"
+      Background="#0A0A0A">
+
+    <Page.Resources>
+        <!-- ESTILO RESIDENT EVIL PARA BOTONES -->
+        <Style x:Key="ResidentButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="45"/>
+            <Setter Property="Margin" Value="0,5,0,5"/>
+            <Setter Property="Background" Value="#1A241A"/>
+            <Setter Property="Foreground" Value="#33FF33"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="BorderBrush" Value="#446644"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="btnBorder" 
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="btnBorder" Property="Background" Value="#33FF33"/>
+                                <Setter Property="Foreground" Value="Black"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="btnBorder" Property="BorderBrush" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- PANEL LATERAL -->
+        <Border Grid.Column="0" Background="#111" BorderBrush="#333" BorderThickness="0,0,2,0">
+            <StackPanel Margin="20">
+                <!-- Logotipo Umbrella -->
+                <Ellipse Width="40" Height="40" Fill="#CC0000" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                
+                <TextBlock Text="LUIS VIVES CORP." 
+                           Foreground="#AA0000" 
+                           FontSize="10" 
+                           FontWeight="Black" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,0,0,30"/>
+                
+                <TextBlock Text="STARS OPERATIONAL COMMAND" 
+                           Foreground="#666" 
+                           FontSize="9" 
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,10"/>
+                
+                <Button Content="[ RESTAURAR.EXE ]" Style="{StaticResource ResidentButtonStyle}"/>
+                <Button Content="[ BACKUP.DAT ]" Style="{StaticResource ResidentButtonStyle}"/>
+                <Button Content="[ REFRESCAR.SYS ]" Style="{StaticResource ResidentButtonStyle}"/>
+                
+                <Separator Background="#333" Margin="0,20"/>
+                
+                <Button Content="[ PURGAR O EVANGELIZAR ]" Style="{StaticResource ResidentButtonStyle}" 
+                        Foreground="#FF3333" BorderBrush="#880000" Background="#220000"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ÁREA DE CONTENIDO -->
+        <Grid Grid.Column="1" Margin="30">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                <TextBlock Text="DATA RECOVERY SYSTEM" FontSize="22" FontFamily="Courier New" 
+                           FontWeight="Bold" Foreground="#CCC"/>
+                <TextBlock Text="Location: Arklay Research Facility" FontSize="10" Foreground="#555"/>
+            </StackPanel>
+
+            <Border Grid.Row="1" Background="#050805" BorderBrush="#446644" BorderThickness="3" CornerRadius="2">
+                <Grid>
+                    <StackPanel VerticalAlignment="Top" Margin="15">
+                        <TextBlock Text="> ACCESSING DATABASE..." Foreground="#33FF33" FontFamily="Courier New" Margin="0,0,0,5"/>
+                        <TextBlock Text="> STATUS: SYSTEM CAUTION" Foreground="#FFCC00" FontFamily="Courier New" Margin="0,0,0,5"/>
+                        <TextBlock Text="> NO FILES CORRUPTED... YET." Foreground="#33FF33" FontFamily="Courier New" Margin="0,0,0,5"/>
+                        
+                        <ProgressBar IsIndeterminate="True" Width="150" Height="4" HorizontalAlignment="Left" 
+                                     Margin="0,20,0,0" Background="#111" Foreground="#33FF33" BorderThickness="1" BorderBrush="#33FF33"/>
+                    </StackPanel>
+
+                    <TextBlock Text="BIOHAZARD" VerticalAlignment="Bottom" HorizontalAlignment="Right" 
+                               FontSize="40" Foreground="#111" FontWeight="Black" Margin="0,0,10,-10"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

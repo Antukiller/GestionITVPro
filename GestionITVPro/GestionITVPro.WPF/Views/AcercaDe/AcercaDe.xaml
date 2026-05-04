@@ -1,0 +1,52 @@
+﻿<Window x:Class="GestionITVPro.WPF.Views.AcercaDe.AcercaDe"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+        Title="Acerca de" Height="350" Width="450"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid>
+        <!-- 1. Definimos el fondo del Grid -->
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#0f0c29" Offset="0"/>
+                <GradientStop Color="#302b63" Offset="0.5"/>
+                <GradientStop Color="#24243e" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <!-- 2. Ponemos el contenido DENTRO del Grid -->
+        <StackPanel VerticalAlignment="Center" Margin="20">
+            
+            <TextBlock Text="Antoine Amir López Jauregui" 
+                       FontSize="20" 
+                       FontWeight="Bold" 
+                       Foreground="White" 
+                       HorizontalAlignment="Center" 
+                       Margin="0,0,0,10" />
+
+            <TextBlock Text="Autor de esta octava maravilla del mundo" 
+                       FontSize="14" 
+                       Foreground="#A0A0A0" 
+                       HorizontalAlignment="Center" 
+                       Margin="0,0,0,20" />
+            
+            <!-- He subido el icono para que quede sobre el botón -->
+            <iconPacks:PackIconMaterial Kind="Github" 
+                                        Width="50" 
+                                        Height="50" 
+                                        Foreground="White" 
+                                        HorizontalAlignment="Center" 
+                                        Margin="0,0,0,15"/>
+
+            <Button Content="Visitar GitHub" 
+                    Width="140" 
+                    Padding="8"
+                    Background="#4E4E50"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Cursor="Hand" />
+            
+        </StackPanel>
+    </Grid>
+</Window>

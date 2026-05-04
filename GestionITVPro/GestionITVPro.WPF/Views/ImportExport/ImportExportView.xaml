@@ -1,0 +1,99 @@
+﻿<Page x:Class="GestionITVPro.WPF.Views.ImportExport.ImportExportView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+      Title="Gestión ITV - Importar/Exportar"
+      Background="#0A0A0C"> <!-- Fondo oscuro consistente con tus gráficos -->
+
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 1. HEADER (Siguiendo tu estilo de Gestión Académica) -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,30">
+            <iconPacks:PackIconMaterial Kind="DatabaseSync" Width="40" Height="40" Foreground="#00F2FF"
+                                        VerticalAlignment="Center" Margin="0,0,15,0" />
+            <StackPanel>
+                <TextBlock Text="MANTENIMIENTO DE DATOS" Foreground="#00F2FF" FontSize="12" FontWeight="ExtraBold"/>
+                <TextBlock Text="Importar / Exportar Citas" Foreground="White" FontSize="28" FontWeight="Black"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- 2. OPCIONES DE CONFIGURACIÓN -->
+        <Border Grid.Row="1" Background="#0F0F12" CornerRadius="10" Padding="15" Margin="0,0,0,25" BorderBrush="#1A1A23" BorderThickness="1">
+            <StackPanel Orientation="Horizontal">
+                <CheckBox IsChecked="{Binding SustituirDatos}" VerticalAlignment="Center">
+                    <TextBlock Text="Sustituir base de datos actual al importar" Foreground="#AAA" Margin="5,0,0,0"/>
+                </CheckBox>
+                <iconPacks:PackIconMaterial Kind="AlertCircleOutline" Foreground="#555" Width="16" Height="16" Margin="15,0,5,0" VerticalAlignment="Center"/>
+                <TextBlock Text="Esta acción es irreversible" Foreground="#555" VerticalAlignment="Center" FontSize="11" FontStyle="Italic"/>
+            </StackPanel>
+        </Border>
+
+        <!-- 3. ACCIONES PRINCIPALES -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Exportar -->
+            <GroupBox Grid.Column="0" Header="EXPORTAR DATOS" Margin="0,0,12,0" 
+                      BorderBrush="#1A1A23" Foreground="#00F2FF" FontWeight="Bold">
+                <StackPanel Margin="15">
+                    <TextBlock Text="Guarda una copia de seguridad de todas las citas en un archivo local." 
+                               TextWrapping="Wrap" Foreground="#888" Margin="0,0,0,20"/>
+                    
+                    <Button Command="{Binding ExportarCsvCommand}" Height="50" Margin="0,0,0,12" Background="#16161D" BorderBrush="#222">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconMaterial Kind="FileTable" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="#00FF88"/>
+                            <TextBlock Text="Exportar a CSV" VerticalAlignment="Center" Foreground="White"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding ExportarJsonCommand}" Height="50" Background="#16161D" BorderBrush="#222">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconMaterial Kind="CodeJson" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="#FFB800"/>
+                            <TextBlock Text="Exportar a JSON" VerticalAlignment="Center" Foreground="White"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Importar -->
+            <GroupBox Grid.Column="1" Header="IMPORTAR DATOS" Margin="12,0,0,0"
+                      BorderBrush="#1A1A23" Foreground="#00F2FF" FontWeight="Bold">
+                <StackPanel Margin="15">
+                    <TextBlock Text="Carga citas desde archivos externos. Asegúrate de que el formato sea el correcto." 
+                               TextWrapping="Wrap" Foreground="#888" Margin="0,0,0,20"/>
+
+                    <Button Command="{Binding ImportarCsvCommand}" Height="50" Margin="0,0,0,12" Background="#16161D" BorderBrush="#222">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconMaterial Kind="FileImport" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="#00FF88"/>
+                            <TextBlock Text="Importar desde CSV" VerticalAlignment="Center" Foreground="White"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding ImportarJsonCommand}" Height="50" Background="#16161D" BorderBrush="#222">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconMaterial Kind="DatabaseImport" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="#FFB800"/>
+                            <TextBlock Text="Importar desde JSON" VerticalAlignment="Center" Foreground="White"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </GroupBox>
+        </Grid>
+
+        <!-- 4. BARRA DE ESTADO -->
+        <Border Grid.Row="3" Background="#16161D" Padding="10,5" CornerRadius="5" Margin="0,20,0,0">
+            <StackPanel Orientation="Horizontal">
+                <iconPacks:PackIconMaterial Kind="InformationOutline" Width="14" Height="14" Foreground="#00F2FF" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock Text="{Binding StatusMessage}" Foreground="#AAA" FontSize="12" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>

@@ -14,9 +14,21 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.2" />
+      <PackageReference Include="MahApps.Metro.IconPacks" Version="6.2.1" />
+      <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="6.2.1" />
       <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
       <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
       <PackageReference Include="Serilog.Sinks.File" Version="8.0.0-nblumhardt-02322" />
+      <PackageReference Include="SkiaSharp.Views.WPF" Version="3.119.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Page Update="Views\Main\MainWindow.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <XamlRuntime>Wpf</XamlRuntime>
+        <SubType>Designer</SubType>
+      </Page>
     </ItemGroup>
 
 </Project>
