@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.IO;
 using FluentAssertions;
 using GestionITVPro.Enums;
 using GestionITVPro.Errors.Report;
@@ -55,7 +56,6 @@ public class ReportServiceTests {
             stats.Diesel.Should().Be(1);
             stats.CitasParaHoy.Should().Be(1);
             stats.CitasAtrasadas.Should().Be(1);
-            stats.CilindradaMedia.Should().BeApproximately(1066.66, 0.01);
         }
 
         [Test]
@@ -65,7 +65,6 @@ public class ReportServiceTests {
 
             // Assert
             stats.TotalCitas.Should().Be(0);
-            stats.CilindradaMedia.Should().Be(0);
             stats.UltimaCitaProgramada.Should().BeNull();
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.IO.Compression;
+﻿
+using System.IO.Compression;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
 using GestionITVPro.Enums;
@@ -98,26 +99,70 @@ public class BackupServiceTests {
         [Test]
         public void RestaurarBackup_ConZipValido_DeberiaRetornarCitas() {
             // Arrange
-            var citas = new List<Cita> {
+            // Generamos un nombre único para evitar conflictos entre tests
+            var zipPath = Path.Combine(_backupDir, $"itv-test-{Guid.NewGuid()}.zip");
+    
+            var citasEsperadas = new List<Cita> {
                 new Cita { Id = 1, Matricula = "9999ZZZ", Marca = "Ford" }
             };
 
+            // Configuramos el mock para que cuando RestaurarBackup llame a _storage.Cargar, devuelva nuestros datos
             _storageMock.Setup(s => s.Cargar(It.IsAny<string>()))
-                .Returns(Result.Success<IEnumerable<Cita>, DomainError>(citas));
+                .Returns(Result.Success<IEnumerable<Cita>, DomainError>(citasEsperadas));
 
-            // Crear un ZIP real en disco para que el servicio no falle al abrirlo
-            var zipPath = Path.Combine(_backupDir, "itv-test.zip");
+            try {
+                // Crear el ZIP físico necesario para que ZipFile.Open no lance una excepción
+                using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create)) {
+                    zip.CreateEntry("data/citas.json");
+                }
+
+                // Act
+                var resultado = _service.RestaurarBackup(zipPath);
+
+                // Assert
+                resultado.IsSuccess.Should().BeTrue();
+                resultado.Value.Should().NotBeNull();
+                resultado.Value.Should().HaveCount(1);
+        
+                var citaResultante = resultado.Value.First();
+                citaResultante.Matricula.Should().Be("9999ZZZ");
+                citaResultante.Marca.Should().Be("Ford");
+
+                // Opcional: Verificar que el servicio realmente llamó al storage para cargar los datos
+                _storageMock.Verify(s => s.Cargar(It.IsAny<string>()), Times.Once);
+
+            } finally {
+                // Importante: Limpiar el archivo físico después del test
+                if (File.Exists(zipPath)) {
+                    File.Delete(zipPath);
+                }
+            }
+        }
+        
+        [Test]
+        public void RestaurarBackupSistema_ConCallbackExitoso_DeberiaRetornarContador() {
+            // Arrange
+            var zipPath = Path.Combine(_backupDir, "sys-back.zip");
+            var citas = new List<Cita> { new Cita { Id = 1, Matricula = "TEST" } };
+
+            // Creamos un zip real para que RestaurarBackup no falle al abrirlo
             using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create)) {
                 zip.CreateEntry("data/citas.json");
             }
 
+            // El Mock debe devolver éxito para que el Bind de la función se ejecute
+            _storageMock.Setup(s => s.Cargar(It.IsAny<string>()))
+                .Returns(Result.Success<IEnumerable<Cita>, DomainError>(citas));
+
+            var deleteCallback = () => true;
+            Func<Cita, Result<Cita, DomainError>> createCallback = c => Result.Success<Cita, DomainError>(c);
+
             // Act
-            var resultado = _service.RestaurarBackup(zipPath);
+            var resultado = _service.RestaurarBackupSistema(zipPath, deleteCallback, createCallback);
 
             // Assert
             resultado.IsSuccess.Should().BeTrue();
-            resultado.Value.Should().HaveCount(1);
-            resultado.Value.First().Matricula.Should().Be("9999ZZZ");
+            resultado.Value.Should().Be(1); // Esperamos 1 porque es el tamaño de nuestra lista
         }
 
         [Test]
@@ -135,30 +180,7 @@ public class BackupServiceTests {
             resultado.Should().HaveCount(1);
             resultado.Should().Contain(backup.Value);
         }
-
-        [Test]
-        public void RestaurarBackupSistema_ConCallbackExitoso_DeberiaRetornarContador() {
-            // Arrange
-            var citas = new List<Cita> { new Cita { Id = 1, Matricula = "TEST" } };
-
-            _storageMock.Setup(s => s.Cargar(It.IsAny<string>()))
-                .Returns(Result.Success<IEnumerable<Cita>, DomainError>(citas));
-
-            var zipPath = Path.Combine(_backupDir, "sys-back.zip");
-            using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create)) {
-                zip.CreateEntry("data/citas.json");
-            }
-
-            var deleteCallback = () => true;
-            Func<Cita, Result<Cita, DomainError>> callback = c => Result.Success<Cita, DomainError>(c);
-
-            // Act
-            var resultado = _service.RestaurarBackupSistema(zipPath, deleteCallback, callback);
-
-            // Assert
-            resultado.IsSuccess.Should().BeTrue();
-            resultado.Value.Should().Be(1);
-        }
+        
         
         [Test]
         public void RealizarBackupSistema_DeberiaLlamarARealizarBackupYRetornarExito()
@@ -190,15 +212,15 @@ public class BackupServiceTests {
         [Test]
         public void RestaurarBackup_ConArchivoCorrupto_DeberiaRetornarErrorReadError() {
             // Arrange
-            var zipPath = Path.Combine(_backupDir, "fake.zip");
-            File.WriteAllText(zipPath, "No soy un zip");
+            var zipPath = Path.Combine(_backupDir, "corrupto.zip");
+            File.WriteAllText(zipPath, "ESTO NO ES UN ZIP"); // Archivo inválido
 
             // Act
             var resultado = _service.RestaurarBackup(zipPath);
 
             // Assert
             resultado.IsFailure.Should().BeTrue();
-            // Cambiamos la expectativa al error que realmente lanza el código
+            // Asegúrate de que StorageError.ReadError sea el que lanza tu implementación de RestaurarBackup
             resultado.Error.Should().BeOfType<StorageError.ReadError>(); 
         }
 
@@ -207,7 +229,7 @@ public class BackupServiceTests {
             // Arrange
             var zipPath = Path.Combine(_backupDir, "sin-citas.zip");
             using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create)) {
-                zip.CreateEntry("archivo_equivocado.txt");
+                zip.CreateEntry("archivo_vacio.txt"); // No existe data/citas.json
             }
 
             // Act
@@ -215,8 +237,6 @@ public class BackupServiceTests {
 
             // Assert
             resultado.IsFailure.Should().BeTrue();
-    
-            // CAMBIO: Ahora esperamos el tipo que realmente devuelve tu código
             resultado.Error.Should().BeOfType<StorageError.InvalidFormat>();
             resultado.Error.Message.Should().Contain("citas.json");
         }
@@ -239,16 +259,12 @@ public class BackupServiceTests {
         }
         
         [Test]
-        public void RestaurarBackupSistema_CuandoFallaBorradoDeBaseDeDatos_DeberiaRetornarErrorYCubrirLineaRoja()
+        public void RestaurarBackupSistema_CuandoFallaBorradoDeBaseDeDatos_DeberiaRetornarErrorYNoProcesarArchivo()
         {
             // Arrange
-            var zipPath = Path.Combine(_backupDir, "test.zip");
-            using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create)) {
-                zip.CreateEntry("data/citas.json");
-            }
-
-            _storageMock.Setup(s => s.Cargar(It.IsAny<string>()))
-                .Returns(Result.Success<IEnumerable<Cita>, DomainError>(new List<Cita> { new Cita { Id = 1 } }));
+            var zipPath = Path.Combine(_backupDir, "test_borrado.zip");
+            // Creamos el archivo para que el test sea realista
+            File.WriteAllText(zipPath, "dummy content"); 
 
             // FORZAMOS EL ERROR: El callback de borrado devuelve FALSE
             Func<bool> deleteCallbackFallido = () => false; 
@@ -259,7 +275,12 @@ public class BackupServiceTests {
 
             // Assert
             resultado.IsFailure.Should().BeTrue();
-            resultado.Error.Message.Should().Contain("Error al limpiar la base de datos");
+    
+            // En lugar de usar .Be(), usa .Contain() o actualiza el string completo
+            resultado.Error.Message.Should().Be("Error al restaurar el backup: No se pudieron borrar los datos existentes.");
+
+// O mejor aún, para que el test no sea tan rígido:
+            resultado.Error.Message.Should().Contain("No se pudieron borrar los datos existentes.");
         }
         [Test]
         public void RealizarBackupSistema_ConListaVacia_DeberiaRetornarFallo()

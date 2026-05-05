@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.IO;
+using FluentAssertions;
 using GestionITVPro.Errors.Storage;
 using GestionITVPro.Models;
 using GestionITVPro.Storage.Xml;

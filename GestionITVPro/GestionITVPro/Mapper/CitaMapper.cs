@@ -14,6 +14,23 @@ public static class CitaMapper {
     private const string DateTimeFormat = "s";
     private static readonly CultureInfo InvariantCulture = CultureInfo.InvariantCulture;
 
+    public static CitaFormData ToFormData(this Cita model) {
+        return new CitaFormData {
+            Id = model.Id,
+            Matricula = model.Matricula,
+            Marca = model.Marca,
+            Modelo = model.Modelo,
+            Cilindrada = model.Cilindrada,
+            Motor = model.Motor,
+            FechaInspeccion = model.FechaInspeccion,
+            FechaITV = model.FechaItv,
+            DniPropietario = model.DniPropietario,
+            CreatedAt = model.CreatedAt,
+            UpdatedAt = model.UpdatedAt,
+            IsDeleted = model.IsDeleted,
+            DeletedAt = model.DeletedAt
+        };
+    }
 
     public static Cita ToModel(this CitaDto dto) {
         var createdAt = DateTime.Parse(dto.CreatedAt, InvariantCulture);

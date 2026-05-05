@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.IO;
+using CSharpFunctionalExtensions;
 using FluentAssertions;
 using GestionITVPro.Errors.Common;
 using GestionITVPro.Models;

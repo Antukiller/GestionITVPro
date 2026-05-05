@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.IO;
+using FluentAssertions;
 using GestionITVPro.Enums;
 using GestionITVPro.Error.Cita;
 using GestionITVPro.Models;

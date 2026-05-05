@@ -1,4 +1,5 @@
-﻿using GestionITVPro.Error.Cita;
+﻿using System.IO;
+using GestionITVPro.Error.Cita;
 using GestionITVPro.Models;
 using GestionITVPro.Repositories.Binary;
 
