@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using GestionITVPro.Views;
+using GestionITVPro.Views.Main;
 using Serilog;
 
 namespace GestionITVPro.WPF.Views.Splash;

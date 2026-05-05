@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using GestionITVPro.WPF.ViewModels.Citas;
 
 namespace GestionITVPro.WPF.Views.Cita;
 

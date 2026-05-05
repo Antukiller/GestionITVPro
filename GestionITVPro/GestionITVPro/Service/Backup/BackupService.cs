@@ -1,6 +1,8 @@
-﻿using System.IO.Compression;
+﻿using System.IO;
+using System.IO.Compression;
 using CSharpFunctionalExtensions;
 using GestionITVPro.Config;
+using GestionITVPro.Errors.Backup;
 using GestionITVPro.Errors.Common;
 using GestionITVPro.Errors.Storage;
 using GestionITVPro.Models;
@@ -104,22 +106,36 @@ public class BackupService(
         return RealizarBackup(citas);
     }
 
-    public Result<int, DomainError> RestaurarBackupSistema(string archivoBackup, Func<bool> deleteAllCallback, Func<Cita, Result<Cita, DomainError>> createCallback, string? customImagesDirectory = null) {
-        return RestaurarBackup(archivoBackup)
-            .Bind(citas => {
-                _logger.Warning("Iniciando restauración de sistema. Eliminando datos actuales...");
-                
-                if (!deleteAllCallback()) 
-                    return Result.Failure<int, DomainError>(StorageErrors.WriteError("Error al limpiar la base de datos antes de restaurar."));
+    public Result<int, DomainError> RestaurarBackupSistema(string archivoBackup, 
+        Func<bool> deleteAllCallback, 
+        Func<Cita, Result<Cita, DomainError>> createCallback) {
+        // 1. Borrar todos los datos existentes
+        _logger.Information("Borrando datos existentes...");
+        var deleteResult = deleteAllCallback();
+        if (!deleteResult) {
+            _logger.Warning("No se pudieron borrar los datos existentes.");
+            return Result.Failure<int, DomainError>(
+                BackupErrors.RestorationError("No se pudieron borrar los datos existentes."));
+        }
 
-                int restaurados = 0;
-                foreach (var cita in citas) {
-                    var res = createCallback(cita);
-                    if (res.IsSuccess) restaurados++;
+       return RestaurarBackup(archivoBackup)
+            .Bind(citas => {
+                var contador = 0;
+                DomainError? primerError = null;
+
+                foreach (var c in citas) {
+                    var result = createCallback(c);
+                    if (result.IsSuccess)
+                        contador++;
+                    else if (primerError == null)
+                        primerError = result.Error;
                 }
 
-                _logger.Information("Restauración completada. {n} citas importadas.", restaurados);
-                return Result.Success<int, DomainError>(restaurados);
+                if (primerError != null && contador == 0)
+                    return Result.Failure<int, DomainError>(primerError);
+
+                _logger.Information("Restauracion completada. Total registros: {count}", contador);
+                return Result.Success<int, DomainError>(contador);
             });
     }
 }

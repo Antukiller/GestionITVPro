@@ -118,6 +118,24 @@ public class CitasService(
         return repository.CountCita(includeDeleted);
     }
     
+
+    public int CountCompletadas() {
+        // Citas cuya fecha ya pasó (asumiendo que no están borradas)
+        return repository.GetAll(null, null, null, null, DateTime.Today.AddDays(-1), 1, int.MaxValue, false).Count();
+    }
+
+    public int CountPendientes() {
+        // Citas de hoy en adelante
+        return repository.GetAll(null, null, null, DateTime.Today, null, 1, int.MaxValue, false).Count();
+    }
+
+    // Para las métricas de motor (opcional, si quieres que el service haga el trabajo pesado)
+    public Dictionary<Motor, int> GetEstadisticasMotor() {
+        var todas = repository.GetAll(null, null, null, null, null, 1, int.MaxValue, false);
+        return todas.GroupBy(c => c.Motor)
+            .ToDictionary(g => g.Key, g => g.Count());
+    }
+    
     
     // Funciones Auxiliares
 

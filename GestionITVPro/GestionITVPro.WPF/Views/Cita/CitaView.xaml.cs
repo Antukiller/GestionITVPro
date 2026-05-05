@@ -1,5 +1,6 @@
 ﻿using System.Windows.Controls;
 using System.Windows.Input;
+using GestionITVPro.WPF.ViewModels.Citas;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GestionITVPro.WPF.Views.Cita;
@@ -22,6 +23,6 @@ public partial class CitaView : Page {
     /// </summary>
     
     private void OnCitaDoubleClick(object sender, MouseButtonEventArgs e) {
-        if (DataContext id CitaViewModel vm &&b vm.ViewCommand.CanExecute(null)) vm.ViewCommand.CanExecute(null);
+        if (DataContext is CitaViewModel vm && vm.ViewCommand.CanExecute(null)) vm.ViewCommand.CanExecute(null);
     }
 }

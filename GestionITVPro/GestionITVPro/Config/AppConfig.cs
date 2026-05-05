@@ -1,4 +1,6 @@
-﻿namespace GestionITVPro.Config;
+﻿using System.IO;
+
+namespace GestionITVPro.Config;
 using System.Globalization;
 using Microsoft.Extensions.Configuration;
 

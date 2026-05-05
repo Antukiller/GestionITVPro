@@ -1,61 +1,52 @@
-﻿using System.Windows;
-using System.Windows.Controls;
-using Microsoft.Extensions.DependencyInjection;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GestionITVPro.Models;
+using GestionITVPro.Service.Citas;
+using GestionITVPro.Service.Report;
 using Serilog;
-using GestionITVPro.WPF.ViewModels; // Asegúrate de que este namespace sea el correcto
-using GestionITVPro.WPF.Views.Vehiculos; // Namespace donde tengas la vista de Vehículos
-using GestionITVPro.WPF.Views.Graficos;
-using GestionITVPro.WPF.Views.Backup;
 
-namespace GestionITVPro.WPF.Views.Dashboard
+namespace GestionITVPro.WPF.ViewModels.Dashboard;
+
+public partial class DashboardView : ObservableObject 
 {
-    /// <summary>
-    /// Página del panel de control (Dashboard) versión Gaming.
-    /// Centrado exclusivamente en la gestión de vehículos.
-    /// </summary>
-    public partial class DashboardView : Page {
-        public DashboardView() {
-            InitializeComponent();
+    private readonly ILogger _logger = Log.ForContext<DashboardViewModel>();
+    private readonly ICitasService _citasService;
+    private readonly IReportService _reportService;
 
-            // Corregido: DashboardViewModel (estaba como VieModel)
-            var vm = App.ServiceProvider.GetRequiredService<DashboardViewModel>();
-            
-            // Asignamos la acción de navegación
-            vm.NavigateAction = OnNavigate;
-            
-            DataContext = vm;
+    [ObservableProperty] 
+    private InformeCita _informe;
 
-            Log.Debug("📊 DashboardView Gaming cargado correctamente");
+    // Acción para comunicar la navegación a la View
+    public Action<string>? NavigateAction { get; set; }
+
+    public DashboardView(ICitasService citasService, IReportService reportService) 
+    {
+        _citasService = citasService;
+        _reportService = reportService;
+        LoadStatistics();
+    }
+
+    private void LoadStatistics() 
+    {
+        try 
+        {
+            // Obtenemos todas las citas activas para generar las estadísticas
+            var citas = _citasService.GetAll(null, null, null, null, null, 1, int.MaxValue, false);
+            Informe = _reportService.GenerarInformeEstadistico(citas);
         }
-
-        /// <summary>
-        /// Maneja la navegación desde el Dashboard hacia otras secciones.
-        /// </summary>
-        private void OnNavigate(string view) {
-            // Buscamos la ventana principal para acceder al Frame de navegación
-            var mainWindow = Window.GetWindow(this) as MainWindow;
-            
-            if (mainWindow == null) return;
-
-            switch (view)
-            {
-                case "Vehiculos":
-                    // Si antes tenías "Estudiantes", ahora navegamos a VehiculosView
-                    mainWindow.MainFrame.Navigate(new CitaView());
-                    break;
-
-                case "Graficos":
-                    mainWindow.MainFrame.Navigate(new GraficosView());
-                    break;
-
-                case "Backup":
-                    mainWindow.MainFrame.Navigate(new BackupView());
-                    break;
-                
-                default:
-                    Log.Warning("⚠️ Intento de navegación a una vista no definida: {View}", view);
-                    break;
-            }
+        catch (Exception ex) 
+        {
+            _logger.Error(ex, "❌ Error al cargar estadísticas");
         }
+    }
+
+    [RelayCommand]
+    private void Refrescar() => LoadStatistics();
+
+    [RelayCommand]
+    private void VerGraficos() 
+    {
+        // Solo lanzamos la navegación si la vista está escuchando
+        NavigateAction?.Invoke("Graficos");
     }
 }

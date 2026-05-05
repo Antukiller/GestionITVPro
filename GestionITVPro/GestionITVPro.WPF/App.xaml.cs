@@ -5,6 +5,7 @@ using System.Windows.Threading;
 using GestionITVPro.Config;
 using GestionITVPro.Infrastructure;
 using GestionITVPro.Views;
+using GestionITVPro.Views.Main;
 using GestionITVPro.WPF.Views.Splash;
 using Serilog;
 using Serilog.Debugging;

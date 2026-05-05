@@ -1,15 +1,16 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GestionITVPro.Enums;
+using GestionITVPro.Mapper;
 using GestionITVPro.Service.Citas;
 using GestionITVPro.Service.Dialogs;
 using GestionITVPro.Validator;
-using GestionITVPro.Models;
 using GestionITVPro.WPF.ViewModels.Form;
-using GestionITVPro.Mappers; // Asegúrate de tener tus extensiones ToModel() aquí
+using GestionITVPro.Mappers;
+using GestionITVPro.Models; // Asegúrate de tener tus extensiones ToModel() aquí
 using Serilog;
 
-namespace GestionITVPro.WPF.ViewModels.Cita;
+namespace GestionITVPro.WPF.ViewModels.Citas;
 
 public partial class CitaEditViewModel(
       Cita cita,

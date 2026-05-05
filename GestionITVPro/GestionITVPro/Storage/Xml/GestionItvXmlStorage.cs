@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.IO;
+using CSharpFunctionalExtensions;
 using GestionITVPro.Config;
 using GestionITVPro.Dto;
 using GestionITVPro.Errors.Common;

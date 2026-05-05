@@ -40,7 +40,16 @@ public interface IReportService {
     /// <param name="fileName">Nombre del archivo de destino.</param>
     /// <returns>Result indicando éxito o error de almacenamiento.</returns>
     Result<bool, DomainError> GuardarInformeHtml(string html, string fileName);
-
+    
+    /// <summary>
+    ///     Guarda el informe HTML en un archivo.
+    /// </summary>
+    /// <param name="html">Contenido HTML.</param>
+    /// <param name="fileName">Nombre del archivo.</param>
+    /// <returns>
+    ///     Result con true si se guardó correctamente o error <see cref="Errors.Report.ReportErrors.StorageError(string)" />.
+    /// </returns>
+    Result<bool, DomainError> GuardarInforme(string html, string fileName);
     /// <summary>
     /// Exporta el informe HTML a formato PDF.
     /// </summary>

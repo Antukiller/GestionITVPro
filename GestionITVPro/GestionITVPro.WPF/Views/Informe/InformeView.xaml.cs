@@ -2,7 +2,7 @@
 using Microsoft.Testing.Platform.Services;
 
 namespace GestionITVPro.WPF.Views.Informe;
-
+/*
 
 /// <summary>
 ///     Página de generación de informes.
@@ -15,4 +15,4 @@ public partial class InformeView : Page {
         InitializeComponent();
         DataContext = App.ServiceProvider.GetRequiredService<InformesViewModel>();
     }
-}
+}*/

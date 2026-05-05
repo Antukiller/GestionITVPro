@@ -1,7 +1,10 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.IO;
+using System.Text;
+using CSharpFunctionalExtensions;
 using GestionITVPro.Enums;
 using GestionITVPro.Error.Cita;
 using GestionITVPro.Errors.Common;
+using GestionITVPro.Errors.Report;
 using GestionITVPro.Models;
 using Serilog;
 
@@ -22,27 +25,26 @@ public class ReportService : IReportService {
     {
         var list = citas.ToList();
         var hoy = DateTime.Today;
-        var proximaSemana = hoy.AddDays(7);
 
         return new InformeCita
         {
             ListadoCitas = list.OrderBy(c => c.FechaItv),
             TotalCitas = list.Count,
 
-            // Conteo por tipos de motor
+            // Motores
             Gasolina = list.Count(c => c.Motor == Motor.Gasolina),
             Diesel = list.Count(c => c.Motor == Motor.Diesel),
             Hibrido = list.Count(c => c.Motor == Motor.Hibrido),
             Electrico = list.Count(c => c.Motor == Motor.Electrico),
 
-            // Métricas de fechas
+            // Fechas y Estado Operativo
             CitasParaHoy = list.Count(c => c.FechaItv.Date == hoy),
             CitasAtrasadas = list.Count(c => c.FechaItv.Date < hoy && !c.IsDeleted),
-            CitasProximaSemana = list.Count(c => c.FechaItv.Date > hoy && c.FechaItv.Date <= proximaSemana),
-            UltimaCitaProgramada = list.Any() ? list.Max(c => c.FechaItv) : null,
-
-            // Otras métricas
-            CilindradaMedia = list.Any() ? list.Average(c => c.Cilindrada) : 0,
+        
+            // Definimos "Completada" como una cita cuya fecha ya pasó
+            CitasCompletadas = list.Count(c => c.FechaItv.Date < hoy), 
+        
+            UltimaCitaProgramada = list.Any() ? list.Max(c => c.FechaItv) : null
         };
     }
 
@@ -118,7 +120,6 @@ public class ReportService : IReportService {
             <li><strong>Eléctrico:</strong> {stats.Electrico}</li>
         </ul>
         <hr>
-        <h3>Total Combustión: {stats.TotalCombustion}</h3>
         <h3>Total ECO: {stats.TotalEco}</h3>
     </body>
     </html>";
@@ -133,6 +134,26 @@ public class ReportService : IReportService {
         }
         catch (Exception ex) {
             return Result.Failure<bool, DomainError>(CitaErrors.DatabaseError($"No se pudo guardar el archivo: {ex.Message}"));
+        }
+    }
+
+    public Result<bool, DomainError> GuardarInforme(string html, string fileName) {
+        var directory = _reportDirectory;
+        _logger.Information("Guardando informe en directorio {Directory}", directory);
+
+        try {
+            if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+
+            var filePath = Path.Combine(directory, fileName);
+            File.WriteAllText(filePath, html, Encoding.UTF8);
+
+            _logger.Information("Informe guardado correctamente en {FilePath}", filePath);
+            return Result.Success<bool, DomainError>(true);
+        }
+        catch (Exception ex) {
+            _logger.Error(ex, "Error al guardar informe");
+            return Result.Failure<bool, DomainError>(
+                ReportErrors.SaveError(ex.Message));
         }
     }
 

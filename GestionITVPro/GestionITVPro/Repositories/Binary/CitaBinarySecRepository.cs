@@ -1,4 +1,5 @@
 ﻿
+using System.IO;
 using System.Text;
 using GestionITVPro.Errors.Common;
 using GestionITVPro.Repositories.Base;

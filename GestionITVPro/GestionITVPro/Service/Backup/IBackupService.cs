@@ -65,16 +65,13 @@ public interface IBackupService {
     /// <param name="archivoBackup">Ruta del archivo ZIP.</param>
     /// <param name="deleteAllCallback">Función para borrar todos los datos existentes.</param>
     /// <param name="createCallback">Función para crear cada persona en el repositorio.</param>
-    /// <param name="customImagesDirectory">Directorio personalizado para imágenes (opcional).</param>
     /// <returns>
     ///     Result con el número de personas restauradas o error:
     ///     <see cref="BackupErrors.FileNotFound(string)" />,
     ///     <see cref="BackupErrors.InvalidBackupFile(string)" /> o
     ///     <see cref="BackupErrors.RestorationError(string)" />.
     /// </returns>
-    Result<int, DomainError> RestaurarBackupSistema(
-        string archivoBackup,
+    Result<int, DomainError> RestaurarBackupSistema(string archivoBackup,
         Func<bool> deleteAllCallback,
-        Func<Cita, Result<Cita, DomainError>> createCallback,
-        string? customImagesDirectory = null);
+        Func<Cita, Result<Cita, DomainError>> createCallback);
 }
