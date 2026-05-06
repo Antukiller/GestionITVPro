@@ -117,7 +117,7 @@ public static class DependenciesProvider {
             new LruCache<int, Cita>(AppConfig.CacheSize));
     }
 
-   /* private static void RegisterServices(IServiceCollection services) {
+    private static void RegisterServices(IServiceCollection services) {
         // 1. DialogService (Asegúrate de que la clase se llame DialogService o lo que corresponda)
         services.AddSingleton<IDialogService, DialogService>();
     
@@ -136,14 +136,14 @@ public static class DependenciesProvider {
         // 5. CitaService (Simplificado: el contenedor ya sabe resolver los parámetros del constructor)
         services.AddScoped<ICitaService, CitaService>();
     }
-   /* private static void RegisterViewModels(IServiceCollection service) {
+    private static void RegisterViewModels(IServiceCollection service) {
         service.AddTransient<MainViewModel>();
         service.AddTransient<DashboardViewModel>();
         service.AddTransient<VehiculoViewModel>();
         service.AddTransient<GraficosViewModel>();
         service.AddTransient<BackupViewModel>();
         service.AddTransient<ImportExportViewModel>();
-    }*/
+    }
 
     private static void CleanData() {
         // Limpiar directporios de reports o SeedData están activos

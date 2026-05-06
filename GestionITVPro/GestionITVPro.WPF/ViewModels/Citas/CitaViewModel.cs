@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -10,6 +9,7 @@ using GestionITVPro.Message;
 using GestionITVPro.Models;
 using GestionITVPro.Service.Citas;
 using GestionITVPro.Service.Dialogs;
+using GestionITVPro.WPF.Mapper;
 using GestionITVPro.WPF.Views.Cita;
 using Serilog;
 
@@ -27,7 +27,7 @@ public partial class CitaViewModel : ObservableObject {
 
     [ObservableProperty] private bool _isLoading;
 
-    [ObservableProperty] private bool _mostrarELiminados;
+    [ObservableProperty] private bool _mostrarEliminados;
 
     [ObservableProperty] private TipoOrdenamiento _ordenActual = TipoOrdenamiento.Matricula;
 
@@ -64,8 +64,8 @@ public partial class CitaViewModel : ObservableObject {
 
     public int[] TamanosPagina => [5, 10, 25, 50];
 
-    public bool PuedeIrAnteriorPagina => PaginaActual > 1;
-    public bool PuedeIrPaginaSiguiente => PaginaActual < TotalPaginas;
+    public bool PuedeIrAPaginaAnterior => PaginaActual > 1;
+    public bool PuedeIrAPaginaSiguiente => PaginaActual < TotalPaginas;
 
     partial void OnSearchTextChanged(string value) {
         FilterCitas();
@@ -75,8 +75,8 @@ public partial class CitaViewModel : ObservableObject {
         FilterCitas();
     }
 
-    partial void OnMostrarEliminadosChanged() {
-        LoadCitas();
+    partial void OnMostrarEliminadosChanged(bool value) {
+        FilterCitas();
     }
 
     partial void OnPaginaActualChanged(int value) {
@@ -85,7 +85,7 @@ public partial class CitaViewModel : ObservableObject {
         PaginaAnteriorCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnTamañoPaginaChanged(int value) {
+    partial void OnTamanoPaginaChanged(int value) {
         PaginaActual = 1;
         FilterCitas();
         PaginaSiguienteCommand.NotifyCanExecuteChanged();
@@ -93,7 +93,7 @@ public partial class CitaViewModel : ObservableObject {
         
     }
 
-    partial void OnSelectCitaChanged(CitaItemViewModel? value) {
+    partial void OnSelectedCitaChanged(CitaItemViewModel? value) {
         EditCommand.NotifyCanExecuteChanged();
         DeleteCommand.NotifyCanExecuteChanged();
         ViewCommand.NotifyCanExecuteChanged();
@@ -118,7 +118,7 @@ public partial class CitaViewModel : ObservableObject {
         var filtered = _todasLasCitas.AsEnumerable();
         
         // Filtro de eliminados (si no se muestran, los quitamos)
-        if (!MostrarELiminados)
+        if (!MostrarEliminados)
             filtered = filtered.Where(e => !e.IsDeleted);
         
         if (MotorSeleccionado != "Todos" && !string.IsNullOrEmpty(MotorSeleccionado))
@@ -146,7 +146,7 @@ public partial class CitaViewModel : ObservableObject {
         var pagina = listaFiltradaOrdenada
             .Skip((PaginaActual - 1) * TamanoPagina)
             .Take(TamanoPagina)
-            .Select(e => e.ToItemVieModel())
+            .Select(e => e.ToItemViewModel())
             .ToList();
 
         Citas = new ObservableCollection<CitaItemViewModel>(pagina);
@@ -183,7 +183,7 @@ public partial class CitaViewModel : ObservableObject {
         StatusMessage = "Cargando citas...";
 
         try {
-            var result = _citasService.GetCitasOrderBy(OrdenActual, 1, int.MaxValue, MostrarELiminados);
+            var result = _citasService.GetCitasOrderBy(OrdenActual, 1, int.MaxValue, MostrarEliminados);
             _todasLasCitas = result.ToList();
             FilterCitas();
         }
@@ -243,7 +243,7 @@ public partial class CitaViewModel : ObservableObject {
         };
 
         if (editWindow.ShowDialog() == true) {
-            SelectedCita.UpdateFromData(editViewModel.FormData);
+            SelectedCita.UpdateFromFormData(editViewModel.FormData);
 
             var index = _todasLasCitas.FindIndex(e => e.Id == SelectedCita.Id);
             if (index != -1) _todasLasCitas[index] = editViewModel.FormData.ToModel();
@@ -280,7 +280,7 @@ public partial class CitaViewModel : ObservableObject {
                 var index = _todasLasCitas.FindIndex(e => e.Id == SelectedCita.Id);
                 if (index != -1) _todasLasCitas[index] = _todasLasCitas[index] with { IsDeleted = true };
 
-                if (!MostrarELiminados) Citas.Remove(SelectedCita);
+                if (MostrarEliminados) Citas.Remove(SelectedCita);
             }
             else {
                 _todasLasCitas.RemoveAll(e => e.Id == SelectedCita.Id);

@@ -25,6 +25,8 @@ public partial class CitaItemViewModel : ObservableObject {
 
     [ObservableProperty] private DateTime _fechaItv;
 
+    [ObservableProperty] private bool _isDeleted;
+
     [ObservableProperty] private string _dniPropietario = string.Empty;
 
 

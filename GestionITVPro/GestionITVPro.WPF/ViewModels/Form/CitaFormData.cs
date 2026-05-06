@@ -20,8 +20,11 @@ public partial class CitaFormData : ObservableObject, IDataErrorInfo {
     [ObservableProperty] private string _modelo = string.Empty;
 
     [ObservableProperty] private int _cilindrada;
-    
 
+    [ObservableProperty] private int id;
+
+    [ObservableProperty] private Motor _motor;
+    
     [ObservableProperty] private string _dniPropietario = string.Empty;
 
     [ObservableProperty] private DateTime _fechaItv = DateTime.UtcNow;
@@ -70,6 +73,10 @@ public partial class CitaFormData : ObservableObject, IDataErrorInfo {
 
         nameof(FechaItv) when !FechaItv.IsValidFechaCita()
             => "La fecha de matriculación no puede ser furtura",
+        
+        nameof(DniPropietario) when !DniPropietario.IsValidDniPropietario()
+            => "El dni del propietario es obligatorio",
+        
         
 
         nameof(DniPropietario) when !DniPropietario.IsValidDniPropietario()

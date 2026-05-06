@@ -6,8 +6,8 @@ using GestionITVPro.Service.Citas;
 using GestionITVPro.Service.Dialogs;
 using GestionITVPro.Validator;
 using GestionITVPro.WPF.ViewModels.Form;
-using GestionITVPro.Mappers;
-using GestionITVPro.Models; // Asegúrate de tener tus extensiones ToModel() aquí
+using GestionITVPro.Models;
+using GestionITVPro.WPF.Mapper; // Asegúrate de tener tus extensiones ToModel() aquí
 using Serilog;
 
 namespace GestionITVPro.WPF.ViewModels.Citas;
