@@ -6,6 +6,7 @@ using GestionITVPro.Config;
 using GestionITVPro.Infrastructure;
 using GestionITVPro.Views;
 using GestionITVPro.Views.Main;
+using GestionITVPro.WPF.Infrastructure;
 using GestionITVPro.WPF.Views.Splash;
 using Serilog;
 using Serilog.Debugging;
@@ -17,13 +18,13 @@ namespace GestionITVPro.WPF;
 /// Clase principal de la aplicacion WPF.
 /// Controla el ciclo de vida de la aplicación.
 /// </summary>
-public partial class App {
+public partial class App : Application {
     /// <summary>
     /// Proveedor  de servicios para inyeccion de dependencias.
     /// Acceso global desde cualquier parte de la app:
     ///   var service = App.ServiceProvider.GetRequiredService<IPersonasService>();
     /// </summary>
-    public static IServiceProvider ServiceProvider { get; set; } = null!;
+    public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
     // ====================================================================
     // OnStartup - Se ejecuta al iniciar la aplicación
@@ -38,7 +39,7 @@ public partial class App {
         Log.Information("🚀☠️ Aplicación WPF iniciada 🙈🙊");
         ;
 
-        ServiceProvider = DependenciesProvider.BuildServiceProvider();
+        ServiceProvider = FrontDependenciesProvider.BuildServiceProvider();
 
         Log.Information("✅ ServiceProvider creado con todos los servicios");
 

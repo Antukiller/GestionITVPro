@@ -26,7 +26,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace GestionITVPro.Infrastructure;
 
 public static class DependenciesProvider {
-    public static IServiceProvider BuildServiceProvider() {
+    public static IServiceProvider BuildServiceProvider(Action<IServiceCollection>? configureAdditional = null) {
         var services = new ServiceCollection();
 
         CleanData();
@@ -35,8 +35,10 @@ public static class DependenciesProvider {
         RegisterValidators(services);
         RegisterStorages(services);
         RegisterRepositories(services);
-        //RegisterServices(services);
-        //RegisterViewModels(services);
+        RegisterServices(services);
+        
+        // Permitir extensión con servicios adicionales
+        configureAdditional?.Invoke(services);
         
         // Construir el proveedpr de servicios y devolverlo
         return services.BuildServiceProvider();
@@ -71,6 +73,7 @@ public static class DependenciesProvider {
                     AppConfig.DropData,
                     AppConfig.SeedData),
                 // ---------------------------
+                "ado" => CreateDapperRepository(AppConfig.DropData, AppConfig.SeedData),
                 "dapper" => CreateDapperRepository(AppConfig.DropData, AppConfig.SeedData),
                 "efcore" => CreateEfRepository(AppConfig.DropData, AppConfig.SeedData),
                 _ => new CitaMemoryRepository(AppConfig.DropData, AppConfig.SeedData)
@@ -134,16 +137,9 @@ public static class DependenciesProvider {
         services.AddTransient<IImportExportService, ImportExportService>();
     
         // 5. CitaService (Simplificado: el contenedor ya sabe resolver los parámetros del constructor)
-        services.AddScoped<ICitaService, CitaService>();
+        services.AddScoped<ICitasService, CitasService>();
     }
-    private static void RegisterViewModels(IServiceCollection service) {
-        service.AddTransient<MainViewModel>();
-        service.AddTransient<DashboardViewModel>();
-        service.AddTransient<VehiculoViewModel>();
-        service.AddTransient<GraficosViewModel>();
-        service.AddTransient<BackupViewModel>();
-        service.AddTransient<ImportExportViewModel>();
-    }
+    
 
     private static void CleanData() {
         // Limpiar directporios de reports o SeedData están activos
