@@ -49,7 +49,7 @@ public partial class CitaEditViewModel(
                return;
           }
 
-          if (!FormData.FechaItv.IsValidFechaCita()) {
+          if (!FormData.FechaItv.IsValidFechaPasada()) {
                _dialogService.ShowWarning(
                     "La fecha de matriculación no puede ser futura.",
                     "Errores de validación");

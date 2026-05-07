@@ -9,150 +9,150 @@
 
     <Grid Margin="25">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- 0: Header -->
-            <RowDefinition Height="Auto" /> <!-- 1: Acciones Principales -->
-            <RowDefinition Height="*" />    <!-- 2: Área de Trabajo -->
-            <RowDefinition Height="Auto" /> <!-- 3: Paginación -->
-            <RowDefinition Height="Auto" /> <!-- 4: Footer -->
-        </Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <RowDefinition Height="Auto" /> <RowDefinition Height="*" />    <RowDefinition Height="Auto" /> <RowDefinition Height="Auto" /> <RowDefinition Height="Auto" /> </Grid.RowDefinitions>
 
-        <!-- 1. HEADER -->
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
             <TextBlock Text="SISTEMA DE INSPECCIÓN TÉCNICA" Foreground="#00F2FF" FontSize="11" FontWeight="ExtraBold" Margin="0,0,0,5"/>
             <TextBlock Text="GESTIÓN DE CITAS" Foreground="White" FontSize="32" FontWeight="Black"/>
             <Separator Background="#1A1A23" Margin="0,10,0,0"/>
         </StackPanel>
 
-        <!-- 2. TOOLBAR PRINCIPAL -->
-        <Border Grid.Row="1" Background="#16161D" CornerRadius="10" Padding="15" Margin="0,0,0,20" BorderBrush="#222" BorderThickness="1">
-            <DockPanel LastChildFill="False">
-                <!-- Botones de Acción (Izquierda) -->
-                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                    <Button x:Name="BtnNuevo" 
-                            Command="{Binding NewCommand}"
-                            Content="➕ NUEVO" Width="120" Height="40" Margin="0,0,20,0" Background="#00F2FF" Foreground="#0A0A0C" FontWeight="Black" Cursor="Hand" BorderThickness="0">
-                        <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
-                    </Button>
-                    
-                    <Button x:Name="BtnVer" 
-                            Command="{Binding ViewCommand}"
-                            Content="👁️ VER" Width="100" Height="40" Margin="0,0,20,0" Background="#1A1A23" Foreground="White" BorderBrush="#333" Cursor="Hand"/>
-                    
-                    <Button x:Name="BtnEditar" 
-                            Command="{Binding EditCommand}"
-                            Content="✏️ EDITAR" Width="100" Height="40" Margin="0,0,20,0" Background="#1A1A23" Foreground="White" BorderBrush="#333" Cursor="Hand"/>
-                    
-                    <Button x:Name="BtnEliminar" 
-                            Command="{Binding DeleteCommand}"
-                            Content="🗑️ ELIMINAR" Width="110" Height="40" Background="#1A1A23" Foreground="#FF0055" BorderBrush="#441122" Cursor="Hand"/>
-                </StackPanel>
-
-                <!-- Filtros y Búsqueda (Derecha) -->
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                    <Rectangle Width="1" Height="25" Fill="#333" Margin="20,0,25,0"/>
-                    
-                    <!-- Filtro Motor -->
-                    <TextBlock Text="MOTOR:" Foreground="#555" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <ComboBox x:Name="CbFiltroMotor" 
-                              SelectedItem="{Binding SelectedMotorFilter}"
-                              Width="130" Height="32" Background="#1A1A23" Foreground="White" BorderBrush="#333" Margin="0,0,20,0">
-                        <!-- Nota: Estos items deberían cargarse preferiblemente desde el ViewModel si usas Enums -->
-                        <ComboBoxItem Content="⚡ TODOS" IsSelected="True"/>
-                        <ComboBoxItem Content="⛽ GASOLINA"/>
-                        <ComboBoxItem Content="🛢️ DIÉSEL"/>
-                        <ComboBoxItem Content="🔌 HÍBRIDO"/>
-                        <ComboBoxItem Content="🔋 ELÉCTRICO"/>
-                    </ComboBox>
-
-                    <!-- Buscador -->
-                    <TextBlock Text="🔍" Foreground="#555" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="16"/>
+        <Border Grid.Row="1" Background="#16161D" CornerRadius="10" Padding="15" Margin="0,0,15,0" BorderBrush="#222" BorderThickness="1">
+            <DockPanel LastChildFill="True">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="🔍" Foreground="#00F2FF" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="18"/>
                     <TextBox x:Name="TxtBuscar" 
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                             Width="150" Height="32" Background="Transparent" Foreground="White" BorderBrush="#00F2FF" BorderThickness="0,0,0,1" VerticalContentAlignment="Center" Padding="5,0" />
-                    
-                    <!-- Recargar -->
-                    <Button x:Name="BtnRefrescar" 
-                            Command="{Binding LoadStatisticsCommand}"
-                            Content="🔄 RECARGAR" Width="120" Height="35" Margin="25,0,0,0" Background="#1A1A23" Foreground="#00F2FF" BorderBrush="#00F2FF" Cursor="Hand" FontWeight="Bold"/>
+                             Width="180" Height="34" Background="#0A0A0C" Foreground="White" BorderBrush="#333" VerticalContentAlignment="Center" Padding="5,0" />
+
+                    <Rectangle Width="1" Height="25" Fill="#333" Margin="25,0"/>
+
+                    <TextBlock Text="DESDE:" Foreground="#555" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <DatePicker SelectedDate="{Binding FechaInicio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                Width="140" Height="34" 
+                                Background="#1A1A23" BorderBrush="#333" VerticalAlignment="Center"/>
+
+                    <TextBlock Text="HASTA:" Foreground="#555" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" Margin="20,0,12,0"/>
+                    <DatePicker SelectedDate="{Binding FechaFin, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                Width="140" Height="34" 
+                                Background="#1A1A23" BorderBrush="#333" VerticalAlignment="Center"/>
+
+                    <Rectangle Width="1" Height="25" Fill="#333" Margin="25,0"/>
+
+                    <TextBlock Text="MOTOR:" Foreground="#555" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <ComboBox x:Name="CbFiltroMotor" 
+                              SelectedValue="{Binding MotorSeleccionado, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                              SelectedValuePath="Content"
+                              Width="130" Height="34" Background="#1A1A23">
+                        <ComboBoxItem Content="TODOS" IsSelected="True"/>
+                        <ComboBoxItem Content="GASOLINA"/>
+                        <ComboBoxItem Content="DIÉSEL"/>
+                        <ComboBoxItem Content="HÍBRIDO"/>
+                        <ComboBoxItem Content="ELÉCTRICO"/>
+                    </ComboBox>
                 </StackPanel>
             </DockPanel>
         </Border>
 
-        <!-- 3. ÁREA DE TRABAJO -->
-        <Grid Grid.Row="2">
-            <Border Background="#0F0F12" CornerRadius="10" BorderBrush="#1A1A23" BorderThickness="1"/>
+        <Border Grid.Row="2" Background="#0F0F12" CornerRadius="10" BorderBrush="#1A1A23" BorderThickness="1" Margin="0,15,0,0">
+           <DataGrid ItemsSource="{Binding Citas}" 
+          SelectedItem="{Binding SelectedCita}" 
+          AutoGenerateColumns="False" 
+          Background="#0F0F12" 
+          Foreground="White" 
+          BorderThickness="0" 
+          GridLinesVisibility="None" 
+          CanUserAddRows="False" 
+          IsReadOnly="True" 
+          SelectionMode="Single"
+          SelectionUnit="FullRow"
+          HeadersVisibility="Column"
+          FontSize="16" 
+          RowHeight="50"
+          MouseDoubleClick="OnCitaDoubleClick">
 
-            <DockPanel>
-                <!-- Toolbar de estado superior -->
-                <Border x:Name="AcademicToolbar" DockPanel.Dock="Top" Background="#2200F2FF" BorderBrush="#00F2FF" BorderThickness="0,0,0,1" Padding="10,5"> 
-                    <Grid>
-                        <StackPanel Orientation="Horizontal">
-                            <!-- El ProgressBar puede ocultarse si no hay carga activa usando Visibility -->
-                            <ProgressBar IsIndeterminate="True" Width="80" Height="2" VerticalAlignment="Center" Background="Transparent" Foreground="#00F2FF" BorderThickness="0"/>
-                            <TextBlock Text="{Binding StatusMessage}" Foreground="#00F2FF" FontSize="10" FontWeight="Bold" Margin="15,0,0,0" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <TextBlock Text="SISTEMA LISTO" HorizontalAlignment="Right" Foreground="#00F2FF" FontSize="9" FontWeight="Black" VerticalAlignment="Center"/>
-                    </Grid>
-                </Border>
+    <DataGrid.CellStyle>
+        <Style TargetType="DataGridCell">
+            <Setter Property="Background" Value="#0F0F12"/> 
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,0"/> 
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#3300F2FF"/> 
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </DataGrid.CellStyle>
 
-                <!-- TABLA DE DATOS (DataGrid) -->
-                <DataGrid ItemsSource="{Binding Citas}" 
-                          SelectedItem="{Binding SelectedCita}"
-                          AutoGenerateColumns="False" 
-                          Background="Transparent" 
-                          Foreground="White"
-                          BorderThickness="0" 
-                          GridLinesVisibility="None"
-                          RowBackground="Transparent"
-                          AlternatingRowBackground="#08080A"
-                          CanUserAddRows="False"
-                          IsReadOnly="True"
-                          FontSize="13"
-                          MouseDoubleClick="OnCitaDoubleClick">
-                    
-                    <DataGrid.ColumnHeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="#16161D"/>
-                            <Setter Property="Foreground" Value="#555"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Padding" Value="10,12"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            <Setter Property="BorderBrush" Value="#222"/>
-                        </Style>
-                    </DataGrid.ColumnHeaderStyle>
+    <DataGrid.RowStyle>
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="#0F0F12"/> 
+            <Setter Property="Foreground" Value="White"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#16161D"/> 
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </DataGrid.RowStyle>
 
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="MATRÍCULA" Binding="{Binding Matricula}" Width="1.2*"/>
-                        <DataGridTextColumn Header="MARCA" Binding="{Binding Marca}" Width="*"/>
-                        <DataGridTextColumn Header="MODELO" Binding="{Binding Modelo}" Width="*"/>
-                        <DataGridTextColumn Header="MOTOR" Binding="{Binding Motor}" Width="0.8*"/>
-                        <DataGridTextColumn Header="FECHA ITV" Binding="{Binding FechaItv, StringFormat=dd/MM/yyyy}" Width="*"/>
-                        <DataGridTextColumn Header="INSPECCIÓN" Binding="{Binding FechaInspeccion, StringFormat=dd/MM/yyyy}" Width="*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </DockPanel>
-        </Grid>
+    <DataGrid.ColumnHeaderStyle>
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#16161D"/>
+            <Setter Property="Foreground" Value="#00F2FF"/>
+            <Setter Property="FontSize" Value="14"/> <Setter Property="FontWeight" Value="ExtraBold"/>
+            <Setter Property="Padding" Value="15,12"/> 
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="#222"/>
+        </Style>
+    </DataGrid.ColumnHeaderStyle>
 
-        <!-- 4. PAGINACIÓN -->
-        <Border Grid.Row="3" Background="#16161D" CornerRadius="10" Padding="15,10" Margin="0,15,0,0" BorderBrush="#222" BorderThickness="1">
+    <DataGrid.Columns>
+        <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="70" />
+        <DataGridTextColumn Header="DNI PROPIETARIO" Binding="{Binding DniPropietario}" Width="1.5*" />
+        <DataGridTextColumn Header="MATRÍCULA" Binding="{Binding Matricula}" Width="1.5*"/>
+        <DataGridTextColumn Header="MARCA" Binding="{Binding Marca}" Width="*"/>
+        <DataGridTextColumn Header="MOTOR" Binding="{Binding Motor}" Width="*"/>
+        <DataGridTextColumn Header="FECHA ITV" Binding="{Binding FechaItv, StringFormat=dd/MM/yyyy}" Width="1.2*"/>
+        <DataGridTextColumn Header="INSPECCIÓN" Binding="{Binding FechaInspeccion, StringFormat=dd/MM/yyyy}" Width="1.2*"/>
+    </DataGrid.Columns>
+</DataGrid>
+        </Border>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+            <Button Command="{Binding NewCommand}" Content="➕ NUEVO" Width="120" Height="45" Margin="0,0,15,0" Background="#00F2FF" Foreground="#0A0A0C" FontWeight="Black" BorderThickness="0">
+                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style></Button.Resources>
+            </Button>
+            <Button Command="{Binding ViewCommand}" Content="👁️ VER" Width="110" Height="45" Margin="0,0,15,0" Background="#16161D" Foreground="White" BorderBrush="#333">
+                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style></Button.Resources>
+            </Button>
+            <Button Command="{Binding EditCommand}" Content="✏️ EDITAR" Width="110" Height="45" Margin="0,0,15,0" Background="#16161D" Foreground="White" BorderBrush="#333">
+                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style></Button.Resources>
+            </Button>
+            <Button Command="{Binding DeleteCommand}" Content="🗑️ ELIMINAR" Width="110" Height="45" Background="#16161D" Foreground="#FF0055" BorderBrush="#441122">
+                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style></Button.Resources>
+            </Button>
+        </StackPanel>
+
+        <Border Grid.Row="4" Background="#16161D" CornerRadius="10" Padding="10" Margin="0,20,0,0" BorderBrush="#222" BorderThickness="1">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Command="{Binding FirstPageCommand}" Content="⏮" Width="45" Height="35" Background="Transparent" Foreground="#00F2FF" BorderBrush="#333" Margin="0,0,8,0"/>
-                <Button Command="{Binding PreviousPageCommand}" Content="◀" Width="45" Height="35" Background="Transparent" Foreground="#00F2FF" BorderBrush="#333" Margin="0,0,15,0"/>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="PÁGINA" Foreground="#555" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <Border Background="#00F2FF" Margin="12,0" Padding="12,6" CornerRadius="4">
-                        <TextBlock Text="{Binding CurrentPage}" Foreground="#0A0A0C" FontWeight="Bold"/>
-                    </Border>
-                    <TextBlock Text="DE" Foreground="#555" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding TotalPages}" Foreground="White" Margin="12,0" VerticalAlignment="Center" FontWeight="Bold"/>
-                </StackPanel>
-                <Button Command="{Binding NextPageCommand}" Content="▶" Width="45" Height="35" Background="Transparent" Foreground="#00F2FF" BorderBrush="#333" Margin="15,0,8,0"/>
-                <Button Command="{Binding LastPageCommand}" Content="⏭" Width="45" Height="35" Background="Transparent" Foreground="#00F2FF" BorderBrush="#333" Margin="0,0,25,0"/>
+                <Button Command="{Binding PrimeraPaginaCommand}" Content="⏮" Width="40" Height="30" Background="Transparent" Foreground="#00F2FF" BorderBrush="Transparent"/>
+                <Button Command="{Binding PaginaAnteriorCommand}" Content="◀" Width="40" Height="30" Background="Transparent" Foreground="#00F2FF" BorderBrush="Transparent" Margin="0,0,10,0"/>
+                <TextBlock Text="PÁGINA" Foreground="#555" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                <Border Background="#00F2FF" Margin="10,0" Padding="10,4" CornerRadius="4">
+                    <TextBlock Text="{Binding PaginaActual}" Foreground="#0A0A0C" FontWeight="Bold"/>
+                </Border>
+                <TextBlock Text="DE" Foreground="#555" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding TotalPaginas}" Foreground="White" Margin="10,0" VerticalAlignment="Center" FontWeight="Bold"/>
+                <Button Command="{Binding PaginaSiguienteCommand}" Content="▶" Width="40" Height="30" Background="Transparent" Foreground="#00F2FF" BorderBrush="Transparent" Margin="10,0,0,0"/>
+                <Button Command="{Binding UltimaPaginaCommand}" Content="⏭" Width="40" Height="30" Background="Transparent" Foreground="#00F2FF" BorderBrush="Transparent"/>
             </StackPanel>
         </Border>
 
-        <!-- 5. FOOTER -->
-        <Border Grid.Row="4" Margin="0,15,0,0">
+        <Border Grid.Row="5" Margin="0,15,0,0">
             <Grid>
                 <TextBlock Text="LUIS VIVES ITV - TERMINAL 01 v2.6" Foreground="#333" FontSize="10" FontWeight="Bold"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">

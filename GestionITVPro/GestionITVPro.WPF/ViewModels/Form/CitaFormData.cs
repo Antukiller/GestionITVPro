@@ -27,9 +27,10 @@ public partial class CitaFormData : ObservableObject, IDataErrorInfo {
     
     [ObservableProperty] private string _dniPropietario = string.Empty;
 
-    [ObservableProperty] private DateTime _fechaItv = DateTime.UtcNow;
+    [ObservableProperty] private DateTime _fechaItv = DateTime.Today;
 
-    [ObservableProperty] private DateTime _fechaInspeccion = DateTime.Today.AddDays(+30);
+    
+    [ObservableProperty] private DateTime _fechaInspeccion = DateTime.Today.AddDays(1);
     
     /// <summary>
     /// Marca de tiempo de creación del registro
@@ -69,21 +70,16 @@ public partial class CitaFormData : ObservableObject, IDataErrorInfo {
             => "La cilindrada debe de estar entre 0 y 3000",
 
         nameof(FechaInspeccion) when !FechaInspeccion.IsWithinNext30Days()
-            => "La inspeccion debe estar entre hoy y los próximos 30 dias",
+            => "La inspección debe estar entre hoy y los próximos 30 días",
 
-        nameof(FechaItv) when !FechaItv.IsValidFechaCita()
-            => "La fecha de matriculación no puede ser furtura",
+        // Aquí es donde fallaba en tus capturas image_d0912e e image_d032d9
+        nameof(FechaItv) when !FechaItv.IsValidFechaPasada() // Cambiamos el método de validación
+            => "La fecha de matriculación no puede ser futura",
         
         nameof(DniPropietario) when !DniPropietario.IsValidDniPropietario()
-            => "El dni del propietario es obligatorio",
-        
-        
-
-        nameof(DniPropietario) when !DniPropietario.IsValidDniPropietario()
-            => "EL dni del propietario no puede estar vacío y es obligatio",
+            => "El DNI del propietario es obligatorio o tiene un formato inválido",
 
         _ => null!
-
     };
 
 

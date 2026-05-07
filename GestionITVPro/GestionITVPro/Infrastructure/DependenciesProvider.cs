@@ -131,13 +131,19 @@ public static class DependenciesProvider {
                 AppConfig.BackupDirectory));
     
         // 3. ReportService (¡Corregido! Se usa AddTransient o AddScoped, NO AddDbContext)
-        services.AddTransient<IReportService, ReportService>();
+        services.AddTransient<IReportService, ReportService>(
+            sp => new ReportService(AppConfig.ReportDirectory));
     
         // 4. ImportExportService
         services.AddTransient<IImportExportService, ImportExportService>();
     
         // 5. CitaService (Simplificado: el contenedor ya sabe resolver los parámetros del constructor)
-        services.AddScoped<ICitasService, CitasService>();
+        services.AddScoped<ICitasService, CitasService>(cs =>
+            new CitasService(
+                cs.GetRequiredService<ICitaRepository>(),
+                cs.GetRequiredService<IValidador<Cita>>(),
+                cs.GetRequiredService<ICache<int, Cita>>()
+                ));
     }
     
 

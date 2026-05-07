@@ -4,6 +4,7 @@ using System.IO;
 using CSharpFunctionalExtensions;
 using GestionITVPro.Config;
 using GestionITVPro.Entity;
+using GestionITVPro.Enums;
 using GestionITVPro.Error.Cita;
 using GestionITVPro.Errors.Common;
 using GestionITVPro.Factory;
@@ -34,7 +35,7 @@ public class CitaAdoRepository : ICitaRepository {
 
         if (seedData && CountCita(true) == 0) {
             _logger.Information("Sembrando datos iniciales...");
-            foreach (var vehiculo in VehiculosFactory.Seed()) {
+            foreach (var vehiculo in CitasFactory.Seed()) {
                 Create(vehiculo);
             }
         }
@@ -73,51 +74,45 @@ public class CitaAdoRepository : ICitaRepository {
         command.ExecuteNonQuery();
     }
 
-   public IEnumerable<Cita> GetAll(string? marca, string? dniPropietario, string? matricula, 
-    DateTime? desde, DateTime? hasta, int page = 1, int pageSize = 10, bool includeDeleted = true) {
-    var lista = new List<Cita>();
+    public IEnumerable<Cita> GetAll(int pagina, int tamPagina, bool isDeleteInclude, string campoBusqueda) {
+        var lista = new List<Cita>();
 
-    try {
-        using var connection = CreateConnection(); // Corregido: Crear conexión local
-        connection.Open(); // IMPORTANTE: Abrir conexión
+        try {
+            using var connection = CreateConnection();
+            connection.Open();
 
-        const string sql = @"
+            const string sql = @"
             SELECT * FROM Citas 
-            WHERE (@Marca IS NULL OR Marca LIKE '%' || @Marca || '%')
-              AND (@Dni IS NULL OR DniPropietario = @Dni)
-              AND (@Matricula IS NULL OR Matricula = @Matricula)
-              AND (@Desde IS NULL OR date(FechaItv) >= date(@Desde))
-              AND (@Hasta IS NULL OR date(FechaItv) <= date(@Hasta))
-              AND (@IncludeDeleted = 1 OR IsDeleted = 0)
+            WHERE (@IncludeDeleted = 1 OR IsDeleted = 0)
+              AND (@Busqueda IS NULL OR (
+                  Matricula LIKE '%' || @Busqueda || '%' OR
+                  Marca LIKE '%' || @Busqueda || '%' OR
+                  Modelo LIKE '%' || @Busqueda || '%' OR
+                  DniPropietario LIKE '%' || @Busqueda || '%'
+              ))
             ORDER BY Id 
             LIMIT @Limit OFFSET @Offset";
 
-        using var command = connection.CreateCommand();
-        command.CommandText = sql;
+            using var command = connection.CreateCommand();
+            command.CommandText = sql;
 
-        // Parámetros
-        command.Parameters.AddWithValue("@Marca", (object?)marca ?? DBNull.Value);
-        command.Parameters.AddWithValue("@Dni", (object?)dniPropietario ?? DBNull.Value);
-        command.Parameters.AddWithValue("@Matricula", (object?)matricula ?? DBNull.Value);
-        command.Parameters.AddWithValue("@Desde", desde?.ToString("yyyy-MM-dd") ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("@Hasta", hasta?.ToString("yyyy-MM-dd") ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("@IncludeDeleted", includeDeleted ? 1 : 0);
-        command.Parameters.AddWithValue("@Limit", pageSize);
-        command.Parameters.AddWithValue("@Offset", (page - 1) * pageSize);
+            // Si campoBusqueda es nulo o vacío, pasamos DBNull para que el SQL ignore el filtro
+            command.Parameters.AddWithValue("@Busqueda", string.IsNullOrWhiteSpace(campoBusqueda) ? DBNull.Value : campoBusqueda);
+            command.Parameters.AddWithValue("@IncludeDeleted", isDeleteInclude ? 1 : 0);
+            command.Parameters.AddWithValue("@Limit", tamPagina);
+            command.Parameters.AddWithValue("@Offset", (pagina - 1) * tamPagina);
 
-        using var reader = command.ExecuteReader();
-        while (reader.Read()) {
-            // Usamos el método MapReaderToEntity que ya tienes abajo para no repetir código
-            lista.Add(MapReaderToEntity(reader).ToModel()!);
+            using var reader = command.ExecuteReader();
+            while (reader.Read()) {
+                lista.Add(MapReaderToEntity(reader).ToModel()!);
+            }
         }
-    }
-    catch (Exception ex) {
-        _logger.Error(ex, "Error en GetAll ADO.NET");
-    }
+        catch (Exception ex) {
+            _logger.Error(ex, "Error en GetAll ADO.NET");
+        }
 
-    return lista;
-}
-
+        return lista;
+    }
     public Cita? GetById(int id) {
         using var connection = CreateConnection();
         connection.Open();
@@ -128,82 +123,140 @@ public class CitaAdoRepository : ICitaRepository {
         return reader.Read() ? MapReaderToEntity(reader).ToModel() : null;
     }
 
-   public Result<Cita, DomainError> Create(Cita model)
-    {
-        var dni = model.DniPropietario ?? "";
-        var matricula = model.Matricula ?? "";
+   public Result<IEnumerable<Cita>, DomainError> GetByDateMatricula(
+    DateTime inicio, DateTime? fin, int pagina, int tamPagina, 
+    string searchText = null, string motor = "TODOS", bool isDeleteInclude = false)
+{
+    var lista = new List<Cita>();
 
-        // 1. REGLA: Límite de 3 (Validar PRIMERO para los tests)
-        if (!ValidarLimiteVehiculos(dni))
-        {
-            _logger.Warning("Límite alcanzado para DNI {Dni}", dni);
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["Límite alcanzado: Este propietario ya tiene 3 vehículos registrados."]));
-        }
-
-        // 2. REGLA: Cita mismo día
-        if (ExisteCitaMismoDia(matricula, model.FechaItv))
-        {
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.MatriculaAlreadyExists(matricula));
-        }
-
-        // 3. INTEGRIDAD: Matrícula única
-        if (ExistsMatricula(matricula))
-        {
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.MatriculaAlreadyExists(matricula));
-        }
-
-        using var connection = CreateConnection(); // Usamos tu método local
+    try {
+        using var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
-        const string sql = @"
-            INSERT INTO Citas (
-                Matricula, Marca, Modelo, Cilindrada, Motor, 
-                DniPropietario, FechaItv, FechaInspeccion, CreatedAt, UpdatedAt, 
-                IsDeleted, DeletedAt
-            ) VALUES (
-                @Matricula, @Marca, @Modelo, @Cilindrada, @Motor, 
-                @DniPropietario, @FechaItv, @FechaInspeccion, @CreatedAt, @UpdatedAt, 
-                @IsDeleted, @DeletedAt
-            );
-            SELECT last_insert_rowid();";
-
-        using var command = new SqliteCommand(sql, connection);
-
-        // Añadimos TODOS los parámetros para evitar el error "Must add values..."
-        command.Parameters.AddWithValue("@Matricula", matricula);
-        command.Parameters.AddWithValue("@Marca", model.Marca ?? "");
-        command.Parameters.AddWithValue("@Modelo", model.Modelo ?? "");
-        command.Parameters.AddWithValue("@Cilindrada", model.Cilindrada);
-        command.Parameters.AddWithValue("@Motor", (int)model.Motor);
-        command.Parameters.AddWithValue("@DniPropietario", dni);
-        command.Parameters.AddWithValue("@FechaItv", model.FechaItv.ToString("yyyy-MM-dd HH:mm:ss"));
-        command.Parameters.AddWithValue("@FechaInspeccion", model.FechaInspeccion.ToString("yyyy-MM-dd HH:mm:ss"));
-        command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
-        command.Parameters.AddWithValue("@UpdatedAt", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
-        command.Parameters.AddWithValue("@IsDeleted", 0);
-        command.Parameters.AddWithValue("@DeletedAt", DBNull.Value);
-
-        try
-        {
-            var id = Convert.ToInt32(command.ExecuteScalar());
-            var creado = GetById(id);
-            return creado != null 
-                ? Result.Success<Cita, DomainError>(creado)
-                : Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
+        using var command = connection.CreateCommand();
+        
+        // 1. Lógica para el Motor (Convertir Texto de la UI a Entero de la DB)
+        int motorValue = -1;
+        if (motor != "TODOS") {
+            // Ajusta 'MotorType' al nombre de tu Enum real
+            if (Enum.TryParse<Motor>(motor, true, out var resultadoEnum)) {
+                motorValue = (int)resultadoEnum;
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.Error(ex, "Error al crear cita en ADO");
-            // Si salta un error de restricción de base de datos que no pillamos antes
-            if (ex.Message.Contains("UNIQUE")) 
-                return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(matricula));
-                
-            return Result.Failure<Cita, DomainError>(CitaErrors.Validation([ex.Message]));
+
+        // 2. Query SQL corregida
+        command.CommandText = @"
+            SELECT * FROM Citas 
+            WHERE date(FechaInspeccion) >= date(@inicio)
+            AND (@fin_val IS NULL OR date(FechaInspeccion) <= date(@fin_val))
+            AND (IsDeleted = 0 OR @inc_del = 1)
+            AND (@motor_text = 'TODOS' OR Motor = @motor_int) -- Comparación numérica
+            AND (@search_val IS NULL OR (
+                LOWER(Matricula) LIKE @search_val OR 
+                LOWER(DniPropietario) LIKE @search_val OR 
+                LOWER(Marca) LIKE @search_val
+            ))
+            ORDER BY FechaInspeccion ASC
+            LIMIT @limit OFFSET @offset";
+
+        // 3. Parámetros limpios
+        command.Parameters.AddWithValue("@inicio", inicio.ToString("yyyy-MM-dd"));
+        command.Parameters.AddWithValue("@fin_val", fin.HasValue ? fin.Value.ToString("yyyy-MM-dd") : DBNull.Value);
+        command.Parameters.AddWithValue("@inc_del", isDeleteInclude ? 1 : 0);
+        command.Parameters.AddWithValue("@motor_text", motor);
+        command.Parameters.AddWithValue("@motor_int", motorValue);
+        command.Parameters.AddWithValue("@search_val", string.IsNullOrWhiteSpace(searchText) ? DBNull.Value : $"%{searchText.ToLower()}%");
+        command.Parameters.AddWithValue("@limit", tamPagina);
+        command.Parameters.AddWithValue("@offset", (pagina - 1) * tamPagina);
+
+        using var reader = command.ExecuteReader();
+        while (reader.Read()) {
+            var entity = new CitaEntity {
+                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                Matricula = reader.GetString(reader.GetOrdinal("Matricula")),
+                Marca = reader.GetString(reader.GetOrdinal("Marca")),
+                Modelo = reader.GetString(reader.GetOrdinal("Modelo")),
+                DniPropietario = reader.GetString(reader.GetOrdinal("DniPropietario")),
+                // IMPORTANTE: Si en DB es INTEGER, leemos GetInt32
+                Motor = reader.GetInt32(reader.GetOrdinal("Motor")), 
+                FechaInspeccion = DateTime.Parse(reader.GetString(reader.GetOrdinal("FechaInspeccion"))),
+                IsDeleted = reader.GetInt32(reader.GetOrdinal("IsDeleted")) == 1
+            };
+            lista.Add(entity.ToModel()!);
         }
+
+        return Result.Success<IEnumerable<Cita>, DomainError>(lista);
     }
+    catch (Exception ex) {
+        return Result.Failure<IEnumerable<Cita>, DomainError>(CitaErrors.DatabaseError(ex.Message));
+    }
+}
+
+    public Result<Cita, DomainError> Create(Cita model) {
+    var dni = model.DniPropietario ?? "";
+    var matricula = model.Matricula ?? "";
+
+    // 1. REGLA: Límite de 3 citas por propietario el mismo día
+    // Reutilizamos ExisteLimiteDniDia (método auxiliar que definiremos abajo)
+    if (ExisteLimiteDniDia(dni, model.FechaItv)) {
+        return Result.Failure<Cita, DomainError>(
+            CitaErrors.Validation(["Límite alcanzado: Máximo 3 citas por propietario al día."]));
+    }
+
+    // 2. REGLA: El vehículo no puede repetir el mismo día
+    if (ExisteCitaMismoDia(matricula, model.FechaItv)) {
+        return Result.Failure<Cita, DomainError>(
+            CitaErrors.MatriculaAlreadyExists(matricula));
+    }
+
+    // 3. INTEGRIDAD: Matrícula única global (si no ha sido borrada)
+    if (ExistsMatricula(matricula)) {
+        return Result.Failure<Cita, DomainError>(
+            CitaErrors.MatriculaAlreadyExists(matricula));
+    }
+
+    using var connection = CreateConnection();
+    connection.Open();
+
+    const string sql = @"
+        INSERT INTO Citas (
+            Matricula, Marca, Modelo, Cilindrada, Motor, 
+            DniPropietario, FechaItv, FechaInspeccion, CreatedAt, UpdatedAt, 
+            IsDeleted
+        ) VALUES (
+            @Matricula, @Marca, @Modelo, @Cilindrada, @Motor, 
+            @DniPropietario, @FechaItv, @FechaInspeccion, @CreatedAt, @UpdatedAt, 
+            @IsDeleted
+        );
+        SELECT last_insert_rowid();";
+
+    using var command = connection.CreateCommand();
+    command.CommandText = sql;
+
+    command.Parameters.AddWithValue("@Matricula", matricula);
+    command.Parameters.AddWithValue("@Marca", model.Marca ?? "");
+    command.Parameters.AddWithValue("@Modelo", model.Modelo ?? "");
+    command.Parameters.AddWithValue("@Cilindrada", model.Cilindrada);
+    command.Parameters.AddWithValue("@Motor", (int)model.Motor);
+    command.Parameters.AddWithValue("@DniPropietario", dni);
+    command.Parameters.AddWithValue("@FechaItv", model.FechaItv.ToString("yyyy-MM-dd HH:mm:ss"));
+    command.Parameters.AddWithValue("@FechaInspeccion", model.FechaInspeccion.ToString("yyyy-MM-dd HH:mm:ss"));
+    command.Parameters.AddWithValue("@CreatedAt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+    command.Parameters.AddWithValue("@UpdatedAt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+    command.Parameters.AddWithValue("@IsDeleted", 0);
+
+    try {
+        var id = Convert.ToInt32(command.ExecuteScalar());
+        var creado = GetById(id);
+        return creado != null 
+            ? Result.Success<Cita, DomainError>(creado)
+            : Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
+    }
+    catch (Exception ex) {
+        _logger.Error(ex, "Error al crear cita en ADO");
+        return Result.Failure<Cita, DomainError>(CitaErrors.DatabaseError(ex.Message));
+    }
+}
 
     public Result<Cita, DomainError> Update(int id, Cita cita) {
     var existing = GetById(id);
@@ -408,5 +461,42 @@ public class CitaAdoRepository : ICitaRepository {
         if (excluirId.HasValue) command.Parameters.AddWithValue("@Id", excluirId.Value);
 
         return Convert.ToInt32(command.ExecuteScalar()) > 0;
+    }
+    
+    
+    private bool ExisteLimiteDniDia(string dni, DateTime fecha) {
+        using var connection = CreateConnection();
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+        SELECT COUNT(*) FROM Citas 
+        WHERE DniPropietario = @Dni 
+          AND date(FechaItv) = date(@Fecha) 
+          AND IsDeleted = 0";
+        command.Parameters.AddWithValue("@Dni", dni);
+        command.Parameters.AddWithValue("@Fecha", fecha.ToString("yyyy-MM-dd"));
+        return Convert.ToInt32(command.ExecuteScalar()) >= 3;
+    }
+    
+    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool isDeleteInclude) 
+    {
+        using var connection = CreateConnection();
+        connection.Open();
+        using var command = connection.CreateCommand();
+
+        command.CommandText = @"
+        SELECT COUNT(*) FROM Citas 
+        WHERE (@IncludeDeleted = 1 OR IsDeleted = 0)
+          AND date(FechaInspeccion) >= date(@Inicio)
+          AND (@Fin IS NULL OR date(FechaInspeccion) <= date(@Fin))
+          AND (@Matricula IS NULL OR Matricula LIKE @MatriculaLike)";
+
+        command.Parameters.AddWithValue("@Inicio", inicio.ToString("yyyy-MM-dd"));
+        command.Parameters.AddWithValue("@Fin", (object?)fin?.ToString("yyyy-MM-dd") ?? DBNull.Value);
+        command.Parameters.AddWithValue("@IncludeDeleted", isDeleteInclude ? 1 : 0);
+        command.Parameters.AddWithValue("@Matricula", (object?)matricula ?? DBNull.Value);
+        command.Parameters.AddWithValue("@MatriculaLike", string.IsNullOrWhiteSpace(matricula) ? DBNull.Value : $"%{matricula}%");
+
+        return Convert.ToInt32(command.ExecuteScalar());
     }
 }

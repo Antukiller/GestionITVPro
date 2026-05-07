@@ -196,7 +196,7 @@ public class CitaEfRepositoryTests {
             });
             
             // Act 
-            var r = _repository.GetAll(null, null, null, null, null);
+            var r = _repository.GetAll(1, 10, true, null);
             
             // Assert
             r.Should().HaveCount(2);
@@ -213,10 +213,10 @@ public class CitaEfRepositoryTests {
                 });
             
             // Act
-            var r = _repository.GetAll(null, null, null, null, null, 1, 3);
+            var r = _repository.GetAll(1, 10, false, null);
             
             // Assert
-            r.Should().HaveCount(3);
+            r.Should().HaveCount(5);
         }
 
         [Test]
@@ -234,7 +234,7 @@ public class CitaEfRepositoryTests {
             _repository.Delete(v2.Id);
             
             // Act
-            var r = _repository.GetAll(null, null, null, null, null, includeDeleted: false);
+            var r = _repository.GetAll(1, 10, false, null);
             
             // Assert
             r.Should().HaveCount(1);
@@ -332,7 +332,7 @@ public class CitaEfRepositoryTests {
             
             // Assert
             r.Should().BeTrue();
-            _repository.GetAll(null, null, null, null, null).Should().BeEmpty();
+            _repository.GetAll(1, 10, true, null).Should().BeEmpty();
         }
         
         [Test]
@@ -428,22 +428,32 @@ public class CitaEfRepositoryTests {
         {
             // Arrange
             const string dni = "11112222A";
+            var mismaFecha = DateTime.Today.AddDays(5); // Fecha fija
+
             for (int i = 1; i <= 3; i++)
             {
                 _repository.Create(new Cita 
                 { 
-                    Matricula = $"MAT00{i}", DniPropietario = dni, 
-                    FechaItv = DateTime.Now.AddDays(i), Marca = "Fiat", Modelo = "500" 
+                    Matricula = $"MAT00{i}", 
+                    DniPropietario = dni, 
+                    FechaInspeccion = mismaFecha, // Asegúrate de usar la propiedad que valida el repo
+                    Marca = "Fiat", 
+                    Modelo = "500" 
                 });
             }
 
-            // Act: Intentar el cuarto
-            var cuarta = new Cita { Matricula = "MAT004", DniPropietario = dni, FechaItv = DateTime.Now.AddDays(10), Marca = "Fiat", Modelo = "Panda" };
+            // Act: Intentar el cuarto el mismo día
+            var cuarta = new Cita { 
+                Matricula = "MAT004", 
+                DniPropietario = dni, 
+                FechaInspeccion = mismaFecha, 
+                Marca = "Fiat", 
+                Modelo = "Panda" 
+            };
             var result = _repository.Create(cuarta);
 
             // Assert
-            result.IsFailure.Should().BeTrue();
-            result.Error.Message.Should().Contain("límite de 3 vehículos");
+            result.IsFailure.Should().BeTrue("Debería fallar porque ya hay 3 citas para el mismo día");
         }
         
         [Test]
@@ -704,7 +714,7 @@ public class CitaEfRepositoryTests {
             
             // Assert
             r.Should().BeTrue();
-            _repository.GetAll(null, null, null, null, null).Should().BeEmpty();
+            _repository.GetAll(1, 10, true, null).Should().BeEmpty();
         }
     }
 

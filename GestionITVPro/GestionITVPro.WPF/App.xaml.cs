@@ -3,11 +3,10 @@ using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using GestionITVPro.Config;
-using GestionITVPro.Infrastructure;
-using GestionITVPro.Views;
 using GestionITVPro.Views.Main;
 using GestionITVPro.WPF.Infrastructure;
 using GestionITVPro.WPF.Views.Splash;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Debugging;
 
@@ -29,37 +28,42 @@ public partial class App : Application {
     // ====================================================================
     // OnStartup - Se ejecuta al iniciar la aplicación
     // ====================================================================
-    protected override void OnStartup(StartupEventArgs e) {
-        // Forzamos el directorio actual al del ejecutable para que las 
-        // rutas relativas de appsettings.json (log/, data/, etc.) funcionen.
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        // 1. Configuración básica inicial
         Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-
         ConfigureSerilog();
+        Log.Information("🚀 Aplicación WPF iniciada");
 
-        Log.Information("🚀☠️ Aplicación WPF iniciada 🙈🙊");
-        ;
-
+        // 2. INICIALIZAR EL PROVIDER (¡Esto debe ir antes de cualquier uso!)
+        // Asegúrate de que esta línea se ejecute ANTES de llamar al Splash o a la MainWindow
         ServiceProvider = FrontDependenciesProvider.BuildServiceProvider();
-
-        Log.Information("✅ ServiceProvider creado con todos los servicios");
+    
+        if (ServiceProvider == null)
+        {
+            Log.Fatal("❌ El ServiceProvider no se pudo crear.");
+            return;
+        }
+        Log.Information("✅ ServiceProvider creado correctamente");
 
         ConfigureExceptionHandling();
 
-        var splah = new SplashWindow();
-        Log.Information("Mostrndo SplashWindow");
-        splah.ShowDialog();
-        Log.Information("SplashWindow cerrado");
+        // 3. Mostrar SplashWindow
+        // Lo mostramos como Dialog para que bloquee el hilo hasta que termine la carga
+        var splash = new SplashWindow();
+        Log.Information("Mostrando SplashWindow");
+        splash.ShowDialog(); 
+        Log.Information("SplashWindow cerrado, procediendo a cargar MainWindow");
 
         // Crear y mostrar ventana principal
         var mainWindow = new MainWindow();
+        MainWindow = mainWindow;
+        
         Log.Information("Llamando a mainWindow.Show");
         mainWindow.Show();
-
-
         base.OnStartup(e);
-
+        
         Log.Information("mainWindow.Show() completado");
-
     }
     
     

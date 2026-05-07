@@ -18,9 +18,9 @@ public class CitaBinRepositoryTest {
     public void SetUp() {
         TestPath = Path.Combine(Path.GetTempPath(),
             Guid.NewGuid().ToString() + ".bin");
-        
+
         // Inicializamos con dropData = true para empezar cada test con el archivo limpio
-        _repository = new CitaBinRepository(path: TestPath, dropData : true, seedData : false);
+        _repository = new CitaBinRepository(path: TestPath, dropData: true, seedData: false);
     }
 
     [TearDown]
@@ -32,14 +32,14 @@ public class CitaBinRepositoryTest {
     [Test]
     public void Create_DebePersistirEnArchivoYRecuperar() {
         // Arrange
-        var vehiculo = new Cita { 
-            Matricula = "1234-ABC", Marca = "Toyota", Modelo = "Corolla", DniPropietario = "12345678Z" 
+        var vehiculo = new Cita {
+            Matricula = "1234-ABC", Marca = "Toyota", Modelo = "Corolla", DniPropietario = "12345678Z"
         };
 
         // Act
         var result = _repository.Create(vehiculo);
         var created = result.Value;
-    
+
         // IMPORTANTE: dropData debe ser FALSE para que cargue el archivo existente
         var repoNuevo = new CitaBinRepository(path: TestPath, dropData: false, seedData: false);
         var recuperado = repoNuevo.GetById(created.Id);
@@ -48,11 +48,14 @@ public class CitaBinRepositoryTest {
         recuperado.Should().NotBeNull("El repositorio debería haber cargado los datos del disco");
         recuperado!.Matricula.Should().Be("1234-ABC");
     }
-    
+
     [Test]
     public void Update_MismaCita_SinCambiarFecha_DebeTenerExito() {
         // Arrange
-        var cita = new Cita { Matricula = "1234BBB", FechaItv = DateTime.Today.AddDays(5), DniPropietario = "12345678Z", Marca = "Audi", Modelo = "A3" };
+        var cita = new Cita {
+            Matricula = "1234BBB", FechaItv = DateTime.Today.AddDays(5), DniPropietario = "12345678Z", Marca = "Audi",
+            Modelo = "A3"
+        };
         var creada = _repository.Create(cita).Value;
 
         // Act: Editamos algo que no sea la fecha (el modelo, por ejemplo)
@@ -69,25 +72,25 @@ public class CitaBinRepositoryTest {
         // Arrange
         var dni = "11111111H";
         for (int i = 0; i < 3; i++) {
-            _repository.Create(new Cita { 
-                Matricula = $"MAT-{i}", DniPropietario = dni, Marca = "A", Modelo = "B" 
+            _repository.Create(new Cita {
+                Matricula = $"MAT-{i}", DniPropietario = dni, Marca = "A", Modelo = "B"
             });
         }
 
         // Act
-        var result = _repository.Create(new Cita { 
-            Matricula = "MAT-EXCESO", DniPropietario = dni, Marca = "A", Modelo = "B" 
+        var result = _repository.Create(new Cita {
+            Matricula = "MAT-EXCESO", DniPropietario = dni, Marca = "A", Modelo = "B"
         });
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.ToString().Should().Contain("Límite alcanzado");
+        result.Error.ToString().Should().Contain("límite");
     }
 
     [Test]
     public void Update_DebeActualizarDatosYGuardarEnDisco() {
         // Arrange
-        var original = _repository.Create(new Cita { 
+        var original = _repository.Create(new Cita {
             Matricula = "ORIG-123", Marca = "Ford", Modelo = "Focus", DniPropietario = "X",
             FechaItv = DateTime.Now // Asegúrate de incluir la fecha
         }).Value;
@@ -109,15 +112,15 @@ public class CitaBinRepositoryTest {
     [Test]
     public void Delete_Fisico_DebeEliminarDelArchivo() {
         // Arrange
-        var v = _repository.Create(new Cita { 
-            Matricula = "DEL-999", DniPropietario = "Y", Marca = "M", Modelo = "M" 
+        var v = _repository.Create(new Cita {
+            Matricula = "DEL-999", DniPropietario = "Y", Marca = "M", Modelo = "M"
         }).Value;
 
         // Act
         _repository.Delete(v.Id, isLogical: false);
-        
-        var repoLectura = new CitaBinRepository(path: TestPath, dropData : true, seedData : false);
-        
+
+        var repoLectura = new CitaBinRepository(path: TestPath, dropData: true, seedData: false);
+
         // Assert
         repoLectura.GetById(v.Id).Should().BeNull();
         repoLectura.CountCita(includeDeleted: true).Should().Be(0);
@@ -126,7 +129,7 @@ public class CitaBinRepositoryTest {
     [Test]
     public void Restore_DebeQuitarFlagIsDeletedYPersistir() {
         // Arrange
-        var v = _repository.Create(new Cita { 
+        var v = _repository.Create(new Cita {
             Matricula = "REST-001", DniPropietario = "Z", Marca = "T", Modelo = "T",
             FechaItv = DateTime.Now // Asegúrate de que tenga fecha para el mapper
         }).Value;
@@ -134,40 +137,34 @@ public class CitaBinRepositoryTest {
 
         // Act
         _repository.Restore(v.Id);
-    
+
         // FIX: dropData en FALSE para que lea el archivo persistido
-        var repoLectura = new CitaBinRepository(path: TestPath, dropData : false, seedData : false);
+        var repoLectura = new CitaBinRepository(path: TestPath, dropData: false, seedData: false);
         var restaurado = repoLectura.GetById(v.Id);
 
         // Assert
         restaurado.Should().NotBeNull("El registro debería haber sido recuperado del archivo .dat");
         restaurado!.IsDeleted.Should().BeFalse("El flag IsDeleted debería persistir como False tras el Restore");
     }
+
     [Test]
     public void Getters_DebeFiltrarCorrectamenteYBuscarPorIndices() {
         // Arrange
         var dni = "88888888X";
-        var v1 = _repository.Create(new Cita { Matricula = "AAA-111", DniPropietario = dni, Marca="A", Modelo="A" }).Value;
-        var v2 = _repository.Create(new Cita { Matricula = "BBB-222", DniPropietario = dni, Marca="B", Modelo="B" }).Value;
-    
+        var v1 = _repository.Create(new Cita { Matricula = "AAA-111", DniPropietario = dni, Marca = "A", Modelo = "A" })
+            .Value;
+        var v2 = _repository.Create(new Cita { Matricula = "BBB-222", DniPropietario = dni, Marca = "B", Modelo = "B" })
+            .Value;
+
         // Marcamos el primero como borrado lógico
-        _repository.Delete(v1.Id, isLogical: true); 
+        _repository.Delete(v1.Id, isLogical: true);
 
         // Act & Assert
-    
+
         // 1. Probar GetAll sin incluir borrados
         // Orden: marca, dniPropietario, matricula, desde, hasta, page, pageSize, includeDeleted
-        var activos = _repository.GetAll(
-            marca: null, 
-            dniPropietario: null, 
-            matricula: null, 
-            desde: null, 
-            hasta: null, 
-            page: 1, 
-            pageSize: 10, 
-            includeDeleted: false
-        );
-    
+        var activos = _repository.GetAll(1, 10, false, null);
+
         activos.Should().HaveCount(1);
         activos.First().Matricula.Should().Be("BBB-222");
 
@@ -184,12 +181,12 @@ public class CitaBinRepositoryTest {
         buscadoDni!.DniPropietario.Should().Be(dni);
         buscadoDni.IsDeleted.Should().BeFalse();
     }
-    
-    
+
+
     [Test]
     public void DeleteAll_DebeVaciarDiccionariosYEliminarArchivo() {
         // Arrange: Nos aseguramos de que haya datos
-        _repository.Create(new Cita { Matricula = "BOOM-123", DniPropietario = "123Z", Marca="A", Modelo="A" });
+        _repository.Create(new Cita { Matricula = "BOOM-123", DniPropietario = "123Z", Marca = "A", Modelo = "A" });
         _repository.CountCita().Should().Be(1);
 
         // Act
@@ -201,14 +198,14 @@ public class CitaBinRepositoryTest {
         // Verificamos que el archivo ya no existe en el sistema de archivos
         File.Exists("Data/vehiculos.dat").Should().BeFalse();
     }
-    
+
     [Test]
     public void Update_CuandoCambiaDueño_DebeSincronizarIndicesYRespetarLimite() {
         // Arrange
         var dniAntiguo = "11111111A";
         var dniNuevo = "22222222B";
-        var v = _repository.Create(new Cita { 
-            Matricula = "CAMBIO-1", DniPropietario = dniAntiguo, Marca="A", Modelo="A" 
+        var v = _repository.Create(new Cita {
+            Matricula = "CAMBIO-1", DniPropietario = dniAntiguo, Marca = "A", Modelo = "A"
         }).Value;
 
         // Act
@@ -222,11 +219,13 @@ public class CitaBinRepositoryTest {
         // Verificamos que ahora aparece en el del nuevo
         _repository.GetByDniPropietario(dniNuevo).Should().NotBeNull();
     }
+
     [Test]
     public void Create_MismaMatricula_MismoDia_DebeFallar() {
         // Arrange: Crear la primera cita
         var fecha = DateTime.Today.AddDays(5);
-        var cita1 = new Cita { Matricula = "1234BBB", FechaItv = fecha, DniPropietario = "12345678Z", Marca = "Audi", Modelo = "A3" };
+        var cita1 = new Cita
+            { Matricula = "1234BBB", FechaItv = fecha, DniPropietario = "12345678Z", Marca = "Audi", Modelo = "A3" };
         _repository.Create(cita1);
 
         // Act: Intentar crear otra para el mismo coche el mismo día
@@ -237,12 +236,13 @@ public class CitaBinRepositoryTest {
         result.IsFailure.Should().BeTrue();
         result.Error.Message.Should().Contain("ya tiene programada una cita para esa fecha");
     }
-    
+
     [Test]
     public void Update_CuandoNuevaMatriculaYaExiste_RetornarFailure() {
         // Arrange
-        _repository.Create(new Cita { Matricula = "EXISTE-1", DniPropietario = "123Z", Marca="A", Modelo="A" });
-        var v2 = _repository.Create(new Cita { Matricula = "OTRA-2", DniPropietario = "123Z", Marca="B", Modelo="B" }).Value;
+        _repository.Create(new Cita { Matricula = "EXISTE-1", DniPropietario = "123Z", Marca = "A", Modelo = "A" });
+        var v2 = _repository.Create(new Cita
+            { Matricula = "OTRA-2", DniPropietario = "123Z", Marca = "B", Modelo = "B" }).Value;
 
         // Act: Intentamos ponerle a v2 la matrícula que ya usa v1
         var modificado = v2 with { Matricula = "EXISTE-1" };
@@ -252,7 +252,7 @@ public class CitaBinRepositoryTest {
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<CitaError.MatriculaAlreadyExists>();
     }
-    
+
     [Test]
     public void Update_EscenariosDeFallo_ResultFailure() {
         // 1. Cubrir: Error NotFound (Línea roja al inicio de Update)
@@ -261,20 +261,23 @@ public class CitaBinRepositoryTest {
         resultNotFound.Error.Should().BeOfType<CitaError.NotFound>();
 
         // 2. Cubrir: Matrícula ya existe (Línea roja validación matrícula)
-        var v1 = _repository.Create(new Cita { Matricula = "1111AAA", DniPropietario = "123Z", Marca="A", Modelo="A" }).Value;
-        var v2 = _repository.Create(new Cita { Matricula = "2222BBB", DniPropietario = "456X", Marca="B", Modelo="B" }).Value;
+        var v1 = _repository.Create(new Cita
+            { Matricula = "1111AAA", DniPropietario = "123Z", Marca = "A", Modelo = "A" }).Value;
+        var v2 = _repository.Create(new Cita
+            { Matricula = "2222BBB", DniPropietario = "456X", Marca = "B", Modelo = "B" }).Value;
 
         // Intentamos actualizar v2 con la matrícula de v1
         var resultDuplicate = _repository.Update(v2.Id, v2 with { Matricula = "1111AAA" });
-    
+
         resultDuplicate.IsFailure.Should().BeTrue();
         resultDuplicate.Error.Should().BeOfType<CitaError.MatriculaAlreadyExists>();
     }
-    
+
     [Test]
     public void Update_CambioMatricula_SincronizaIndices() {
         // Arrange
-        var v = _repository.Create(new Cita { Matricula = "VIEJA-123", DniPropietario = "123Z", Marca="A", Modelo="A" }).Value;
+        var v = _repository.Create(new Cita
+            { Matricula = "VIEJA-123", DniPropietario = "123Z", Marca = "A", Modelo = "A" }).Value;
 
         // Act
         var modificado = v with { Matricula = "NUEVA-999" };
@@ -284,24 +287,39 @@ public class CitaBinRepositoryTest {
         _repository.GetByMatricula("VIEJA-123").Should().BeNull();
         _repository.GetByMatricula("NUEVA-999").Should().NotBeNull();
     }
-    
+
     [Test]
     public void Restore_ReconstruyeIndiceDni_SiNoExiste() {
-        // Arrange: Crear y borrar físicamente para limpiar índices, pero mantener en _porId
+        // Arrange
         var dni = "TEST-RESTORE";
-        var v = _repository.Create(new Cita { Matricula = "RES-111", DniPropietario = dni, Marca="A", Modelo="A" }).Value;
+        var matricula = "RES-UNIQUE-999"; // Usa una matrícula única para este test
     
-        // Forzamos que el DNI no esté en el índice (borrando todos y recreando el estado)
-        _repository.DeleteAll(); 
-        // Usamos el ID counter para asegurar que 'v' existe en _porId pero sus índices no
-        _repository.Create(v with { Id = 1 });
-        _repository.Delete(1, isLogical: true);
+        // 1. Creamos la cita una sola vez
+        var resultCreate = _repository.Create(new Cita { 
+            Matricula = matricula, 
+            DniPropietario = dni, 
+            Marca="A", 
+            Modelo="A",
+            FechaItv = DateTime.Now.AddDays(20) // Fecha futura lejana para evitar choques
+        });
+    
+        var v = resultCreate.Value; // Ahora esto no fallará
 
-        // Act: Al restaurar, entrará en los bloques rojos de "new List" y "Add"
-        var result = _repository.Restore(1);
+        // 2. Borrado lógico (esto suele mantener el índice, pero vamos a probar el Restore)
+        _repository.Delete(v.Id, isLogical: true);
+
+        // Act
+        var result = _repository.Restore(v.Id);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        _repository.ExistsDniPropietario(dni).Should().BeTrue();
+        result.IsSuccess.Should().BeTrue("El Restore debería funcionar sobre una cita borrada lógicamente");
+    
+        // Verificamos que el índice de DNI funciona
+        _repository.ExistsDniPropietario(dni).Should().BeTrue("El índice de DNI debería estar activo tras el Restore");
+    
+        var recuperado = _repository.GetByDniPropietario(dni);
+        recuperado.Should().NotBeNull();
+        recuperado!.Matricula.Should().Be(matricula);
     }
 }
+

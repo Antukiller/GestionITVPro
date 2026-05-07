@@ -26,25 +26,32 @@ public class ReportService : IReportService {
         var list = citas.ToList();
         var hoy = DateTime.Today;
 
+        // 1. Separamos las activas (no borradas) de las completadas (borradas)
+        var activas = list.Where(c => !c.IsDeleted).ToList();
+        var completadas = list.Where(c => c.IsDeleted).ToList();
+
         return new InformeCita
         {
-            ListadoCitas = list.OrderBy(c => c.FechaItv),
+            // Total absoluto (debe dar 80)
             TotalCitas = list.Count,
+        
+            // Basado en IsDeleted = true (debe dar 40)
+            CitasCompletadas = completadas.Count,
+    
+            // Basado en IsDeleted = false y Fecha anterior a hoy (debe dar 10)
+            CitasAtrasadas = activas.Count(c => c.FechaInspeccion.Date < hoy),
+        
+            // Basado en IsDeleted = false y Fecha exactamente hoy (debe dar 20)
+            CitasParaHoy = activas.Count(c => c.FechaInspeccion.Date == hoy),
 
-            // Motores
+            // Conteo de motores (sobre el total de 80)
             Gasolina = list.Count(c => c.Motor == Motor.Gasolina),
             Diesel = list.Count(c => c.Motor == Motor.Diesel),
-            Hibrido = list.Count(c => c.Motor == Motor.Hibrido),
             Electrico = list.Count(c => c.Motor == Motor.Electrico),
-
-            // Fechas y Estado Operativo
-            CitasParaHoy = list.Count(c => c.FechaItv.Date == hoy),
-            CitasAtrasadas = list.Count(c => c.FechaItv.Date < hoy && !c.IsDeleted),
-        
-            // Definimos "Completada" como una cita cuya fecha ya pasó
-            CitasCompletadas = list.Count(c => c.FechaItv.Date < hoy), 
-        
-            UltimaCitaProgramada = list.Any() ? list.Max(c => c.FechaItv) : null
+            Hibrido = list.Count(c => c.Motor == Motor.Hibrido),
+    
+            // Fecha más lejana en el calendario
+            UltimaCitaProgramada = list.Any() ? list.Max(c => c.FechaInspeccion) : null
         };
     }
 

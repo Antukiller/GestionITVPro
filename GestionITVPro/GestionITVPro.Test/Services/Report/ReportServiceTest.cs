@@ -41,9 +41,25 @@ public class ReportServiceTests {
             // Arrange
             var hoy = DateTime.Today;
             var citas = new List<Cita> {
-                new() { Motor = Motor.Gasolina, Cilindrada = 1200, FechaItv = hoy },
-                new() { Motor = Motor.Electrico, Cilindrada = 0, FechaItv = hoy.AddDays(-1), IsDeleted = false },
-                new() { Motor = Motor.Diesel, Cilindrada = 2000, FechaItv = hoy.AddDays(2) }
+                // Cita para HOY (Gasolina)
+                new() { 
+                    Motor = Motor.Gasolina, 
+                    FechaInspeccion = hoy, 
+                    FechaItv = hoy.AddYears(-4) // Fecha matriculación
+                },
+                // Cita ATRASADA (Eléctrico)
+                new() { 
+                    Motor = Motor.Electrico, 
+                    FechaInspeccion = hoy.AddDays(-1), 
+                    FechaItv = hoy.AddYears(-2),
+                    IsDeleted = false 
+                },
+                // Cita FUTURA (Diesel)
+                new() { 
+                    Motor = Motor.Diesel, 
+                    FechaInspeccion = hoy.AddDays(2), 
+                    FechaItv = hoy.AddYears(-10) 
+                }
             };
 
             // Act
@@ -54,10 +70,11 @@ public class ReportServiceTests {
             stats.Gasolina.Should().Be(1);
             stats.Electrico.Should().Be(1);
             stats.Diesel.Should().Be(1);
-            stats.CitasParaHoy.Should().Be(1);
-            stats.CitasAtrasadas.Should().Be(1);
-        }
 
+            // Ahora sí coincidirán
+            stats.CitasParaHoy.Should().Be(1, "Solo la de gasolina tiene FechaInspeccion para hoy");
+            stats.CitasAtrasadas.Should().Be(1, "Solo la eléctrica tiene FechaInspeccion de ayer");
+        }
         [Test]
         public void GenerarInformeEstadistico_SinCitas_DeberiaManejarValoresNulos() {
             // Act

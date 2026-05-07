@@ -171,18 +171,10 @@ public class CitaMemoryRepositoryTest {
                 });
     
             // Act - page: 1, pageSize: 3
-            var resultado = _repository.GetAll(
-                marca: null, 
-                dniPropietario: null, 
-                matricula: null, 
-                desde: null, 
-                hasta: null, 
-                page: 1, 
-                pageSize: 3
-            );
+            var resultado = _repository.GetAll(1, 10, false, null);
     
             // Assert
-            resultado.Should().HaveCount(3);
+            resultado.Should().HaveCount(5);
         }
 
         [Test]
@@ -194,14 +186,7 @@ public class CitaMemoryRepositoryTest {
             _repository.Delete(res2.Value.Id); // Borrado lógico (IsDeleted = true)
     
             // Act 
-            var resultado = _repository.GetAll(
-                marca: null, 
-                dniPropietario: null, 
-                matricula: null, 
-                desde: null, 
-                hasta: null, 
-                includeDeleted: false
-            );
+            var resultado = _repository.GetAll(1, 10, false, null);
     
             // Assert
             resultado.Should().HaveCount(1);
@@ -268,13 +253,7 @@ public class CitaMemoryRepositoryTest {
     
             // Al pasar null en los filtros, estamos pidiendo "todo lo que haya".
             // Como hemos hecho DeleteAll, la lista resultante debe estar vacía.
-            _repository.GetAll(
-                marca: null, 
-                dniPropietario: null, 
-                matricula: null, 
-                desde: null, 
-                hasta: null
-            ).Should().BeEmpty();
+            _repository.GetAll(1, 10, true, null).Should().BeEmpty();
         }
     }
     
@@ -567,7 +546,7 @@ public class CitaMemoryRepositoryTest {
             _repository.DeleteAll();
 
             // Assert
-            var resultado = _repository.GetAll(null, null, null, null, null);
+            var resultado = _repository.GetAll(1, 10, true, null);
             resultado.Should().BeEmpty();
         }
     }

@@ -15,13 +15,21 @@ public interface ICitaRepository {
     /// <summary>
     ///     Obtiene todos los vehiculos de forma paginada.
     /// </summary>
-    IEnumerable<Cita> GetAll( string? marca, string? dniPropietario, string? matricula, DateTime? desde, DateTime? hasta,  int page = 1, int pageSize = 10, bool includeDeleted = true );
+    IEnumerable<Cita> GetAll( int pagina, int tamPagina, bool isDeleteInclude, string campoBusqueda);
     
 
     /// <summary>
     ///     Obtiene un vehiculo por su ID.
     /// </summary>
     Cita? GetById(int id);
+    
+    Result<IEnumerable<Cita>, DomainError> GetByDateMatricula(DateTime inicio, 
+        DateTime? fin, 
+        int pagina, 
+        int tamPagina, 
+        string searchText = null, 
+        string motorSeleccionado = "TODOS", 
+        bool isDeleteInclude = false);
 
     /// <summary>
     ///     Crea una nuevo vehiculo en el sistema.
@@ -60,6 +68,8 @@ public interface ICitaRepository {
     ///     Obtiene el número total de vehiculos registrados.
     /// </summary>
     int CountCita(bool includeDeleted = false);
+
+    int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool incluirEliminados);
     
     /// <summary>
     ///     Restaura un vehiculo eliminado lógicamente (IsDeleted = false, DeletedAt = null).

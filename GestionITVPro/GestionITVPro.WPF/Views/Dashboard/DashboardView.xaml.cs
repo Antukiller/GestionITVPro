@@ -1,52 +1,47 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using GestionITVPro.Models;
-using GestionITVPro.Service.Citas;
-using GestionITVPro.Service.Report;
+﻿using System.Windows;
+using System.Windows.Controls;
+using GestionITVPro.WPF.ViewModels.Dashboard; // Asegúrate de que apunte a TU proyecto
+using GestionITVPro.Views.Main;
+using GestionITVPro.WPF.Views.Grafico; // Donde esté tu MainWindow
+// Importa tus otras vistas según necesites
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
-namespace GestionITVPro.WPF.ViewModels.Dashboard;
+namespace GestionITVPro.WPF.Views.Dashboard;
 
-public partial class DashboardView : ObservableObject 
+public partial class DashboardView : Page 
 {
-    private readonly ILogger _logger = Log.ForContext<DashboardViewModel>();
-    private readonly ICitasService _citasService;
-    private readonly IReportService _reportService;
-
-    [ObservableProperty] 
-    private InformeCita _informe;
-
-    // Acción para comunicar la navegación a la View
-    public Action<string>? NavigateAction { get; set; }
-
-    public DashboardView(ICitasService citasService, IReportService reportService) 
+    public DashboardView() 
     {
-        _citasService = citasService;
-        _reportService = reportService;
-        LoadStatistics();
+        InitializeComponent();
+
+        // Obtenemos el ViewModel del contenedor de servicios
+        var vm = App.ServiceProvider.GetRequiredService<DashboardViewModel>();
+        
+        // Suscribimos la acción de navegación
+        vm.NavigateAction = OnNavigate;
+        
+        DataContext = vm;
+        Log.Debug("📊 DashboardView cargado correctamente");
     }
 
-    private void LoadStatistics() 
+    private void OnNavigate(string view) 
     {
-        try 
-        {
-            // Obtenemos todas las citas activas para generar las estadísticas
-            var citas = _citasService.GetAll(null, null, null, null, null, 1, int.MaxValue, false);
-            Informe = _reportService.GenerarInformeEstadistico(citas);
-        }
-        catch (Exception ex) 
-        {
-            _logger.Error(ex, "❌ Error al cargar estadísticas");
-        }
-    }
+        // Obtenemos la referencia a la ventana principal para usar su Frame
+        var mainWindow = (MainWindow)Window.GetWindow(this);
+        
+        if (mainWindow == null) return;
 
-    [RelayCommand]
-    private void Refrescar() => LoadStatistics();
-
-    [RelayCommand]
-    private void VerGraficos() 
-    {
-        // Solo lanzamos la navegación si la vista está escuchando
-        NavigateAction?.Invoke("Graficos");
+        switch (view) 
+        {
+            // En DashboardView.xaml.cs
+            case "Graficos":
+                var graficosPage = App.ServiceProvider.GetRequiredService<GraficoView>();
+                mainWindow.MainFrame.Navigate(graficosPage);
+                break;
+            case "Citas":
+                // mainWindow.MainFrame.Navigate(new CitaView());
+                break;
+        }
     }
 }

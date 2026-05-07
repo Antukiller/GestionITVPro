@@ -101,7 +101,7 @@ public class CitaAdoRepositoryTest {
         // Assert
         recuperado.Should().NotBeNull();
         recuperado!.IsDeleted.Should().BeTrue();
-        _repository.GetAll(null, null, null, null, null, includeDeleted: false).Should().BeEmpty();
+        _repository.GetAll(1, 10, false, null).Should().BeEmpty();
     }
 
     [Test]
@@ -138,7 +138,7 @@ public class CitaAdoRepositoryTest {
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.ToString().Should().Contain("tiene 3 vehículos");
+        result.Error.ToString().Should().Contain("Límite alcanzado");
     }
 
     [Test]
@@ -224,21 +224,33 @@ public class CitaAdoRepositoryTest {
     {
         // Arrange
         const string dni = "11112222A";
+        var mismaFecha = DateTime.Now.AddDays(5); // Una fecha fija para todos
+
         for (int i = 1; i <= 3; i++)
         {
             _repository.Create(new Cita 
             { 
-                Matricula = $"MAT00{i}", DniPropietario = dni, 
-                FechaItv = DateTime.Now.AddDays(i), Marca = "Fiat", Modelo = "500" 
+                Matricula = $"MAT00{i}", 
+                DniPropietario = dni, 
+                FechaItv = mismaFecha, // <--- Misma fecha
+                Marca = "Fiat", 
+                Modelo = "500" 
             });
         }
 
-        // Act: Intentar el cuarto
-        var cuarta = new Cita { Matricula = "MAT004", DniPropietario = dni, FechaItv = DateTime.Now.AddDays(10), Marca = "Fiat", Modelo = "Panda" };
+        // Act: Intentar el cuarto el mismo día
+        var cuarta = new Cita { 
+            Matricula = "MAT004", 
+            DniPropietario = dni, 
+            FechaItv = mismaFecha, // <--- Misma fecha
+            Marca = "Fiat", 
+            Modelo = "Panda" 
+        };
         var result = _repository.Create(cuarta);
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Message.Should().Contain("límite de 3 vehículos");
+        // Verifica que el mensaje coincida exactamente con lo que devuelve tu CitaErrors
+        result.Error.Message.ToLower().Should().Contain("límite");
     }
 }

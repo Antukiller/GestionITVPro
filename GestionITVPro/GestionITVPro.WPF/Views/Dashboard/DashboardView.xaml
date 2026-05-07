@@ -4,12 +4,11 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       mc:Ignorable="d"
-      d:DesignHeight="700" d:DesignWidth="1000"
+      d:DesignHeight="720" d:DesignWidth="1000"
       Title="Panel de Control de Citas"
       Background="#0F0F12">
 
     <Page.Resources>
-        <!-- Estilo Gamer para Botones -->
         <Style x:Key="GamerActionButton" TargetType="Button">
             <Setter Property="Height" Value="50"/>
             <Setter Property="Background" Value="#1A1A2E"/>
@@ -40,103 +39,112 @@
         </Style>
     </Page.Resources>
 
-    <!-- Usamos un Viewbox para que el contenido se adapte al tamaño de la ventana sin cortarse -->
     <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
-        <Grid Margin="30" Width="900">
+        <Grid Margin="30" Width="950">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" /> <!-- Cabecera -->
-                <RowDefinition Height="Auto" /> <!-- Card Principal -->
-                <RowDefinition Height="Auto" /> <!-- Estadísticas y Acciones -->
-            </Grid.RowDefinitions>
+                <RowDefinition Height="Auto" /> <RowDefinition Height="Auto" /> <RowDefinition Height="Auto" /> </Grid.RowDefinitions>
 
-            <!-- 1. CABECERA -->
             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,25">
-                <Border Width="50" Height="50" Background="#00F2FF" CornerRadius="12" Margin="0,0,15,0">
-                    <TextBlock Text="📅" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Border Width="55" Height="55" Background="#00F2FF" CornerRadius="12" Margin="0,0,15,0">
+                    <TextBlock Text="📊" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <StackPanel>
-                    <TextBlock Text="CENTRO DE CONTROL" Foreground="White" FontSize="30" FontWeight="Black"/>
-                    <TextBlock Text="Gestión Operativa de Citas ITV" Foreground="#555" FontSize="12"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="CENTRO DE CONTROL" Foreground="White" FontSize="32" FontWeight="Black"/>
+                    <TextBlock Text="Umbrella ITV - Gestión de Datos Operativos" Foreground="#555" FontSize="12" FontWeight="SemiBold"/>
                 </StackPanel>
             </StackPanel>
 
-            <!-- 2. CARD DE CITAS -->
-            <Border Grid.Row="1" Background="#16161D" CornerRadius="20" Padding="25" Margin="0,0,0,25" 
+            <Border Grid.Row="1" Background="#16161D" CornerRadius="20" Padding="30" Margin="0,0,0,25" 
                     BorderBrush="#333" BorderThickness="1">
                 <Grid>
                     <StackPanel HorizontalAlignment="Left">
-                        <TextBlock Text="TOTAL DE CITAS" Foreground="#777" FontSize="13" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding Informe.TotalCitas}" Foreground="White" FontSize="56" FontWeight="Bold">
-                            <TextBlock.Effect>
-                                <DropShadowEffect Color="#00F2FF" BlurRadius="10" ShadowDepth="0" Opacity="0.5"/>
-                            </TextBlock.Effect>
-                        </TextBlock>
+                        <TextBlock Text="VOLUMEN TOTAL DE VEHÍCULOS" Foreground="#777" FontSize="13" FontWeight="Bold"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Informe.TotalCitas}" Foreground="White" FontSize="64" FontWeight="Black">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect Color="#00F2FF" BlurRadius="15" ShadowDepth="0" Opacity="0.4"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+                            <TextBlock Text=" REGISTROS" Foreground="#333" FontSize="20" FontWeight="Black" VerticalAlignment="Bottom" Margin="10,0,0,12"/>
+                        </StackPanel>
                     </StackPanel>
+                    
                     <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top">
-                        <TextBlock Text="SISTEMA: ONLINE" Foreground="#00FF88" FontSize="12" FontWeight="Bold" HorizontalAlignment="Right"/>
-                        <TextBlock Text="{Binding Informe.UltimaCitaProgramada, StringFormat='Ultima: {0:dd/MM/yy}'}" 
-                                   Foreground="#555" FontSize="10" HorizontalAlignment="Right" Margin="0,5,0,0"/>
+                        <Border Background="#0D2A1F" CornerRadius="5" Padding="8,4" Margin="0,0,0,10">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="8" Height="8" Fill="#00FF88" Margin="0,0,8,0"/>
+                                <TextBlock Text="MONITORIZACIÓN ACTIVA" Foreground="#00FF88" FontSize="11" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="{Binding Informe.UltimaCitaProgramada, StringFormat='Último dato: {0:dd/MM/yy}'}" 
+                                   Foreground="#555" FontSize="10" HorizontalAlignment="Right"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- 3. SECCIÓN INFERIOR: ESTADÍSTICAS Y ACCIONES -->
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.5*" />
+                    <ColumnDefinition Width="1.6*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Columna Izquierda: Estadísticas -->
-                <Border Grid.Column="0" Background="#16161D" CornerRadius="20" Padding="20" Margin="0,0,15,0">
+                <Border Grid.Column="0" Background="#16161D" CornerRadius="20" Padding="25" Margin="0,0,20,0" BorderBrush="#222" BorderThickness="1">
                     <StackPanel>
-                        <TextBlock Text="ESTADÍSTICAS" Foreground="White" FontSize="18" FontWeight="Bold" Margin="0,0,0,20"/>
+                        <TextBlock Text="RESUMEN OPERATIVO" Foreground="White" FontSize="18" FontWeight="Bold" Margin="0,0,0,25"/>
                         
-                        <!-- Completadas -->
-                        <StackPanel Margin="0,0,0,15">
-                            <Grid Margin="0,0,0,5">
-                                <TextBlock Text="CITAS COMPLETADAS" Foreground="#AAA" FontSize="12"/>
-                                <TextBlock Text="{Binding Informe.PorcentajeCompletadas, StringFormat={}{0:F0}%}" 
-                                           Foreground="#00F2FF" FontSize="12" HorizontalAlignment="Right" FontWeight="Bold"/>
+                        <StackPanel Margin="0,0,0,20">
+                            <Grid Margin="0,0,0,8">
+                                <TextBlock Text="CITAS FINALIZADAS" Foreground="#AAA" FontSize="12" FontWeight="Bold"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding Informe.CitasCompletadas}" Foreground="#00F2FF" FontWeight="Bold" FontSize="14"/>
+                                    <TextBlock Text="{Binding Informe.PorcentajeCompletadas, StringFormat=' ({0:F0}%)'}" Foreground="#555" FontSize="12" VerticalAlignment="Bottom"/>
+                                </StackPanel>
                             </Grid>
-                            <ProgressBar Value="{Binding Informe.PorcentajeCompletadas}" Height="6" Foreground="#00F2FF" Background="#252525" BorderThickness="0"/>
+                            <ProgressBar Value="{Binding Informe.PorcentajeCompletadas, Mode=OneWay}" Height="10" Foreground="#00F2FF" Background="#0A0A0C" BorderThickness="0"/>
                         </StackPanel>
 
-                        <!-- Pendientes -->
-                        <StackPanel Margin="0,0,0,20">
-                            <Grid Margin="0,0,0,5">
-                                <TextBlock Text="PENDIENTES" Foreground="#AAA" FontSize="12"/>
+                        <StackPanel Margin="0,0,0,25">
+                            <Grid Margin="0,0,0,8">
+                                <TextBlock Text="PENDIENTES" Foreground="#AAA" FontSize="12" FontWeight="Bold"/>
                                 <TextBlock Text="{Binding Informe.PorcentajePendientes, StringFormat={}{0:F0}%}" 
-                                           Foreground="#FF0055" FontSize="12" HorizontalAlignment="Right" FontWeight="Bold"/>
+                                           Foreground="#FF0055" FontSize="14" HorizontalAlignment="Right" FontWeight="Bold"/>
                             </Grid>
-                            <ProgressBar Value="{Binding Informe.PorcentajePendientes}" Height="6" Foreground="#FF0055" Background="#252525" BorderThickness="0"/>
+                            <ProgressBar Value="{Binding Informe.PorcentajePendientes, Mode=OneWay}" Height="10" Foreground="#FF0055" Background="#0A0A0C" BorderThickness="0"/>
                         </StackPanel>
                         
-                        <!-- Mini Stats -->
-                        <UniformGrid Columns="2" Margin="0,10,0,0">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Hoy:" Foreground="#777" FontSize="12"/>
-                                <TextBlock Text="{Binding Informe.CitasParaHoy}" Foreground="White" FontWeight="Bold" Margin="5,0,0,0"/>
+                        <UniformGrid Columns="3" Margin="0,15,0,0">
+                            <StackPanel>
+                                <TextBlock Text="PARA HOY" Foreground="#555" FontSize="11" FontWeight="Black"/>
+                                <TextBlock Text="{Binding Informe.CitasParaHoy}" Foreground="White" FontSize="24" FontWeight="Bold"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <TextBlock Text="Atrasadas:" Foreground="#777" FontSize="12"/>
-                                <TextBlock Text="{Binding Informe.CitasAtrasadas}" Foreground="#FF0055" FontWeight="Bold" Margin="5,0,0,0"/>
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="ATRASADAS" Foreground="#555" FontSize="11" FontWeight="Black"/>
+                                <TextBlock Text="{Binding Informe.CitasAtrasadas}" Foreground="#FF0055" FontSize="24" FontWeight="Bold"/>
+                            </StackPanel>
+                            <StackPanel HorizontalAlignment="Right">
+                                <TextBlock Text="ELÉCTRICOS" Foreground="#555" FontSize="11" FontWeight="Black"/>
+                                <TextBlock Text="{Binding Informe.Electrico}" Foreground="#00FF88" FontSize="24" FontWeight="Bold"/>
                             </StackPanel>
                         </UniformGrid>
                     </StackPanel>
                 </Border>
 
-                <!-- Columna Derecha: Acciones -->
-                <Border Grid.Column="1" Background="#1A1A23" CornerRadius="20" Padding="20">
+                <Border Grid.Column="1" Background="#1A1A23" CornerRadius="20" Padding="25" BorderBrush="#333" BorderThickness="1">
                     <StackPanel VerticalAlignment="Stretch">
-                        <TextBlock Text="ACCIONES" Foreground="White" FontSize="18" FontWeight="Bold" Margin="0,0,0,20" HorizontalAlignment="Center"/>
+                        <TextBlock Text="DATOS" Foreground="White" FontSize="18" FontWeight="Bold" Margin="0,0,0,25" HorizontalAlignment="Center"/>
                         
-                        <Button Content="REFRESCAR 🔄" Command="{Binding RefrescarCommand}" Style="{StaticResource GamerActionButton}"/>
-                        <Button Content="GRÁFICOS 📊" Command="{Binding VerGraficosCommand}" Style="{StaticResource GamerActionButton}" 
+                        <Button Content="ACTUALIZAR PANEL 🔄" Command="{Binding RefrescarCommand}" Style="{StaticResource GamerActionButton}"/>
+                        <Button Content="VER GRÁFICOS 📈" Command="{Binding VerGraficosCommand}" Style="{StaticResource GamerActionButton}" 
                                 BorderBrush="#7000FF" Foreground="#7000FF" Background="#120B20"/>
-                        
-                        <Border Background="#252535" CornerRadius="10" Padding="10" Margin="0,10,0,0">
-                            <TextBlock Text="LUIS VIVES ITV" Foreground="#555" FontSize="10" TextAlignment="Center" FontWeight="Bold"/>
+
+                        <Border Background="#252535" CornerRadius="8" Padding="15" Margin="0,20,0,0">
+                            <StackPanel>
+                                <TextBlock Text="ESTACIÓN" Foreground="#555" FontSize="9" FontWeight="Bold" TextAlignment="Center"/>
+                                <TextBlock Text="LUIS VIVES ITV" Foreground="White" FontSize="12" FontWeight="Bold" TextAlignment="Center" Margin="0,2,0,0"/>
+                                <Separator Background="#333" Margin="0,10"/>
+                                <TextBlock Text="ESTADO" Foreground="#555" FontSize="9" FontWeight="Bold" TextAlignment="Center"/>
+                                <TextBlock Text="Sincronizado" Foreground="#00FF88" FontSize="10" TextAlignment="Center"/>
+                            </StackPanel>
                         </Border>
                     </StackPanel>
                 </Border>

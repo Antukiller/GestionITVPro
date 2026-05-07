@@ -2,12 +2,14 @@
 using CSharpFunctionalExtensions;
 using Dapper;
 using GestionITVPro.Entity;
+using GestionITVPro.Enums;
 using GestionITVPro.Error.Cita;
 using GestionITVPro.Errors.Common;
 using GestionITVPro.Factory;
 using GestionITVPro.Mapper;
 using GestionITVPro.Models;
 using GestionITVPro.Repositories.Base;
+using Microsoft.Data.Sqlite;
 using Serilog;
 
 namespace GestionITVPro.Repositories.Dapper;
@@ -28,31 +30,27 @@ public class CitaDapperRepository : ICitaRepository {
     }
 
 
-    public IEnumerable<Cita> GetAll(string? marca, string? dniPropietario, string? matricula, 
-        DateTime? desde, DateTime? hasta, int page = 1, int pageSize = 10, bool includeDeleted = true) 
+    public IEnumerable<Cita> GetAll(int pagina, int tamPagina, bool isDeleteInclude, string campoBusqueda) 
     {
-        // CAMBIO: Usamos date() para que la comparación de strings funcione como fechas
+        // Usamos '%' || @Busqueda || '%' para concatenar comodines en SQLite
         const string sql = @"
-        SELECT * FROM Citas 
-        WHERE (@Marca IS NULL OR Marca LIKE '%' || @Marca || '%')
-          AND (@Dni IS NULL OR DniPropietario = @Dni)
-          AND (@Matricula IS NULL OR Matricula = @Matricula)
-          AND (@Desde IS NULL OR date(FechaItv) >= date(@Desde))
-          AND (@Hasta IS NULL OR date(FechaItv) <= date(@Hasta))
-          AND (@IncludeDeleted = 1 OR IsDeleted = 0)
-        ORDER BY Id 
-        LIMIT @Limit OFFSET @Offset";
+    SELECT * FROM Citas 
+    WHERE (@IncludeDeleted = 1 OR IsDeleted = 0)
+      AND (@Busqueda IS NULL OR (
+          Matricula LIKE '%' || @Busqueda || '%' OR
+          Marca LIKE '%' || @Busqueda || '%' OR
+          Modelo LIKE '%' || @Busqueda || '%' OR
+          DniPropietario LIKE '%' || @Busqueda || '%'
+      ))
+    ORDER BY Id 
+    LIMIT @Limit OFFSET @Offset";
 
         try {
             var parameters = new {
-                Marca = string.IsNullOrWhiteSpace(marca) ? null : marca,
-                Dni = string.IsNullOrWhiteSpace(dniPropietario) ? null : dniPropietario,
-                Matricula = string.IsNullOrWhiteSpace(matricula) ? null : matricula,
-                Desde = desde?.ToString("yyyy-MM-dd"), // Formato simplificado para date()
-                Hasta = hasta?.ToString("yyyy-MM-dd"),
-                IncludeDeleted = includeDeleted ? 1 : 0,
-                Limit = pageSize,
-                Offset = (page - 1) * pageSize
+                Busqueda = string.IsNullOrWhiteSpace(campoBusqueda) ? null : campoBusqueda,
+                IncludeDeleted = isDeleteInclude ? 1 : 0,
+                Limit = tamPagina,
+                Offset = (pagina - 1) * tamPagina
             };
 
             var entidades = _connection.Query<CitaEntity>(sql, parameters);
@@ -63,6 +61,7 @@ public class CitaDapperRepository : ICitaRepository {
             return Enumerable.Empty<Cita>();
         }
     }
+       
 
     public Cita? GetById(int id) {
         try {
@@ -76,62 +75,117 @@ public class CitaDapperRepository : ICitaRepository {
         }
     }
 
-    public Result<Cita, DomainError> Create(Cita model) {
-        var dni = model.DniPropietario ?? "";
-        var matricula = model.Matricula ?? "";
+   public Result<IEnumerable<Cita>, DomainError> GetByDateMatricula(
+    DateTime inicio, DateTime? fin, int pagina, int tamPagina, 
+    string searchText = null, string motor = "TODOS", bool isDeleteInclude = false)
+{
+    try
+    {
+        // SQL corregido para usar las funciones de fecha de SQLite y parámetros consistentes
+        var sql = @"
+        SELECT * FROM Citas 
+        WHERE date(FechaInspeccion) >= date(@inicio) 
+        AND (@fin IS NULL OR date(FechaInspeccion) <= date(@fin))
+        AND (@isDeleteInclude = 1 OR IsDeleted = 0)
+        AND (@motor = 'TODOS' OR Motor = @motorValue)
+        AND (@search IS NULL OR (
+            LOWER(Matricula) LIKE @search OR 
+            LOWER(DniPropietario) LIKE @search OR 
+            LOWER(Marca) LIKE @search))
+        ORDER BY FechaInspeccion ASC
+        LIMIT @limit OFFSET @offset";
 
-        // 1. REGLA: Límite de 3 (Dapper usa tu método privado ContarCitaPorDni)
-        if (ContarCitaPorDni(dni) >= 3) {
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["Límite alcanzado: Este propietario ya tiene 3 vehículos registrados."]));
+        // Mapeo de Motor: Si en DB es INTEGER (como en tu EnsureTable), 
+        // necesitamos convertir el string "GASOLINA" a su valor int del Enum.
+        int motorValue = 0;
+        if (motor != "TODOS")
+        {
+            // Intentamos parsear el string al Enum MotorType (o como se llame en tu modelo)
+            if (Enum.TryParse<Motor>(motor, true, out var resultadoEnum))
+            {
+                motorValue = (int)resultadoEnum;
+            }
         }
 
-        // 2. REGLA: Cita mismo día
-        if (ExisteCitaMismoDia(matricula, model.FechaItv)) {
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.MatriculaAlreadyExists(matricula));
-        }
+        var parametros = new {
+            inicio = inicio.ToString("yyyy-MM-dd"),
+            fin = fin?.ToString("yyyy-MM-dd"),
+            isDeleteInclude = isDeleteInclude ? 1 : 0,
+            motor = motor.ToUpper(),
+            motorValue = motorValue,
+            search = string.IsNullOrWhiteSpace(searchText) ? null : $"%{searchText.ToLower()}%",
+            limit = tamPagina,
+            offset = (pagina - 1) * tamPagina
+        };
 
-        // 3. INTEGRIDAD: Matrícula única
-        if (ExistsMatricula(matricula)) {
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.MatriculaAlreadyExists(matricula));
-        }
+        // Ejecutamos sobre _connection directamente (la que recibe el constructor)
+        var entidades = _connection.Query<CitaEntity>(sql, parametros);
+        
+        var modelos = entidades.Select(e => e.ToModel()!).ToList();
 
-        const string sql = @"
-            INSERT INTO Citas (
-                Matricula, Marca, Modelo, Cilindrada, Motor, 
-                DniPropietario, FechaItv, FechaInspeccion, CreatedAt, UpdatedAt, IsDeleted
-            ) VALUES (
-                @Matricula, @Marca, @Modelo, @Cilindrada, @Motor, 
-                @DniPropietario, @FechaItv, @FechaInspeccion, @CreatedAt, @UpdatedAt, @IsDeleted
-            );
-            SELECT last_insert_rowid();";
-
-        try {
-            var id = _connection.QuerySingle<int>(sql, new {
-                Matricula = model.Matricula,
-                model.Marca,
-                model.Modelo,
-                model.Cilindrada,
-                Motor = (int)model.Motor,
-                DniPropietario = model.DniPropietario,
-                FechaItv = model.FechaItv.ToString("yyyy-MM-dd HH:mm:ss"),
-                FechaInspeccion = model.FechaInspeccion.ToString("yyyy-MM-dd HH:mm:ss"), // AÑADIDO
-                CreatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
-                UpdatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
-                IsDeleted = 0
-            });
-
-            return GetById(id) is { } creado 
-                ? Result.Success<Cita, DomainError>(creado)
-                : Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
-        }
-        catch (Exception ex) {
-            _logger.Error(ex, "Error en Dapper Create");
-            return Result.Failure<Cita, DomainError>(CitaErrors.DatabaseError(ex.Message));
-        }
+        return Result.Success<IEnumerable<Cita>, DomainError>(modelos);
     }
+    catch (Exception ex)
+    {
+        _logger.Error(ex, "Error en GetByDateMatricula Dapper");
+        return Result.Failure<IEnumerable<Cita>, DomainError>(CitaErrors.DatabaseError(ex.Message));
+    }
+}
+
+    public Result<Cita, DomainError> Create(Cita model) {
+    // 1. REGLA: Límite de 3 por DNI el mismo día
+    // Nota: He ajustado la lógica para que cuente citas en ese DNI para ESA fecha específica
+    var citasDniFecha = _connection.ExecuteScalar<int>(
+        "SELECT COUNT(1) FROM Citas WHERE DniPropietario = @Dni AND date(FechaItv) = date(@Fecha) AND IsDeleted = 0",
+        new { Dni = model.DniPropietario, Fecha = model.FechaItv.ToString("yyyy-MM-dd") });
+
+    if (citasDniFecha >= 3) {
+        return Result.Failure<Cita, DomainError>(
+            CitaErrors.Validation(["Límite alcanzado: Máximo 3 citas por propietario al día."]));
+    }
+
+    // 2. REGLA: El vehículo no puede repetir el mismo día
+    if (ExisteCitaMismoDia(model.Matricula, model.FechaItv)) {
+        return Result.Failure<Cita, DomainError>(
+            CitaErrors.MatriculaAlreadyExists(model.Matricula));
+    }
+
+    const string sql = @"
+        INSERT INTO Citas (
+            Matricula, Marca, Modelo, Cilindrada, Motor, 
+            DniPropietario, FechaItv, FechaInspeccion, CreatedAt, UpdatedAt, IsDeleted
+        ) VALUES (
+            @Matricula, @Marca, @Modelo, @Cilindrada, @Motor, 
+            @DniPropietario, @FechaItv, @FechaInspeccion, @CreatedAt, @UpdatedAt, @IsDeleted
+        );
+        SELECT last_insert_rowid();";
+
+    try {
+        var id = _connection.QuerySingle<int>(sql, new {
+            model.Matricula,
+            model.Marca,
+            model.Modelo,
+            model.Cilindrada,
+            Motor = (int)model.Motor,
+            model.DniPropietario,
+            // Guardamos las fechas como strings ISO para que SQLite pueda filtrarlas con date()
+            FechaItv = model.FechaItv.ToString("yyyy-MM-dd HH:mm:ss"),
+            FechaInspeccion = model.FechaInspeccion.ToString("yyyy-MM-dd HH:mm:ss"),
+            CreatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            UpdatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            IsDeleted = 0
+        });
+
+        var creado = GetById(id);
+        return creado != null 
+            ? Result.Success<Cita, DomainError>(creado)
+            : Result.Failure<Cita, DomainError>(CitaErrors.NotFound(id.ToString()));
+    }
+    catch (Exception ex) {
+        _logger.Error(ex, "Error en Dapper Create");
+        return Result.Failure<Cita, DomainError>(CitaErrors.DatabaseError(ex.Message));
+    }
+}
 
     public Result<Cita, DomainError> Update(int id, Cita model) {
         var existing = GetById(id);
@@ -268,6 +322,36 @@ public class CitaDapperRepository : ICitaRepository {
             return Result.Failure<Cita, DomainError>(CitaErrors.DatabaseError(ex.Message));
         }
     }
+    
+    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool isDeleteInclude) 
+    {
+        // La consulta es casi igual a la de búsqueda, pero solo pedimos el COUNT
+        const string sql = @"
+        SELECT COUNT(1) FROM Citas 
+        WHERE (@IncludeDeleted = 1 OR IsDeleted = 0)
+          AND date(FechaInspeccion) >= date(@Inicio)
+          AND (@Fin IS NULL OR date(FechaInspeccion) <= date(@Fin))
+          AND (@Matricula IS NULL OR Matricula LIKE @MatriculaLike)";
+
+        try 
+        {
+            var parameters = new {
+                Inicio = inicio.ToString("yyyy-MM-dd"),
+                Fin = fin?.ToString("yyyy-MM-dd"),
+                IncludeDeleted = isDeleteInclude ? 1 : 0,
+                Matricula = string.IsNullOrWhiteSpace(matricula) ? null : matricula,
+                MatriculaLike = string.IsNullOrWhiteSpace(matricula) ? null : $"%{matricula}%"
+            };
+
+            // ExecuteScalar devuelve el primer valor de la primera fila (el COUNT)
+            return _connection.ExecuteScalar<int>(sql, parameters);
+        }
+        catch (Exception ex) 
+        {
+            _logger.Error(ex, "Error al contar citas filtradas con Dapper");
+            return 0;
+        }
+    }
 
     private void EnsureTable(bool dropData) {
         if (_connection.State != ConnectionState.Open) _connection.Open();
@@ -279,8 +363,8 @@ public class CitaDapperRepository : ICitaRepository {
                 Matricula TEXT NOT NULL UNIQUE,
                 Marca TEXT NOT NULL,
                 Modelo TEXT NOT NULL,
-                Cilindrada INTEGER,
-                Motor INTEGER,
+                Cilindrada INTEGER NOT NULL,
+                Motor INTEGER NOT NULL,
                 DniPropietario TEXT NOT NULL,
                 FechaItv TEXT NOT NULL,
                 FechaInspeccion TEXT NOT NULL, -- AÑADIDO
@@ -319,7 +403,7 @@ public class CitaDapperRepository : ICitaRepository {
 
 
     private void Seed() {
-        foreach (var v in VehiculosFactory.Seed()) Create(v);
+        foreach (var v in CitasFactory.Seed()) Create(v);
     }
 }
 

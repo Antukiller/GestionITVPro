@@ -13,36 +13,33 @@ public partial class DashboardViewModel : ObservableObject
     private readonly ICitasService _citasService;
     private readonly IReportService _reportService;
 
-    // Propiedad vinculada a la Card Principal y Estadísticas en el XAML
     [ObservableProperty] 
     private InformeCita _informe;
+
+    // Acción para comunicar la navegación a la View (C# del DashboardView)
+    public Action<string>? NavigateAction { get; set; }
 
     public DashboardViewModel(ICitasService citasService, IReportService reportService) 
     {
         _citasService = citasService;
         _reportService = reportService;
-
-        // Carga inicial al construir el ViewModel
         LoadStatistics();
     }
 
-    /// <summary>
-    /// Carga los datos necesarios para InformeCita usando el Service.
-    /// </summary>
     private void LoadStatistics() 
     {
         try 
         {
-            _logger.Information("📊 Actualizando estadísticas del Dashboard...");
-
-            // Obtenemos las citas activas del service (pageSize: int.MaxValue para tener todas)
-            var citas = _citasService.GetAll(null, null, null, null, null, 1, int.MaxValue, false);
-
-            // El ReportService genera el objeto "Informe" que contiene:
-            // TotalCitas, PorcentajeCompletadas, PorcentajePendientes, CitasParaHoy, etc.
+            _logger.Information("📊 Cargando estadísticas del Dashboard...");
+        
+            // ✅ CAMBIO: Cambiamos el último parámetro a 'true'
+            // Esto permite que el ReportService vea los coches con IsDeleted = true
+            var citas = _citasService.GetAll(1, int.MaxValue, true);
+        
             Informe = _reportService.GenerarInformeEstadistico(citas);
-
-            _logger.Information("✅ Estadísticas cargadas correctamente");
+        
+            _logger.Information("✅ Informe generado: {Total} citas, {Completadas} completadas", 
+                Informe.TotalCitas, Informe.CitasCompletadas);
         }
         catch (Exception ex) 
         {
@@ -50,19 +47,13 @@ public partial class DashboardViewModel : ObservableObject
         }
     }
 
-    // --- COMANDOS (Basados estrictamente en tus botones del XAML) ---
-
     [RelayCommand]
-    private void Refrescar() 
-    {
-        LoadStatistics();
-    }
+    private void Refrescar() => LoadStatistics();
 
     [RelayCommand]
     private void VerGraficos() 
     {
-        // Lógica de navegación o acción para el botón GRÁFICOS 📊
-        _logger.Information("Navegando a Gráficos...");
+        // Esto dispara el evento que escuchará el DashboardView.xaml.cs
+        NavigateAction?.Invoke("Graficos");
     }
 }
-    

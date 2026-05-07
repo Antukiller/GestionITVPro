@@ -194,13 +194,7 @@ public class CitaJsonRepositoryTest {
             // Act
             // Pasamos null en los filtros (marca, dni, matricula, desde, hasta)
             // para que la consulta no filtre nada y devuelva la lista completa.
-            var resultado = _repository.GetAll(
-                marca: null, 
-                dniPropietario: null, 
-                matricula: null, 
-                desde: null, 
-                hasta: null
-            );
+            var resultado = _repository.GetAll(1, 10, true, null);
     
             // Assert
             resultado.Should().HaveCount(2);
@@ -216,15 +210,7 @@ public class CitaJsonRepositoryTest {
                 });
     
             // Act - page: 1, pageSize: 3
-            var resultado = _repository.GetAll(
-                marca: null, 
-                dniPropietario: null, 
-                matricula: null, 
-                desde: null, 
-                hasta: null, 
-                page: 1, 
-                pageSize: 3
-            );
+            var resultado = _repository.GetAll(1, 3, true, null);
     
             // Assert
             resultado.Should().HaveCount(3);
@@ -239,14 +225,7 @@ public class CitaJsonRepositoryTest {
             _repository.Delete(res2.Value.Id); // Borrado lógico (IsDeleted = true)
     
             // Act 
-            var resultado = _repository.GetAll(
-                marca: null, 
-                dniPropietario: null, 
-                matricula: null, 
-                desde: null, 
-                hasta: null, 
-                includeDeleted: false
-            );
+            var resultado = _repository.GetAll(1, 10, false, null);
     
             // Assert
             resultado.Should().HaveCount(1);
@@ -313,13 +292,7 @@ public class CitaJsonRepositoryTest {
     
             // Al pasar null en los filtros, estamos pidiendo "todo lo que haya".
             // Como hemos hecho DeleteAll, la lista resultante debe estar vacía.
-            _repository.GetAll(
-                marca: null, 
-                dniPropietario: null, 
-                matricula: null, 
-                desde: null, 
-                hasta: null
-            ).Should().BeEmpty();
+            _repository.GetAll(1, 10, true, null).Should().BeEmpty();
         }
     }
     
@@ -629,7 +602,7 @@ public class CitaJsonRepositoryTest {
             _repository.DeleteAll();
     
             // Assert
-            var resultado = _repository.GetAll(null, null, null, null, null);
+            var resultado = _repository.GetAll(1, 10, true, null);
             resultado.Should().BeEmpty();
         }
     }

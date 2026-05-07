@@ -48,24 +48,16 @@ public class CitasServiceTest {
             };
     
             // El Mock debe esperar los nuevos parámetros (nulos para los filtros)
-            _repositoryMock.Setup(r => r.GetAll(
-                null, // marca
-                null, // dniPropietario
-                null, // matricula
-                null, // desde
-                null, // hasta
-                1,    // page
-                10,   // pageSize
-                true  // includeDeleted
+            _repositoryMock.Setup(r => r.GetAll(1, 10, true, null  // includeDeleted
             )).Returns(c);
     
             // Act
             // OPCIÓN A: Usar parámetros nombrados para saltar los filtros opcionales
-            var r = _service.GetAll(null, null, null, null, null, page: 1, pageSize: 10, includeDeleted: true);
+            var r = _service.GetAll(page: 1, pageSize: 10, includeDeleted: true);
     
             // Assert
             r.Should().HaveCount(1);
-            _repositoryMock.Verify(r => r.GetAll(null, null, null, null, null, 1, 10, true), Times.Once);
+            _repositoryMock.Verify(r => r.GetAll(1, 10, true, null), Times.Once);
         }
 
         [Test]
@@ -76,17 +68,17 @@ public class CitasServiceTest {
             };
     
             // Configuramos el mock para la página 1
-            _repositoryMock.Setup(repo => repo.GetAll(null, null, null, null, null, 1, 5, false))
+            _repositoryMock.Setup(repo => repo.GetAll(1, 10, true, null))
                 .Returns(c);
     
             // Act
             // CAMBIO: Pedimos la página 1 para que coincida con el Setup
-            var r = _service.GetAll(null, null, null, null, null, 1, 5, false).ToList();
+            var r = _service.GetAll(1, 5, false).ToList();
     
             // Assert
             r.Should().HaveCount(1);
             r.First().Matricula.Should().Be("1234-BBB");
-            _repositoryMock.Verify(repo => repo.GetAll(null, null, null, null, null, 1, 5, false), Times.Once);
+            _repositoryMock.Verify(repo => repo.GetAll(1, 10, true, null), Times.Once);
         }
         [Test]
         public void TotalCitas_DeberiaRetornarElConteoCorrectoDesdeElRepositorio()
@@ -100,7 +92,7 @@ public class CitasServiceTest {
             };
 
             // Configuramos el mock para que cuando GetAll pida "todo" (1 a int.MaxValue), devuelva la lista
-            _repositoryMock.Setup(r => r.GetAll(null, null, null, null, null, 1, int.MaxValue, It.IsAny<bool>()))
+            _repositoryMock.Setup(r => r.GetAll(1, 10, true, null))
                 .Returns(citas);
 
             // Act
@@ -109,7 +101,7 @@ public class CitasServiceTest {
 
             // Assert
             total.Should().Be(3);
-            _repositoryMock.Verify(r => r.GetAll(null, null, null, null, null, 1, int.MaxValue, It.IsAny<bool>()), Times.Once);
+            _repositoryMock.Verify(r => r.GetAll(1, 10, true, null), Times.Once);
         }
 
         [Test]
@@ -263,9 +255,7 @@ public class CitasServiceTest {
 
             // Configuramos el Mock para que acepte CUALQUIER valor en los parámetros
             // o los valores específicos que usa tu servicio (1, int.MaxValue, true)
-            _repositoryMock.Setup(r => r.GetAll(null, null, null, null, null, It.IsAny<int>(), 
-                    It.IsAny<int>(), 
-                    It.IsAny<bool>()))
+            _repositoryMock.Setup(r => r.GetAll(1, 10, true, null))
                 .Returns(citas);
 
             // Act
@@ -287,7 +277,7 @@ public class CitasServiceTest {
                 new() { Id = 1, Matricula = "A", DniPropietario = "1", Marca = "A", Modelo = "M1", Cilindrada = 1000 }
             };
     
-            _repositoryMock.Setup(r => r.GetAll(null, null, null, null, null, It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>()))
+            _repositoryMock.Setup(r => r.GetAll(1, 10, true, null))
                 .Returns(citas);
 
             // Act & Assert - Probamos cada rama para forzar la cobertura
@@ -319,7 +309,7 @@ public class CitasServiceTest {
                 new() { Id = 2, FechaItv = hoy.AddDays(1) }
             };
 
-            _repositoryMock.Setup(r => r.GetAll(null, null, null, null, null, It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>()))
+            _repositoryMock.Setup(r => r.GetAll(1, 10, true, null))
                 .Returns(citas);
 
             // Act

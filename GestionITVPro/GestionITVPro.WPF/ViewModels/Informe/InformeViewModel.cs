@@ -33,7 +33,7 @@ public partial class InformeViewModel(
 
 
     [RelayCommand]
-    private void GenerarInformeCitaPdf() {
+    private void GenerarInformeCitasPdf() {
         try {
             IsGenerating = true;
             StatusMessage = "Generando informe de citas...";
@@ -78,7 +78,7 @@ public partial class InformeViewModel(
     
 
     [RelayCommand]
-    private void GenerarInformeCitaHtml() {
+    private void GenerarInformeCitasHtml() {
         try {
             IsGenerating = true;
             StatusMessage = "Generando informe HTML...";

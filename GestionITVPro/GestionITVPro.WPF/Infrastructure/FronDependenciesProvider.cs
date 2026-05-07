@@ -1,4 +1,5 @@
-﻿using GestionITVPro.WPF.ViewModels;
+﻿using GestionITVPro.Views.Main;
+using GestionITVPro.WPF.ViewModels;
 using GestionITVPro.WPF.ViewModels.Backup;
 using GestionITVPro.WPF.ViewModels.Citas;
 using GestionITVPro.WPF.ViewModels.Dashboard;
@@ -42,6 +43,7 @@ public static class FrontDependenciesProvider {
         services.AddTransient<MainViewModel>();
         // ViewModel del Dashboard (página de inicio con estadísticas)
         services.AddTransient<DashboardViewModel>();
+        // ViewModels de Citas (listado y edición)
         services.AddTransient<CitaViewModel>();
         services.AddTransient<CitaEditViewModel>();
         // ViewModel de Backup (gestión de copias de seguridad)

@@ -19,14 +19,12 @@ public class CitasService(
     private readonly ILogger _logger = Log.ForContext<CitasService>();
 
 
-    public int TotalCitas => repository.GetAll(null, null, null, null, null, 1, int.MaxValue).Count();
+    public int TotalCitas => repository.GetAll(  1, int.MaxValue, true,null).Count();
 
 
-    public IEnumerable<Cita> GetAll(string? marca, string? dniPropietario, string? matricula, 
-        DateTime? desde, DateTime? hasta, int page, int pageSize, bool includeDeleted) 
-    {
+    public IEnumerable<Cita> GetAll(int page, int pageSize = 10, bool includeDeleted = true, string? campoBusqueda = null) {
         // Asegúrate de que estás pasando el parámetro includeDeleted al repositorio
-        var resultados = repository.GetAll(marca, dniPropietario, matricula, desde, hasta, page, pageSize, includeDeleted);
+        var resultados = repository.GetAll(page, pageSize, includeDeleted, campoBusqueda);
     
         // Si el repositorio binario/memoria no implementa la paginación internamente, 
         // asegúrate de no estar haciendo un doble Skip/Take aquí.
@@ -37,7 +35,7 @@ public class CitasService(
     {
         // 1. Obtenemos todas las citas del repositorio (sin paginar aún)
         // Usamos int.MaxValue para traer todas y poder ordenar el conjunto completo
-        var citas = repository.GetAll(null, null, null, null, null, 1, int.MaxValue, includeDeleted);
+        var citas = repository.GetAll(1, int.MaxValue, includeDeleted, null);
 
         // 2. Aplicamos el ordenamiento según el Enum
         var listaOrdenada = AplicarOrdenamientoCitas(citas, ordenamiento);
@@ -66,6 +64,26 @@ public class CitasService(
             return Result.Success<Cita, DomainError>(cita);
 
         return Result.Failure<Cita, DomainError>(CitaErrors.NotFound(matricula));
+    }
+
+    public Result<IEnumerable<Cita>, DomainError> GetByDateMatricula(DateTime inicio,
+        DateTime? fin,
+        int pagina,
+        int tamPagina,
+        string searchText = null, string motor = "TODOS",
+        bool isDeleteInclude = false) 
+    {
+        _logger.Information("Service: Solicitando búsqueda filtrada al repositorio");
+
+        // Aquí podrías añadir validaciones de lógica de negocio, por ejemplo:
+        if (fin.HasValue && fin < inicio)
+        {
+            return Result.Failure<IEnumerable<Cita>, DomainError>(
+                CitaErrors.Validation(["La fecha de fin no puede ser anterior a la de inicio"]));
+        }
+
+        // Llamada al repositorio (sea cual sea el que estés usando: EF, Dapper, Ado o Memory)
+        return repository.GetByDateMatricula(inicio, fin, pagina, tamPagina, searchText, motor, isDeleteInclude: isDeleteInclude);
     }
 
     public Result<Cita, DomainError> GetByDniPropietario(string dni) {
@@ -117,26 +135,15 @@ public class CitasService(
     public int CountCitas(bool includeDeleted = false) {
         return repository.CountCita(includeDeleted);
     }
-    
 
-    public int CountCompletadas() {
-        // Citas cuya fecha ya pasó (asumiendo que no están borradas)
-        return repository.GetAll(null, null, null, null, DateTime.Today.AddDays(-1), 1, int.MaxValue, false).Count();
+    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool incluirEliminados) 
+    {
+        _logger.Debug("Service: Contando citas filtradas para paginación");
+    
+        // Llamada directa al repositorio (sea ADO, Dapper o EF)
+        return repository.CountCitasFiltradas(matricula, inicio, fin, incluirEliminados);
     }
 
-    public int CountPendientes() {
-        // Citas de hoy en adelante
-        return repository.GetAll(null, null, null, DateTime.Today, null, 1, int.MaxValue, false).Count();
-    }
-
-    // Para las métricas de motor (opcional, si quieres que el service haga el trabajo pesado)
-    public Dictionary<Motor, int> GetEstadisticasMotor() {
-        var todas = repository.GetAll(null, null, null, null, null, 1, int.MaxValue, false);
-        return todas.GroupBy(c => c.Motor)
-            .ToDictionary(g => g.Key, g => g.Count());
-    }
-    
-    
     // Funciones Auxiliares
 
 

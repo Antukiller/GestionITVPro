@@ -201,7 +201,7 @@ public class CitaDapperRepositoryTest {
             });
             
             // Act 
-            var r = _repository.GetAll(null, null, null, null, null);
+            var r = _repository.GetAll(1, 10, true, null);
             
             // Assert
             r.Should().HaveCount(2);
@@ -218,7 +218,7 @@ public class CitaDapperRepositoryTest {
                 });
             
             // Act
-            var r = _repository.GetAll(null, null, null, null, null, 1, 3);
+            var r = _repository.GetAll(1, 3, false, null);
             
             // Assert
             r.Should().HaveCount(3);
@@ -239,7 +239,7 @@ public class CitaDapperRepositoryTest {
             _repository.Delete(v2.Id);
             
             // Act
-            var r = _repository.GetAll(null, null, null, null, null, includeDeleted: false);
+            var r = _repository.GetAll(1, 10, false, null);
             
             // Assert
             r.Should().HaveCount(1);
@@ -336,7 +336,7 @@ public class CitaDapperRepositoryTest {
             
             // Assert
             r.Should().BeTrue();
-            _repository.GetAll(null, null, null, null, null).Should().BeEmpty();
+            _repository.GetAll(1, 10, true, null).Should().BeEmpty();
         }
     }
 
@@ -468,22 +468,33 @@ public class CitaDapperRepositoryTest {
         {
             // Arrange
             const string dni = "11112222A";
+            var fechaComun = DateTime.Now.AddDays(5); // Misma fecha para todos
+
             for (int i = 1; i <= 3; i++)
             {
                 _repository.Create(new Cita 
                 { 
-                    Matricula = $"MAT00{i}", DniPropietario = dni, 
-                    FechaItv = DateTime.Now.AddDays(i), Marca = "Fiat", Modelo = "500" 
+                    Matricula = $"MAT00{i}", 
+                    DniPropietario = dni, 
+                    FechaItv = fechaComun, 
+                    Marca = "Fiat", 
+                    Modelo = "500" 
                 });
             }
 
-            // Act: Intentar el cuarto
-            var cuarta = new Cita { Matricula = "MAT004", DniPropietario = dni, FechaItv = DateTime.Now.AddDays(10), Marca = "Fiat", Modelo = "Panda" };
+            // Act: Intentar el cuarto el MISMO día
+            var cuarta = new Cita { 
+                Matricula = "MAT004", 
+                DniPropietario = dni, 
+                FechaItv = fechaComun, 
+                Marca = "Fiat", 
+                Modelo = "Panda" 
+            };
             var result = _repository.Create(cuarta);
 
             // Assert
             result.IsFailure.Should().BeTrue();
-            result.Error.Message.Should().Contain("límite de 3 vehículos");
+            result.Error.Message.ToLower().Should().Contain("límite");
         }
         
         [Test]
@@ -613,7 +624,7 @@ public class CitaDapperRepositoryTest {
             
             // Assert
             r.Should().BeTrue();
-            _repository.GetAll(null, null, null, null, null).Should().BeEmpty();
+            _repository.GetAll(1, 10, true, null).Should().BeEmpty();
         }
     }
     

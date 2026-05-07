@@ -50,13 +50,7 @@ public partial class ImportExportViewModel(
             if (dialog.ShowDialog() == true) {
                 // Usamos null para los filtros que no queremos aplicar en la exportación
                 // y nombres de parámetros para ir directamente a la paginación
-                var citas = _citasService.GetAll(
-                    marca: null, 
-                    dniPropietario: null, 
-                    matricula: null, 
-                    desde: null, 
-                    hasta: null, 
-                    page: 1, 
+                var citas = _citasService.GetAll(page: 1, 
                     pageSize: 1000, 
                     includeDeleted: false
                 );
@@ -134,13 +128,7 @@ public partial class ImportExportViewModel(
             if (dialog.ShowDialog() == true) {
                 // Usamos null para los filtros que no queremos aplicar en la exportación
                 // y nombres de parámetros para ir directamente a la paginación
-                var citas = _citasService.GetAll(
-                    marca: null, 
-                    dniPropietario: null, 
-                    matricula: null, 
-                    desde: null, 
-                    hasta: null, 
-                    page: 1, 
+                var citas = _citasService.GetAll(page: 1, 
                     pageSize: 1000, 
                     includeDeleted: false
                 );

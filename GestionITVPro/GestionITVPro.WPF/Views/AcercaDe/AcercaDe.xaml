@@ -45,7 +45,8 @@
                     Background="#4E4E50"
                     Foreground="White"
                     BorderThickness="0"
-                    Cursor="Hand" />
+                    Cursor="Hand"
+                    Click="OnGitHubClick"/>
             
         </StackPanel>
     </Grid>

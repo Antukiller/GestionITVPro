@@ -21,6 +21,7 @@ public class CitaBinRepository : ICitaRepository {
     private readonly Dictionary<int, CitaEntity> _porId = [];
     private readonly Dictionary<string, int> _matriculaIndex = [];
     private readonly Dictionary<string, List<int>> _dniPropietarioIndex = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<(string matricula, DateTime fecha)> _citaDiaIndex = [];
 
     public CitaBinRepository(string path, bool dropData = false, bool seedData = false) {
         if (!Directory.Exists("Data")) Directory.CreateDirectory("Data");
@@ -35,34 +36,34 @@ public class CitaBinRepository : ICitaRepository {
 
     // --- FUNCIONES DE CONSULTA ---
 
-    public IEnumerable<Cita> GetAll(string? marca, string? dniPropietario, string? matricula, DateTime? desde, DateTime? hasta,
-        int page = 1, int pageSize = 10, bool includeDeleted = true) {
-        var query = _porId.Values.AsQueryable();
-        if (!includeDeleted) {
-            query = query.Where(c => !c.IsDeleted);
+    public IEnumerable<Cita> GetAll(int pagina, int tamPagina, bool isDeleteInclude, string campoBusqueda) {
+        // 1. Obtenemos todos los valores del almacén interno (_porId)
+        // Usamos Select para convertir la CitaEntity a Cita (Model) antes de devolver
+        var consulta = _porId.Values.Select(e => e.ToModel()!).AsEnumerable();
+
+        // 2. Filtro de Borrado Lógico
+        if (!isDeleteInclude) {
+            // Solo incluimos los que NO están marcados como eliminados
+            consulta = consulta.Where(v => v.IsDeleted == false);
         }
 
-        if (!string.IsNullOrWhiteSpace(marca)) {
-            query = query.Where(c => c.Marca.Contains(marca, StringComparison.OrdinalIgnoreCase));
+        // 3. Filtro de Búsqueda General
+        if (!string.IsNullOrWhiteSpace(campoBusqueda)) {
+            consulta = consulta.Where(v => 
+                v.Matricula.Contains(campoBusqueda, StringComparison.OrdinalIgnoreCase) || 
+                v.Marca.Contains(campoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+                v.Modelo.Contains(campoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+                v.DniPropietario.Contains(campoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+                v.Cilindrada.ToString().Contains(campoBusqueda) ||
+                v.Motor.ToString().Contains(campoBusqueda)
+            );
         }
 
-        if (!string.IsNullOrWhiteSpace(dniPropietario)) {
-            query = query.Where(c => c.DniPropietario == dniPropietario);
-        }
-
-        if (desde.HasValue) {
-            query = query.Where(c => c.FechaInspeccion >= desde.Value);
-        }
-
-        if (hasta.HasValue) {
-            query = query.Where(c => c.FechaInspeccion <= hasta.Value);
-        }
-
-        return query
-            .OrderBy(c => c.Id)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(c => c.ToModel()!);
+        // 4. Ordenamiento y Paginación
+        return consulta
+            .OrderBy(v => v.Id) 
+            .Skip((pagina - 1) * tamPagina)
+            .Take(tamPagina);
     }
 
     public Cita? GetById(int id) {
@@ -95,49 +96,100 @@ public class CitaBinRepository : ICitaRepository {
     public int CountCita(bool includeDeleted = false) {
         return includeDeleted ? _porId.Count : _porId.Values.Count(v => !v.IsDeleted);
     }
+    
+    public Result<IEnumerable<Cita>, DomainError> GetByDateMatricula(
+        DateTime inicio, DateTime? fin, int pagina, int tamPagina, 
+        string searchText = null, string motor = "TODOS", bool isDeleteInclude = false)
+    {
+        try
+        {
+            // 1. Filtrado base desde el diccionario interno _porId
+            var consulta = _porId.Values.AsEnumerable();
+
+            // 2. Filtros
+            if (!isDeleteInclude) consulta = consulta.Where(c => !c.IsDeleted);
+    
+            // Filtro de fechas (solo fecha, sin hora para mayor precisión en búsqueda por día)
+            consulta = consulta.Where(c => c.FechaInspeccion.Date >= inicio.Date);
+            if (fin.HasValue) 
+                consulta = consulta.Where(c => c.FechaInspeccion.Date <= fin.Value.Date);
+
+            // Filtro de Motor
+            if (!string.IsNullOrWhiteSpace(motor) && motor.ToUpper() != "TODOS")
+                consulta = consulta.Where(c => c.Motor.ToString().ToUpper() == motor.ToUpper());
+
+            // Filtro de texto (Matrícula, DNI, Marca)
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                var term = searchText.ToLower();
+                consulta = consulta.Where(c => 
+                    (c.Matricula != null && c.Matricula.ToLower().Contains(term)) || 
+                    (c.DniPropietario != null && c.DniPropietario.ToLower().Contains(term)) ||
+                    (c.Marca != null && c.Marca.ToLower().Contains(term)));
+            }
+
+            // 3. Paginación
+            var resultado = consulta
+                .OrderBy(c => c.FechaInspeccion)
+                .Skip((pagina - 1) * tamPagina)
+                .Take(tamPagina)
+                .Select(c => c.ToModel()!)
+                .ToList();
+
+            return Result.Success<IEnumerable<Cita>, DomainError>(resultado);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Error en GetByDateMatricula Memoria");
+            return Result.Failure<IEnumerable<Cita>, DomainError>(CitaErrors.DatabaseError(ex.Message));
+        }
+    }
+
 
     // --- FUNCIONES DE ESCRITURA ---
 
-    public Result<Cita, DomainError> Create(Cita model) {
-        var matricula = model.Matricula ?? "";
-        var dni = model.DniPropietario ?? "";
-
-        // 1. REGLA: Cita mismo día (¡CAMBIO DE TIPO DE ERROR!)
-        var citaMismoDia = _porId.Values.Any(c =>
-            c.Matricula == matricula &&
-            c.FechaItv.Date == model.FechaItv.Date && 
-            !c.IsDeleted);
-
-        if (citaMismoDia) {
-            // El test espera MatriculaAlreadyExists para el caso de duplicado mismo día
-            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(matricula));
-        }
-
-        // 2. INTEGRIDAD: Matrícula única global
-        if (ExistsMatricula(matricula))
-            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(matricula));
-
-        // 3. LÍMITE DE 3
-        if (_dniPropietarioIndex.TryGetValue(dni, out var lista) && lista.Count >= 3)
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["Límite alcanzado"]));
-
-        var entity = (model with {
-            Id = ++_idCounter,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            IsDeleted = false
-        }).ToEntity();
-
-        _porId[entity.Id] = entity;
-        _matriculaIndex[entity.Matricula] = entity.Id;
-    
-        if (!_dniPropietarioIndex.ContainsKey(dni)) _dniPropietarioIndex[dni] = [];
-        _dniPropietarioIndex[dni].Add(entity.Id);
-
-        Save();
-        return Result.Success<Cita, DomainError>(entity.ToModel()!);
+    public Result<Cita, DomainError> Create(Cita entity) {
+    // 1. Validación: Máximo 3 citas por propietario en la misma fecha de inspección
+    // Usamos FechaItv.Date para comparar solo el día, sin la hora
+    if (_porId.Values.Count(v => v.DniPropietario == entity.DniPropietario && 
+                                 v.FechaItv.Date == entity.FechaItv.Date) >= 3) {
+        _logger.Debug("Límite de citas alcanzado para este DNI en la fecha seleccionada.");
+        return Result.Failure<Cita, DomainError>(CitaErrors.Validation(["Límite de 3 citas por día superado"]));
     }
+
+    // 2. Validación: El vehículo (matrícula) no puede tener otra cita el mismo día
+    // Usamos el HashSet _citaDiaIndex para que sea ultra rápido (O(1))
+    if (_citaDiaIndex.Contains((entity.Matricula, entity.FechaItv.Date))) {
+        _logger.Debug("Este vehículo ya tiene una cita programada para este día.");
+        return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(entity.Matricula));
+    } 
+
+    // 3. Preparación del objeto: Asignamos ID, fechas de auditoría y estado inicial
+    var citaModel = entity with { 
+        Id = ++_idCounter, 
+        CreatedAt = DateTime.Now, 
+        IsDeleted = false 
+    };
+
+    // Convertimos a Entity para guardarlo en el diccionario
+    var citaEntity = citaModel.ToEntity();
+    
+    // 4. GUARDADO Y ACTUALIZACIÓN DE ÍNDICES (Crucial en memoria)
+    _porId.Add(citaEntity.Id, citaEntity); // Guardado principal
+    _matriculaIndex[citaEntity.Matricula] = citaEntity.Id; // Índice de matrícula
+    _citaDiaIndex.Add((citaEntity.Matricula, citaEntity.FechaItv.Date)); // Índice de fecha
+
+    // Actualizar índice de DNI (Lista de IDs por DNI)
+    if (!_dniPropietarioIndex.ContainsKey(citaEntity.DniPropietario)) {
+        _dniPropietarioIndex[citaEntity.DniPropietario] = new List<int>();
+    }
+    _dniPropietarioIndex[citaEntity.DniPropietario].Add(citaEntity.Id);
+    
+    Save();
+    
+    _logger.Debug($"Cita para {citaEntity.Matricula} creada correctamente con ID {citaEntity.Id}.");
+    return Result.Success<Cita, DomainError>(citaEntity.ToModel()!);
+}
 
     public Result<Cita, DomainError> Update(int id, Cita model) {
         if (!_porId.TryGetValue(id, out var actual))
@@ -222,6 +274,21 @@ public class CitaBinRepository : ICitaRepository {
         _idCounter = 0;
         if (File.Exists(FilePath)) File.Delete(FilePath);
         return true;
+    }
+    
+    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool isDeleteInclude) 
+    {
+        var consulta = _porId.Values.AsEnumerable();
+
+        if (!isDeleteInclude) consulta = consulta.Where(v => !v.IsDeleted);
+
+        consulta = consulta.Where(c => c.FechaInspeccion >= inicio);
+        if (fin.HasValue) consulta = consulta.Where(c => c.FechaInspeccion <= fin.Value);
+
+        if (!string.IsNullOrWhiteSpace(matricula))
+            consulta = consulta.Where(c => c.Matricula.Contains(matricula, StringComparison.OrdinalIgnoreCase));
+
+        return consulta.Count();
     }
 
     // --- PERSISTENCIA SECUENCIAL ---

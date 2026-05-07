@@ -1,5 +1,7 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Linq.Expressions;
+using CSharpFunctionalExtensions;
 using GestionITVPro.Entity;
+using GestionITVPro.Enums;
 using GestionITVPro.Error.Cita;
 using GestionITVPro.Errors.Common;
 using GestionITVPro.Factory;
@@ -28,52 +30,46 @@ public class CitaEfRepository : ICitaRepository {
 
         if (seedData && !_context.Citas.Any()) {
             _logger.Information("Sembrando datos de vehiculos...");
-            foreach (var v in VehiculosFactory.Seed()) {
+            foreach (var v in CitasFactory.Seed()) {
                 Create(v);
             }
         }
     }
 
-    public IEnumerable<Cita> GetAll(string? marca, string? dniPropietario, string? matricula, DateTime? desde, DateTime? hasta,
-        int page = 1, int pageSize = 10, bool includeDeleted = true) {
-        var query = _context.Citas.AsQueryable();
-        if (!includeDeleted) {
-            query = query.Where(c => !c.IsDeleted);
+    public IEnumerable<Cita> GetAll(int pagina, int tamPagina, bool isDeleteInclude, string campoBusqueda) {
+        // 1. Empezamos la consulta sobre la tabla de Citas
+        var consulta = _context.Citas.AsQueryable();
+
+        // 2. Filtro de Borrado Lógico
+        if (!isDeleteInclude) {
+            consulta = consulta.Where(v => v.IsDeleted == false);
         }
 
-        if (!string.IsNullOrWhiteSpace(marca)) {
-            query = query.Where(c => c.Marca.Contains(marca.ToLower()));
+        // 3. Filtro de Búsqueda General (Traducido a SQL)
+        if (!string.IsNullOrWhiteSpace(campoBusqueda)) {
+            // EF Core traduce Contains a un LIKE '%valor%' de SQL
+            consulta = consulta.Where(v => 
+                v.Matricula.Contains(campoBusqueda) || 
+                v.Marca.Contains(campoBusqueda) ||
+                v.Modelo.Contains(campoBusqueda) ||
+                v.DniPropietario.Contains(campoBusqueda) ||
+                v.Cilindrada.ToString().Contains(campoBusqueda)
+            );
         }
 
-        if (!string.IsNullOrWhiteSpace(matricula)) {
-            query = query.Where(c => c.Matricula.Contains(matricula));
-        }
-
-        if (!string.IsNullOrWhiteSpace(dniPropietario)) {
-            query = query.Where(c => c.DniPropietario == dniPropietario);
-        }
-
-        if (desde.HasValue) {
-            query = query.Where(c => c.FechaInspeccion >= desde.Value);
-        }
-
-        if (hasta.HasValue) {
-            query = query.Where(c => c.FechaInspeccion <= hasta.Value);
-        }
-
-        var entidades = query
-            .OrderBy(c => c.Id)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToList(); // Aquí es donde la consulta viaja a la base de datos
-        // 2. Mapeamos a modelo en memoria (C#)
-        return entidades.Select(e => e.ToModel()!);
+        // 4. Ordenamiento, Paginación y Mapeo
+        return consulta
+            .OrderBy(v => v.Id) 
+            .Skip((pagina - 1) * tamPagina)
+            .Take(tamPagina)
+            .AsEnumerable() // Traemos a memoria solo la página solicitada
+            .Select(e => e.ToModel()!);
     }
 
     public Cita? GetById(int id) {
         try {
             var entity = _context.Citas.FirstOrDefault(v => v.Id == id);
-            return entity.ToModel();
+            return entity?.ToModel();
         }
         catch (Exception ex) {
             _logger.Error("Error al obtener vehiculo por ID {Id}", id);
@@ -81,47 +77,113 @@ public class CitaEfRepository : ICitaRepository {
         }
     }
 
+   public Result<IEnumerable<Cita>, DomainError> GetByDateMatricula(
+    DateTime inicio, 
+    DateTime? fin, 
+    int pagina, 
+    int tamPagina, 
+    string searchText = null, 
+    string motorSeleccionado = "TODOS", 
+    bool isDeleteInclude = false) { 
+       try {
+        var consulta = _context.Citas.AsQueryable();
+
+        // 1. IMPORTANTE: Corregir el filtro de borrado (solo los NO borrados)
+        if (!isDeleteInclude) 
+        {
+            consulta = consulta.Where(v => !v.IsDeleted); 
+        }
+
+        // 2. Filtro por Rango de Fecha de Inspección
+        consulta = consulta.Where(c => c.FechaInspeccion >= inicio);
+        if (fin.HasValue) 
+        {
+            var finDia = fin.Value.Date.AddDays(1).AddTicks(-1);
+            consulta = consulta.Where(c => c.FechaInspeccion <= finDia);
+        }
+
+        // 3. Filtro por Motor (ComboBox)
+        if (!string.IsNullOrWhiteSpace(motorSeleccionado) && !motorSeleccionado.Equals("TODOS", StringComparison.OrdinalIgnoreCase))
+        {
+            // Limpiamos el texto para que coincida con los nombres de la Enum (sin tildes si tu Enum no las tiene)
+            string motorBusqueda = motorSeleccionado
+                .Replace("DIÉSEL", "Diesel")
+                .Replace("HÍBRIDO", "Hibrido")
+                .Replace("ELÉCTRICO", "Electrico")
+                .Trim();
+
+            if (Enum.TryParse<Motor>(motorBusqueda, true, out var motorEnum))
+            {
+                int motorValue = (int)motorEnum; // Convertimos a int porque tu entidad usa int
+                consulta = consulta.Where(c => c.Motor == motorValue);
+            }
+        }
+
+        // 4. Filtro Combinado (DNI, Matrícula, Marca)
+        if (!string.IsNullOrWhiteSpace(searchText)) 
+        {
+            var term = searchText.ToLower();
+            consulta = consulta.Where(c => 
+                c.Matricula.ToLower().Contains(term) || 
+                c.DniPropietario.ToLower().Contains(term) || 
+                c.Marca.ToLower().Contains(term)
+            );
+        }
+
+        // 5. Paginación eficiente en Base de Datos
+        var entidades = consulta
+            .OrderBy(c => c.FechaInspeccion)
+            .Skip((pagina - 1) * tamPagina)
+            .Take(tamPagina)
+            .ToList();
+
+        return Result.Success<IEnumerable<Cita>, DomainError>(entidades.Select(e => e.ToModel()!));
+    }
+    catch (Exception ex) 
+    {
+        _logger.Error(ex, "Error en búsqueda avanzada de citas");
+        return Result.Failure<IEnumerable<Cita>, DomainError>(CitaErrors.DatabaseError(ex.Message));
+    }
+}
+
+
     public Result<Cita, DomainError> Create(Cita model) {
-        var dni = model.DniPropietario ?? "";
-        var matricula = model.Matricula ?? "";
-
-        // 1. REGLA: Límite de 3 (Consistencia con tests)
-        if (ContarVehiculosPorDni(dni) >= 3) {
-            return Result.Failure<Cita, DomainError>(
-                CitaErrors.Validation(["Límite alcanzado: Este propietario ya tiene 3 vehículos registrados."]));
-        }
-
-        // 2. REGLA: Cita mismo día
-        // Usamos .Date para comparar solo el día, ignorando la hora
-        bool citaExiste = _context.Citas.Any(v => 
-            v.Matricula == matricula && 
-            v.FechaItv.Date == model.FechaItv.Date && 
-            !v.IsDeleted);
-
-        if (citaExiste) {
-            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(matricula));
-        }
-        
-        // 3. INTEGRIDAD: Matrícula única
-        if (ExistsMatricula(matricula))
-            return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(matricula));
-
         try {
+            // 1. REGLA: Máximo 3 citas por propietario en la misma fecha (Query a DB)
+            var countDniDia = _context.Citas.Count(v => 
+                v.DniPropietario == model.DniPropietario && 
+                v.FechaItv.Date == model.FechaItv.Date && 
+                !v.IsDeleted);
+
+            if (countDniDia >= 3) {
+                return Result.Failure<Cita, DomainError>(CitaErrors.Validation(["Límite de 3 citas por día superado"]));
+            }
+
+            // 2. REGLA: El vehículo no puede repetir el mismo día (Query a DB)
+            var matriculaDuplicada = _context.Citas.Any(v => 
+                v.Matricula == model.Matricula && 
+                v.FechaItv.Date == model.FechaItv.Date && 
+                !v.IsDeleted);
+
+            if (matriculaDuplicada) {
+                return Result.Failure<Cita, DomainError>(CitaErrors.MatriculaAlreadyExists(model.Matricula));
+            }
+
+            // 3. Conversión y Auditoría
+            // IMPORTANTE: No asignes ID manualmente si es Autoincremental en la DB
             var entity = model.ToEntity();
-            entity.Id = 0; // Aseguramos que sea una inserción
-            entity.CreatedAt = DateTime.UtcNow;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.CreatedAt = DateTime.Now;
             entity.IsDeleted = false;
 
+            // 4. Persistencia
             _context.Citas.Add(entity);
-            _context.SaveChanges();
+            _context.SaveChanges(); // Aquí la DB asigna el ID automáticamente
 
-            // Usamos AsNoTracking para que la entidad devuelta esté limpia
-            var creado = _context.Citas.AsNoTracking().FirstOrDefault(v => v.Id == entity.Id);
-            return Result.Success<Cita, DomainError>(creado.ToModel()!);
+            _logger.Debug("Cita para {Matricula} creada en DB con ID {Id}", entity.Matricula, entity.Id);
+            return Result.Success<Cita, DomainError>(entity.ToModel()!);
         }
         catch (Exception ex) {
-            _logger.Error(ex, "Error al crear el vehiculo en EF");
+            _logger.Error(ex, "Error al crear cita en EF Core");
             return Result.Failure<Cita, DomainError>(CitaErrors.DatabaseError(ex.Message));
         }
     }
@@ -212,7 +274,7 @@ public class CitaEfRepository : ICitaRepository {
                 entity.DeletedAt = DateTime.UtcNow;
                 entity.UpdatedAt = DateTime.UtcNow;
                 _context.SaveChanges();
-                return GetById(id);
+                return entity.ToModel();
             }
 
             _context.Citas.Remove(entity);
@@ -315,4 +377,19 @@ public class CitaEfRepository : ICitaRepository {
     // Helper para la regla de los 3
     private int ContarVehiculosPorDni(string dni) => 
         _context.Citas.Count(v => v.DniPropietario == dni && !v.IsDeleted);
+    
+    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool isDeleteInclude) 
+    {
+        var consulta = _context.Citas.AsQueryable();
+
+        if (!isDeleteInclude) consulta = consulta.Where(v => !v.IsDeleted);
+
+        consulta = consulta.Where(c => c.FechaInspeccion >= inicio);
+        if (fin.HasValue) consulta = consulta.Where(c => c.FechaInspeccion <= fin.Value);
+
+        if (!string.IsNullOrWhiteSpace(matricula))
+            consulta = consulta.Where(c => c.Matricula.Contains(matricula));
+
+        return consulta.Count(); // EF traduce esto a SELECT COUNT(*) en SQL
+    }
 }

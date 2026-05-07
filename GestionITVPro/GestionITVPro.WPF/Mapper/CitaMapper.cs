@@ -86,8 +86,10 @@ public static class CitaMapper
             Matricula = item.Matricula,
             DniPropietario = item.DniPropietario,
             Marca = item.Marca,
+            Cilindrada = item.Cilindrada,
             Modelo = item.Modelo,
             FechaInspeccion = item.FechaInspeccion,
+            FechaItv = item.FechaItv,
             Motor = item.Motor,
             IsDeleted = item.IsDeleted
         };

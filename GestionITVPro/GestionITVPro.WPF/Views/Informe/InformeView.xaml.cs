@@ -1,8 +1,9 @@
 ﻿using System.Windows.Controls;
-using Microsoft.Testing.Platform.Services;
+using GestionITVPro.WPF.ViewModels.Informe;
+using Microsoft.Extensions.DependencyInjection;
+
 
 namespace GestionITVPro.WPF.Views.Informe;
-/*
 
 /// <summary>
 ///     Página de generación de informes.
@@ -13,6 +14,6 @@ public partial class InformeView : Page {
     /// </summary>
     public InformeView() {
         InitializeComponent();
-        DataContext = App.ServiceProvider.GetRequiredService<InformesViewModel>();
+        DataContext = App.ServiceProvider.GetRequiredService<InformeViewModel>();
     }
-}*/
+}

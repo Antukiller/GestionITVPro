@@ -13,15 +13,10 @@ public interface ICitasService {
     int TotalCitas { get; }
     
     // 1. GetAll evolucionado con filtros de búsqueda
-    IEnumerable<Cita> GetAll(
-        string? marca = null, 
-        string? dniPropietario = null, 
-        string? matricula = null, 
-        DateTime? desde = null, 
-        DateTime? hasta = null,
-        int page = 1, 
+    IEnumerable<Cita> GetAll(int page = 1, 
         int pageSize = 10, 
-        bool includeDeleted = true);
+        bool includeDeleted = true, 
+        string? campoBusqueda = null);
     
     IEnumerable<Cita> GetCitasOrderBy(
         TipoOrdenamiento ordenamiento, 
@@ -32,6 +27,11 @@ public interface ICitasService {
     Result<Cita, DomainError> GetById(int id);
 
     Result<Cita, DomainError> GetByMatricula(string matricula);
+    
+    Result<IEnumerable<Cita>, DomainError> GetByDateMatricula(DateTime inicio, DateTime? fin, int pagina, int tamPagina, 
+        string searchText = null, 
+        string motor = "TODOS", 
+        bool isDeleteInclude = false);
 
     Result<Cita, DomainError> GetByDniPropietario(string dni);
 
@@ -46,7 +46,8 @@ public interface ICitasService {
     Result<Cita, DomainError> Restore(int id);
 
     int CountCitas(bool includeDeleted = false);
-
+    
+    int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool incluirEliminados);
 
 
 

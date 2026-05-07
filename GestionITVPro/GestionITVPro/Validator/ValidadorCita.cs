@@ -40,6 +40,11 @@ public static class ValidadorVehiculoExtensions {
         return fechaInspeccion.Date >= hoy && fechaInspeccion.Date <= limite;
     }
     
+    // NUEVO - PARA LA MATRICULACIÓN: Debe ser hoy o en el PASADO
+    public static bool IsValidFechaPasada(this DateTime fecha) {
+        return fecha.Date <= DateTime.Today; 
+    }
+    
     /*
     public static bool IsValidMotor2(this Vehiculo Entity) {
         return !Enum.IsDefined(typeof(Motor), Entity.Motor);

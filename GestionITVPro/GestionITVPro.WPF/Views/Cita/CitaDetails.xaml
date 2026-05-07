@@ -1,100 +1,113 @@
 ﻿<Window x:Class="GestionITVPro.WPF.Views.Cita.CitaDetails"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Vehicle Specifications" 
-        Height="500" Width="550"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Expediente Técnico" 
+        Height="520" Width="550"
         WindowStartupLocation="CenterScreen"
         Background="#0A0A0C"
-        WindowStyle="None" AllowsTransparency="True">
+        WindowStyle="None" 
+        AllowsTransparency="True">
     
     <Border BorderBrush="#1A1A1F" BorderThickness="1" Background="#0F0F12" CornerRadius="15">
         <Grid Margin="25,20">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/> <!-- Fila 0: Header -->
-                <RowDefinition Height="*"/>    <!-- Fila 1: Contenido -->
-                <RowDefinition Height="Auto"/> <!-- Fila 2: Footer -->
+                <RowDefinition Height="Auto"/> <!-- Header -->
+                <RowDefinition Height="*"/>    <!-- Info -->
+                <RowDefinition Height="Auto"/> <!-- Botón -->
             </Grid.RowDefinitions>
 
-            <!-- 1. HEADER: Matrícula Gigante con Brillo Corregido -->
+            <!-- 1. HEADER: Identificación del Vehículo -->
             <StackPanel Grid.Row="0" Margin="0,0,0,15">
-                <TextBlock Text="EXPEDIENTE TÉCNICO" Foreground="#00F2FF" FontSize="20" FontWeight="ExtraBold" Margin="0,0,0,5"/>
-                <Grid>
+                <TextBlock Text="EXPEDIENTE TÉCNICO" Foreground="#00F2FF" FontSize="18" FontWeight="ExtraBold" Opacity="0.8"/>
+                <Grid Margin="0,10,0,0">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="TOYOTA" Foreground="White" FontSize="40" FontWeight="Black"/>
-                        <TextBlock Text="COROLLA" Foreground="#555" FontSize="30" FontWeight="Light" Margin="0,-5,0,0"/>
+                        <TextBlock Text="{Binding Marca, FallbackValue='MARCA'}" Foreground="White" FontSize="36" FontWeight="Black"/>
+                        <TextBlock Text="{Binding Modelo, FallbackValue='MODELO'}" Foreground="#666" FontSize="26" FontWeight="Light" Margin="0,-5,0,0"/>
                     </StackPanel>
                     
-                    <!-- Matrícula resaltada -->
-                    <Border Background="#1A1A2E" CornerRadius="10" Padding="18,10" HorizontalAlignment="Right" VerticalAlignment="Center" BorderBrush="#00F2FF" BorderThickness="2">
+                    <Border Background="#1A1A2E" CornerRadius="10" Padding="15,8" HorizontalAlignment="Right" VerticalAlignment="Center" BorderBrush="#00F2FF" BorderThickness="2">
                         <Border.Effect>
-                            <DropShadowEffect Color="#00F2FF" BlurRadius="15" ShadowDepth="0" Opacity="0.4"/>
+                            <DropShadowEffect Color="#00F2FF" BlurRadius="10" Opacity="0.3"/>
                         </Border.Effect>
-                        <TextBlock Text="1234-ABC" Foreground="#00F2FF" FontSize="32" FontWeight="Black" FontFamily="Consolas" VerticalAlignment="Center">
-                            <TextBlock.Effect>
-                                <DropShadowEffect Color="#00F2FF" BlurRadius="8" ShadowDepth="0" Opacity="0.8"/>
-                            </TextBlock.Effect>
-                        </TextBlock>
+                        <TextBlock Text="{Binding Matricula, FallbackValue='0000-XXX'}" Foreground="#00F2FF" FontSize="28" FontWeight="Black" FontFamily="Consolas"/>
                     </Border>
                 </Grid>
                 <Separator Background="#222" Margin="0,15,0,0"/>
             </StackPanel>
 
-            <!-- 2. CONTENIDO: Datos del Vehículo -->
-            <StackPanel Grid.Row="1">
+            <!-- 2. CUERPO: Datos de Solo Lectura -->
+            <StackPanel Grid.Row="1" VerticalAlignment="Top">
+                
                 <!-- Propietario -->
-                <Border Background="#16161D" Margin="0,0,0,10" Padding="15,12" CornerRadius="10">
-                    <StackPanel>
-                        <TextBlock Text="PROPIETARIO (DNI)" Foreground="#555" FontSize="10" FontWeight="Bold"/>
-                        <TextBlock Text="12345678X" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
-                    </StackPanel>
+                <TextBlock Text="DATOS DEL PROPIETARIO" Foreground="#444" FontSize="10" FontWeight="Bold" Margin="5,0,0,5"/>
+                <Border Background="#16161D" Margin="0,0,0,15" Padding="15,10" CornerRadius="8">
+                    <TextBlock Text="{Binding DniPropietario, FallbackValue='No disponible'}" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
                 </Border>
 
-                <!-- Grid de Motor y Cilindrada -->
-                <UniformGrid Columns="2" Margin="0,0,0,10">
-                    <Border Background="#16161D" Margin="0,0,5,0" Padding="15,12" CornerRadius="10">
-                        <StackPanel>
-                            <TextBlock Text="MOTOR" Foreground="#555" FontSize="10" FontWeight="Bold"/>
-                            <TextBlock Text="HÍBRIDO" Foreground="#00FF88" FontSize="16" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Background="#16161D" Margin="5,0,0,0" Padding="15,12" CornerRadius="10">
-                        <StackPanel>
-                            <TextBlock Text="CILINDRADA" Foreground="#555" FontSize="10" FontWeight="Bold"/>
-                            <TextBlock Text="1798 cc" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Border>
+                <!-- Especificaciones Motor -->
+                <UniformGrid Columns="2" Margin="0,0,0,15">
+                    <StackPanel Margin="0,0,5,0">
+                        <TextBlock Text="TIPO DE MOTOR" Foreground="#444" FontSize="10" FontWeight="Bold" Margin="5,0,0,5"/>
+                        <Border Background="#16161D" Padding="15,10" CornerRadius="8">
+                            <TextBlock Text="{Binding Motor, FallbackValue='Desconocido'}" Foreground="#00FF88" FontSize="15" FontWeight="Bold"/>
+                        </Border>
+                    </StackPanel>
+                    <StackPanel Margin="5,0,0,0">
+                        <TextBlock Text="CILINDRADA" Foreground="#444" FontSize="10" FontWeight="Bold" Margin="5,0,0,5"/>
+                        <Border Background="#16161D" Padding="15,10" CornerRadius="8">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Cilindrada, FallbackValue='0'}" Foreground="White" FontSize="15" FontWeight="Bold"/>
+                                <TextBlock Text=" cc" Foreground="#666" FontSize="15"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
                 </UniformGrid>
 
-                <!-- Bloque Fechas Ajustado -->
-                <Border Background="#1A1A23" Padding="15,12" CornerRadius="10" BorderBrush="#7000FF" BorderThickness="0,0,0,3">
+                <!-- Fechas e Inspección -->
+                <TextBlock Text="CONTROL DE FECHAS" Foreground="#444" FontSize="10" FontWeight="Bold" Margin="5,0,0,5"/>
+                <Border Background="#1A1A23" Padding="20,15" CornerRadius="10" BorderBrush="#7000FF" BorderThickness="0,0,0,4">
                     <UniformGrid Columns="2">
                         <StackPanel>
-                            <TextBlock Text="MATRICULACIÓN" Foreground="#555" FontSize="10" FontWeight="Bold"/>
-                            <TextBlock Text="12 / 05 / 2021" Foreground="White" FontSize="15" Margin="0,2,0,0"/>
+                            <TextBlock Text="REGISTRO" Foreground="#666" FontSize="10" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding FechaItv, StringFormat='dd / MM / yyyy'}" Foreground="White" FontSize="16" Margin="0,3,0,0"/>
                         </StackPanel>
                         <StackPanel>
-                            <TextBlock Text="PRÓXIMA ITV" Foreground="#555" FontSize="10" FontWeight="Bold"/>
-                            <TextBlock Text="12 / 05 / 2025" Foreground="#FF0055" FontSize="15" FontWeight="Bold" Margin="0,2,0,0"/>
+                            <TextBlock Text="INSPECCIÓN" Foreground="#666" FontSize="10" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding FechaInspeccion, StringFormat='dd / MM / yyyy'}" Foreground="#FF0055" FontSize="16" FontWeight="Bold" Margin="0,3,0,0"/>
                         </StackPanel>
                     </UniformGrid>
                 </Border>
             </StackPanel>
 
-            <!-- 3. FOOTER: Botón de Cierre corregido a la Fila 2 -->
-            <Button Grid.Row="2" Content="CERRAR VENTANA" Click="OnVolverPanelClick"
-                    Height="40" Margin="0,15,0,0" Cursor="Hand"
-                    Background="#111" Foreground="#00F2FF" FontWeight="Bold" BorderBrush="#00F2FF" BorderThickness="1">
+            <!-- 3. FOOTER: Botón Cerrar -->
+            <Button Grid.Row="2" Content="CERRAR EXPEDIENTE" Click="OnVolverPanelClick"
+                    Height="45" Margin="0,20,0,5" Cursor="Hand"
+                    Background="Transparent" Foreground="#00F2FF" FontWeight="Bold" 
+                    BorderBrush="#00F2FF" BorderThickness="1.5">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                                    <Border Background="{TemplateBinding Background}" 
+                                            BorderBrush="{TemplateBinding BorderBrush}" 
+                                            BorderThickness="{TemplateBinding BorderThickness}" 
+                                            CornerRadius="10">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                 </ControlTemplate>
                             </Setter.Value>
                         </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1A00F2FF"/>
+                                <Setter Property="BorderBrush" Value="White"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </Style.Triggers>
                     </Style>
                 </Button.Style>
             </Button>

@@ -19,9 +19,10 @@ public partial class CitaViewModel : ObservableObject {
     private IDialogService _dialogService;
     private readonly ILogger _logger = Log.ForContext<CitaViewModel>();
     private ICitasService _citasService;
+    
+   
 
-
-    [ObservableProperty] private string _motorSeleccionado = "Todos";
+    [ObservableProperty] private string _motorSeleccionado = "TODOS";
 
     [ObservableProperty] private ObservableCollection<CitaItemViewModel> _citas = new();
 
@@ -46,6 +47,10 @@ public partial class CitaViewModel : ObservableObject {
     [ObservableProperty] private int _totalPaginas;
 
     [ObservableProperty] private int _totalRegistros;
+    
+    [ObservableProperty] private DateTime _fechaInicio = DateTime.Today.AddMonths(-1);
+
+    [ObservableProperty] private DateTime? _fechaFin = DateTime.Today.AddMonths(1);
 
     public CitaViewModel(
         ICitasService citasService,
@@ -68,11 +73,11 @@ public partial class CitaViewModel : ObservableObject {
     public bool PuedeIrAPaginaSiguiente => PaginaActual < TotalPaginas;
 
     partial void OnSearchTextChanged(string value) {
-        FilterCitas();
+        { PaginaActual = 1; LoadCitas(); }
     }
 
     partial void OnMotorSeleccionadoChanged(string value) {
-        FilterCitas();
+        { PaginaActual = 1; LoadCitas(); }
     }
 
     partial void OnMostrarEliminadosChanged(bool value) {
@@ -80,14 +85,12 @@ public partial class CitaViewModel : ObservableObject {
     }
 
     partial void OnPaginaActualChanged(int value) {
-        FilterCitas();
-        PaginaSiguienteCommand.NotifyCanExecuteChanged();
-        PaginaAnteriorCommand.NotifyCanExecuteChanged();
+        LoadCitas();
     }
 
     partial void OnTamanoPaginaChanged(int value) {
         PaginaActual = 1;
-        FilterCitas();
+        LoadCitas();
         PaginaSiguienteCommand.NotifyCanExecuteChanged();
         PaginaAnteriorCommand.NotifyCanExecuteChanged();
         
@@ -98,15 +101,28 @@ public partial class CitaViewModel : ObservableObject {
         DeleteCommand.NotifyCanExecuteChanged();
         ViewCommand.NotifyCanExecuteChanged();
     }
+    
+    
+    
+
+    // Al cambiar las fechas, volvemos a filtrar
+    partial void OnFechaInicioChanged(DateTime value) => LoadCitas();
+    partial void OnFechaFinChanged(DateTime? value) => LoadCitas();
 
     [RelayCommand(CanExecute = nameof(CanView))]
     private void View() {
         if (SelectedCita == null) return;
 
-        var detailsWindow = new CitaDetails() {
-            DataContext = new { Cita = SelectedCita.ToModel() },
-            Owner = Application.Current.MainWindow
-        };
+        // 1. Creamos la ventana
+        var detailsWindow = new CitaDetails();
+
+        // 2. ASIGNACIÓN DIRECTA: Pasamos el modelo directamente al DataContext.
+        // Al hacer ToModel(), pasamos el objeto Cita puro. 
+        // Ahora los {Binding Marca} funcionarán sin el prefijo "Cita."
+        detailsWindow.DataContext = SelectedCita.ToModel();
+
+        // 3. Configuramos el Owner y mostramos
+        detailsWindow.Owner = Application.Current.MainWindow;
         detailsWindow.ShowDialog();
     }
 
@@ -178,24 +194,56 @@ public partial class CitaViewModel : ObservableObject {
         };
     }
 
+    [RelayCommand]
     private void LoadCitas() {
         IsLoading = true;
-        StatusMessage = "Cargando citas...";
+        StatusMessage = "Cargando datos...";
 
         try {
-            var result = _citasService.GetCitasOrderBy(OrdenActual, 1, int.MaxValue, MostrarEliminados);
-            _todasLasCitas = result.ToList();
-            FilterCitas();
+            // El servicio decidirá si va a memoria o a SQL según tu configuración
+            var result = _citasService.GetByDateMatricula(
+                FechaInicio, 
+                FechaFin, 
+                PaginaActual, 
+                TamanoPagina, 
+                SearchText,
+                MotorSeleccionado,
+                isDeleteInclude: MostrarEliminados
+            );
+
+            if (result.IsSuccess) {
+                // Convertimos los modelos a ViewModels para la lista
+                var lista = result.Value.Select(e => e.ToItemViewModel()).ToList();
+                Citas = new ObservableCollection<CitaItemViewModel>(lista);
+                
+                // Actualizamos totales (Paginación)
+                ActualizarEstadoPaginacion();
+                StatusMessage = $"Registros encontrados: {TotalRegistros}";
+            }
         }
         catch (Exception ex) {
-            _logger.Error(ex, "Error al cargar citas");
-            StatusMessage = "Error al cargar";
-            _dialogService.ShowError("Error al cargar las citas");
+            _logger.Error(ex, "Error al sincronizar citas");
+            StatusMessage = "Error de carga";
         }
         finally {
             IsLoading = false;
         }
     }
+
+    private void ActualizarEstadoPaginacion() {
+        // Llamada al nuevo método del servicio que cuenta en SQL
+        TotalRegistros = _citasService.CountCitasFiltradas(
+            SearchText, FechaInicio, FechaFin, MostrarEliminados);
+
+        TotalPaginas = TotalRegistros == 0 ? 1 : (int)Math.Ceiling((double)TotalRegistros / TamanoPagina);
+
+        // Notificar cambios a comandos de navegación
+        PaginaSiguienteCommand.NotifyCanExecuteChanged();
+        PaginaAnteriorCommand.NotifyCanExecuteChanged();
+
+    }
+    
+    
 
     [RelayCommand]
     private void New() {
@@ -220,10 +268,7 @@ public partial class CitaViewModel : ObservableObject {
         };
 
         if (editWindow.ShowDialog() == true) {
-            var creado = editViewModel.FormData.ToModel();
-            _todasLasCitas.Add(creado);
-            FilterCitas();
-
+            LoadCitas();
             StatusMessage = "Cita creada";
             WeakReferenceMessenger.Default.Send(new CitaCambiadaMesage());
         }
@@ -261,36 +306,27 @@ public partial class CitaViewModel : ObservableObject {
     private void Delete() {
         if (SelectedCita == null) return;
 
-        if (SelectedCita.IsDeleted) {
+        // Solo llamamos a Restore si el usuario activó el check de "Mostrar Eliminados"
+        // y la cita realmente está marcada como borrada.
+        if (MostrarEliminados && SelectedCita.IsDeleted) {
             Restore();
             return;
         }
-        
-        var mensaje = AppConfig.UseLogicalDelete
-            ? $"¿Eliminar a {SelectedCita.Descripcion}? El borrado es reversible."
-            : $"¿Eliminar a {SelectedCita.Descripcion}? Este borrado es IRREVERSIBLE.";
+    
+        // Mensaje claro que evita confusiones
+        var mensaje = "¿Está seguro de que desea eliminar este registro?";
 
-        if (!_dialogService.ShowConfirmation(mensaje))
+        if (!_dialogService.ShowConfirmation(mensaje, "Confirmar Acción"))
             return;
 
         var deleteResult = _citasService.Delete(SelectedCita.Id, AppConfig.UseLogicalDelete);
+    
         if (deleteResult.IsSuccess) {
-            if (AppConfig.UseLogicalDelete) {
-                SelectedCita.IsDeleted = true;
-                var index = _todasLasCitas.FindIndex(e => e.Id == SelectedCita.Id);
-                if (index != -1) _todasLasCitas[index] = _todasLasCitas[index] with { IsDeleted = true };
-
-                if (MostrarEliminados) Citas.Remove(SelectedCita);
-            }
-            else {
-                _todasLasCitas.RemoveAll(e => e.Id == SelectedCita.Id);
-                Citas.Remove(SelectedCita);
-            }
-
-            StatusMessage = "Cita eliminada";
+            // Recargamos para limpiar el cache y la lista
+            LoadCitas(); 
+            StatusMessage = "Cita eliminada correctamente";
             WeakReferenceMessenger.Default.Send(new CitaCambiadaMesage());
-        }
-        else {
+        } else {
             _dialogService.ShowError(deleteResult.Error.Message);
         }
     }
@@ -336,6 +372,7 @@ public partial class CitaViewModel : ObservableObject {
             _dialogService.ShowError($"Error al restaurar: {result.Error.Message}");
         }
     }
+    
     
     
     [RelayCommand(CanExecute = nameof(PuedeIrAPaginaAnterior))]
