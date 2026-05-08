@@ -4,7 +4,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using GestionITVPro.Config;
 using GestionITVPro.WPF;
-using GestionITVPro.WPF.ViewModels;
 using GestionITVPro.WPF.ViewModels.Main;
 using GestionITVPro.WPF.Views.AcercaDe;
 using GestionITVPro.WPF.Views.Backup;

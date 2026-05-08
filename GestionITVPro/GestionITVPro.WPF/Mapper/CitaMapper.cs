@@ -4,13 +4,10 @@ using GestionITVPro.WPF.ViewModels.Form;
 
 namespace GestionITVPro.WPF.Mapper;
 
-public static class CitaMapper
-{
+public static class CitaMapper {
     // --- De Modelo de Dominio a Formulario (Edición) ---
-    public static CitaFormData ToFormData(this Cita model)
-    {
-        return new CitaFormData
-        {
+    public static CitaFormData ToFormData(this Cita model) {
+        return new CitaFormData {
             Id = model.Id,
             DniPropietario = model.DniPropietario,
             Matricula = model.Matricula,
@@ -27,10 +24,8 @@ public static class CitaMapper
     }
 
     // --- De Formulario a Modelo de Dominio (Guardar) ---
-    public static Cita ToModel(this CitaFormData formData)
-    {
-        return new Cita
-        {
+    public static Cita ToModel(this CitaFormData formData) {
+        return new Cita {
             Id = formData.Id,
             DniPropietario = formData.DniPropietario ?? string.Empty,
             Matricula = formData.Matricula ?? string.Empty,
@@ -48,8 +43,7 @@ public static class CitaMapper
     }
 
     // --- De Modelo de Dominio a Item de Lista (Visualización en DataGrid/ListView) ---
-    public static CitaItemViewModel ToItemViewModel(this Cita model)
-    {
+    public static CitaItemViewModel ToItemViewModel(this Cita model) {
         return new CitaItemViewModel
         {
             Id = model.Id,
@@ -66,8 +60,7 @@ public static class CitaMapper
     }
 
     // --- Actualizar un Item de la lista sin recargar todo desde la DB ---
-    public static void UpdateFromFormData(this CitaItemViewModel item, CitaFormData form)
-    {
+    public static void UpdateFromFormData(this CitaItemViewModel item, CitaFormData form) {
         item.Matricula = form.Matricula;
         item.DniPropietario = form.DniPropietario;
         item.Marca = form.Marca;
@@ -78,8 +71,7 @@ public static class CitaMapper
     }
 
     // --- De Item de Lista a Modelo de Dominio ---
-    public static Cita ToModel(this CitaItemViewModel item)
-    {
+    public static Cita ToModel(this CitaItemViewModel item) {
         return new Cita
         {
             Id = item.Id,

@@ -125,6 +125,7 @@ public class CitaAdoRepositoryTest {
     public void ValidarLimite3Vehiculos_DebeFallarAlCuarto() {
         // Arrange
         var dni = "LIMIT-333";
+        // Limpiamos o aseguramos que el entorno sea controlado
         for (int i = 0; i < 3; i++) {
             _repository.Create(new Cita { 
                 Matricula = $"MAT-{i}", DniPropietario = dni, Marca = "A", Modelo = "B" 
@@ -138,7 +139,13 @@ public class CitaAdoRepositoryTest {
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.ToString().Should().Contain("Límite alcanzado");
+    
+        // CORRECCIÓN: Buscamos partes del texto que sabemos que existen en el mensaje de error real
+        var mensajeError = result.Error.ToString();
+    
+        mensajeError.Should().Contain("Límite alcanzado");
+        mensajeError.Should().Contain("3 vehículos"); 
+        // He quitado el "tiene" porque en tu mensaje real dice "límite de 3 vehículos"
     }
 
     [Test]
