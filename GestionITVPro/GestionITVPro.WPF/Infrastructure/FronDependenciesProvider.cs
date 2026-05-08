@@ -1,8 +1,8 @@
-﻿using GestionITVPro.Views.Main;
-using GestionITVPro.WPF.ViewModels;
+﻿
 using GestionITVPro.WPF.ViewModels.Backup;
 using GestionITVPro.WPF.ViewModels.Citas;
 using GestionITVPro.WPF.ViewModels.Dashboard;
+using GestionITVPro.WPF.ViewModels.Graficos;
 using GestionITVPro.WPF.ViewModels.ImportExport;
 using GestionITVPro.WPF.ViewModels.Informe;
 using GestionITVPro.WPF.ViewModels.Main;
@@ -49,7 +49,7 @@ public static class FrontDependenciesProvider {
         // ViewModel de Backup (gestión de copias de seguridad)
         services.AddTransient<BackupViewModel>();
         // ViewModel de Gráficos (visualización de estadísticas)
-        services.AddTransient<GraficosViewModel>();
+        services.AddTransient<GraficoViewModel>();
         // ViewModel de Informes (generación de reportes)
         services.AddTransient<InformeViewModel>();
         // ViewModel de Import/Export (importación y exportación de datos)

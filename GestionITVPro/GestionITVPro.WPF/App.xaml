@@ -6,25 +6,24 @@
     
     <Application.Resources>
         <ResourceDictionary>
-            <!-- ====================================================================== -->
-            <!-- CONVERSORES                                                            -->
-            <!-- ====================================================================== -->
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
             <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
             <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
             <converters:BoolToSiNoConverter x:Key="BoolToSiNoConverter" />
 
-            <!-- ====================================================================== -->
-            <!-- COLORES Y PINCELES TEMÁTICOS (Neon Dark)                               -->
-            <!-- ====================================================================== -->
-            <SolidColorBrush x:Key="NeonCyanBrush" Color="#00F2FF" />
+            <Color x:Key="PrimaryColor">#00F2FF</Color>
+            
+            <SolidColorBrush x:Key="NeonCyanBrush" Color="{StaticResource PrimaryColor}" />
             <SolidColorBrush x:Key="DarkBgBrush" Color="#0A0A0C" />
             <SolidColorBrush x:Key="CardBgBrush" Color="#16161D" />
+            
+            <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />
+            <SolidColorBrush x:Key="BackgroundBrush" Color="#0A0A0C" />
+            <SolidColorBrush x:Key="SurfaceBrush" Color="#16161D" />
+            <SolidColorBrush x:Key="BorderBrush" Color="#1A1A23" />
+            <SolidColorBrush x:Key="PrimaryTransparentBrush" Color="{StaticResource PrimaryColor}" Opacity="0.15" />
 
-            <!-- ====================================================================== -->
-            <!-- BOTONES (ESTILOS BASE Y VARIANTES)                                     -->
-            <!-- ====================================================================== -->
             <Style x:Key="BaseButtonStyle" TargetType="Button">
                 <Setter Property="MinWidth" Value="120" />
                 <Setter Property="MinHeight" Value="36" />
@@ -51,91 +50,12 @@
                 </Setter>
             </Style>
 
-            <!-- Variante Principal (Neon) -->
             <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
                 <Setter Property="Background" Value="#1A1A23" />
                 <Setter Property="Foreground" Value="{StaticResource NeonCyanBrush}" />
                 <Setter Property="BorderBrush" Value="{StaticResource NeonCyanBrush}" />
             </Style>
 
-            <!-- Variante Peligro -->
-            <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
-                <Setter Property="Background" Value="#DC3545" />
-                <Setter Property="Foreground" Value="White" />
-                <Setter Property="BorderBrush" Value="#A71D2A" />
-            </Style>
-
-            <!-- ====================================================================== -->
-            <!-- TEXTOS Y TIPOGRAFÍA                                                    -->
-            <!-- ====================================================================== -->
-            <Style x:Key="HeaderLabel" TargetType="TextBlock">
-                <Setter Property="FontSize" Value="28" />
-                <Setter Property="FontWeight" Value="Bold" />
-                <Setter Property="Foreground" Value="White" />
-                <Setter Property="Margin" Value="0,0,0,15" />
-            </Style>
-
-            <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
-                <Setter Property="FontSize" Value="12" />
-                <Setter Property="Foreground" Value="#888888" />
-                <Setter Property="Margin" Value="0,5,0,2" />
-            </Style>
-
-            <!-- ====================================================================== -->
-            <!-- CONTENEDORES (TARJETAS)                                                -->
-            <!-- ====================================================================== -->
-            <Style x:Key="CardStyle" TargetType="Border">
-                <Setter Property="Background" Value="{StaticResource CardBgBrush}" />
-                <Setter Property="CornerRadius" Value="8" />
-                <Setter Property="Padding" Value="20" />
-                <Setter Property="BorderBrush" Value="#25252D" />
-                <Setter Property="BorderThickness" Value="1" />
-            </Style>
-
-            <!-- ====================================================================== -->
-            <!-- TABLAS (DATAGRID)                                                      -->
-            <!-- ====================================================================== -->
-            <Style x:Key="StandardDataGrid" TargetType="DataGrid">
-                <Setter Property="AutoGenerateColumns" Value="False" />
-                <Setter Property="IsReadOnly" Value="True" />
-                <Setter Property="Background" Value="Transparent" />
-                <Setter Property="BorderThickness" Value="0" />
-                <Setter Property="GridLinesVisibility" Value="None" />
-                <Setter Property="RowHeight" Value="40" />
-                <Setter Property="RowBackground" Value="#1A1A23" />
-                <Setter Property="AlternatingRowBackground" Value="#16161D" />
-                <Setter Property="Foreground" Value="White" />
-            </Style>
-
-            <!-- ====================================================================== -->
-            <!-- VALIDACIÓN Y ENTRADA DE DATOS                                          -->
-            <!-- ====================================================================== -->
-            <Style x:Key="ValidationTextBox" TargetType="TextBox">
-                <Setter Property="Background" Value="#1A1A23" />
-                <Setter Property="Foreground" Value="White" />
-                <Setter Property="BorderBrush" Value="#333333" />
-                <Setter Property="Padding" Value="8,5" />
-                <Setter Property="Validation.ErrorTemplate">
-                    <Setter.Value>
-                        <ControlTemplate>
-                            <StackPanel>
-                                <AdornedElementPlaceholder x:Name="textBox" />
-                                <TextBlock Text="{Binding [0].ErrorContent}" 
-                                           Foreground="#FF4545" 
-                                           FontSize="11" 
-                                           Margin="0,2,0,0" />
-                            </StackPanel>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-                <Style.Triggers>
-                    <Trigger Property="Validation.HasError" Value="True">
-                        <Setter Property="BorderBrush" Value="#FF4545" />
-                        <Setter Property="BorderThickness" Value="1" />
-                    </Trigger>
-                </Style.Triggers>
-            </Style>
-
-        </ResourceDictionary>
+            </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -17,11 +17,10 @@
 
     <ItemGroup>
       <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-      <PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.0.0-rc5" />
-      <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc5" />
+      <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0" />
       <PackageReference Include="MahApps.Metro.IconPacks" Version="6.2.1" />
       <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="6.2.1" />
-      <PackageReference Include="Select.HtmlToPdf.NetCore" Version="26.2.0" />
+      <PackageReference Include="Select.HtmlToPdf.NetCore" Version="25.2.0" />
       <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.0" />
       <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
       <PackageReference Include="Serilog.Sinks.File" Version="8.0.0-nblumhardt-02322" />

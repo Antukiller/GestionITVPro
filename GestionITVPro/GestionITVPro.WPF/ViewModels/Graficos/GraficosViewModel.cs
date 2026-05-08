@@ -4,93 +4,126 @@ using GestionITVPro.Enums;
 using GestionITVPro.Models;
 using GestionITVPro.Service.Citas;
 using Serilog;
-using LiveChartsCore;
-using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore.SkiaSharpView.Painting;
-using SkiaSharp;
+using System.Collections.ObjectModel;
 
-namespace GestionITVPro.WPF.ViewModels;
+namespace GestionITVPro.WPF.ViewModels.Graficos;
 
-public partial class GraficosViewModel : ObservableObject 
-{
-    private readonly ILogger _logger = Log.ForContext<GraficosViewModel>();
+public partial class GraficoViewModel : ObservableObject {
+    private readonly ILogger _logger = Log.ForContext<GraficoViewModel>();
     private readonly ICitasService _citasService;
 
-    // --- PROPIEDADES PARA LAS TARJETAS (STATS) ---
     [ObservableProperty] private int _totalCitas;
     [ObservableProperty] private int _citasParaHoy;
     [ObservableProperty] private double _cilindradaMedia;
     [ObservableProperty] private double _porcentajeVehiculosEco;
-    [ObservableProperty] private DateTime _ultimaCitaProgramada;
     [ObservableProperty] private string _statusMessage = "";
+    [ObservableProperty] private DateTime _ultimaCitaProgramada;
 
-    // --- PROPIEDADES PARA LOS GRÁFICOS (LiveCharts) ---
-    [ObservableProperty] private IEnumerable<ISeries> _motorSeries;
-    [ObservableProperty] private IEnumerable<ISeries> _ecoSeries;
-    [ObservableProperty] private IEnumerable<ISeries> _calendarioSeries;
-    [ObservableProperty] private Axis[] _xAxesCalendario;
+    // Usamos ObservableCollection para que la vista se entere de los cambios de la lista
+    public ObservableCollection<MotorStatItem> MotorStatsList { get; } = new();
+    public ObservableCollection<CalendarioStatItem> CalendarioStatsList { get; } = new();
 
-    public GraficosViewModel(ICitasService citasService) 
-    {
+    public GraficoViewModel(ICitasService citasService) {
         _citasService = citasService;
         LoadStatistics();
     }
 
     [RelayCommand]
-    private void LoadStatistics() 
-    {
-        try 
-        {
-            var citas = _citasService.GetAll().ToList();
+    private void LoadStatistics() {
+        try {
+            var todas = _citasService.GetCitasOrderBy(TipoOrdenamiento.Matricula, 1, 2000, false).ToList();
             
-            // 1. Cálculos de Tarjetas
-            TotalCitas = citas.Count;
-            CitasParaHoy = citas.Count(c => c.FechaInspeccion.Date == DateTime.Today);
-            CilindradaMedia = citas.Any() ? citas.Average(c => c.Cilindrada) : 0;
-            
-            int vehiculosEco = citas.Count(c => c.Motor == Motor.Electrico || c.Motor == Motor.Hibrido);
-            PorcentajeVehiculosEco = citas.Any() ? (double)vehiculosEco / TotalCitas : 0;
-            
-            UltimaCitaProgramada = citas.Any() ? citas.Max(c => c.FechaInspeccion) : DateTime.Today;
+            if (todas == null || !todas.Any()) {
+                // DATOS DE PRUEBA (Si la base de datos está vacía)
+                TotalCitas = 100;
+                CitasParaHoy = 12;
+                CilindradaMedia = 1600;
+                PorcentajeVehiculosEco = 0.35;
+                UltimaCitaProgramada = DateTime.Now;
+            } else {
+                TotalCitas = todas.Count;
+                CitasParaHoy = todas.Count(c => c.FechaInspeccion.Date == DateTime.Today);
+                CilindradaMedia = todas.Average(c => c.Cilindrada);
+                UltimaCitaProgramada = todas.Max(c => c.FechaInspeccion);
+                var ecos = todas.Count(c => c.Motor == Motor.Electrico || c.Motor == Motor.Hibrido);
+                PorcentajeVehiculosEco = (double)ecos / TotalCitas;
+            }
 
-            // 2. Gráfico de Motores (PieChart)
-            MotorSeries = new ISeries[]
-            {
-                new PieSeries<int> { Values = new[] { citas.Count(c => c.Motor == Motor.Diesel) }, Name = "Diésel" },
-                new PieSeries<int> { Values = new[] { citas.Count(c => c.Motor == Motor.Gasolina) }, Name = "Gasolina" },
-                new PieSeries<int> { Values = new[] { citas.Count(c => c.Motor == Motor.Hibrido) }, Name = "Híbrido" },
-                new PieSeries<int> { Values = new[] { citas.Count(c => c.Motor == Motor.Electrico) }, Name = "Eléctrico" }
-            };
+            CalcularStatsMotores(todas ?? new List<Cita>());
+            CalcularStatsCalendario(todas ?? new List<Cita>());
 
-            // 3. Gráfico Eco vs Combustión
-            EcoSeries = new ISeries[]
-            {
-                new PieSeries<int> { Values = new[] { vehiculosEco }, Name = "ECO", Fill = new SolidColorPaint(SKColors.SpringGreen) },
-                new PieSeries<int> { Values = new[] { TotalCitas - vehiculosEco }, Name = "Combustión", Fill = new SolidColorPaint(SKColors.Crimson) }
-            };
-
-            // 4. Gráfico de Calendario (Próximos 7 días)
-            var dias = Enumerable.Range(0, 7).Select(d => DateTime.Today.AddDays(d)).ToList();
-            var conteoPorDia = dias.Select(d => citas.Count(c => c.FechaInspeccion.Date == d.Date)).ToArray();
-
-            CalendarioSeries = new ISeries[]
-            {
-                new ColumnSeries<int> 
-                { 
-                    Values = conteoPorDia, 
-                    Name = "Citas",
-                    Fill = new SolidColorPaint(SKColors.Cyan)
-                }
-            };
-
-            XAxesCalendario = new Axis[] { new Axis { Labels = dias.Select(d => d.ToString("dd/MM")).ToArray() } };
-
-            StatusMessage = "Datos actualizados";
+            StatusMessage = "Sincronización completada";
         }
-        catch (Exception ex) 
-        {
-            _logger.Error(ex, "Error al cargar estadísticas");
+        catch (Exception ex) {
+            _logger.Error(ex, "Error en dashboard");
             StatusMessage = "Error de conexión";
         }
     }
+
+    private void CalcularStatsMotores(List<Cita> citas) {
+        MotorStatsList.Clear();
+        
+        if (!citas.Any()) {
+            // Mock data para ver las barras si no hay citas
+            MotorStatsList.Add(new MotorStatItem { Nombre = "Gasolina", Cantidad = 45, Porcentaje = 45, ColorHex = "#FFB800" });
+            MotorStatsList.Add(new MotorStatItem { Nombre = "Diesel", Cantidad = 30, Porcentaje = 30, ColorHex = "#E44D26" });
+            MotorStatsList.Add(new MotorStatItem { Nombre = "Eléctrico", Cantidad = 15, Porcentaje = 15, ColorHex = "#00FF88" });
+            MotorStatsList.Add(new MotorStatItem { Nombre = "Híbrido", Cantidad = 10, Porcentaje = 10, ColorHex = "#A0FF00" });
+        } else {
+            var grupos = citas.GroupBy(c => c.Motor);
+            foreach (var g in grupos) {
+                MotorStatsList.Add(new MotorStatItem {
+                    Nombre = g.Key.ToString(),
+                    Cantidad = g.Count(),
+                    Porcentaje = (double)g.Count() / citas.Count * 100,
+                    ColorHex = GetColorForMotor(g.Key)
+                });
+            }
+        }
+    }
+
+    private void CalcularStatsCalendario(List<Cita> citas) {
+        CalendarioStatsList.Clear();
+        var random = new Random();
+
+        for (int i = 0; i < 7; i++) {
+            var fecha = DateTime.Today.AddDays(i);
+            int cant = citas.Count(c => c.FechaInspeccion.Date == fecha);
+            
+            // Si no hay datos, inventamos para el gráfico
+            if (!citas.Any()) cant = random.Next(2, 12);
+
+            CalendarioStatsList.Add(new CalendarioStatItem {
+                Etiqueta = i == 0 ? "HOY" : fecha.ToString("dd/MM"),
+                Cantidad = cant,
+                AlturaBarra = Math.Min(cant * 15, 180) // Factor de escala
+            });
+        }
+    }
+
+    private string GetColorForMotor(Motor m) => m switch {
+        Motor.Gasolina => "#FFB800",
+        Motor.Diesel => "#E44D26",
+        Motor.Electrico => "#00FF88",
+        Motor.Hibrido => "#A0FF00",
+        _ => "#00F2FF"
+    };
+    
+    
+    
+}
+
+// Clases de apoyo (Asegúrate de que estén fuera de la clase principal o en archivos aparte)
+public class MotorStatItem {
+    public string Nombre { get; set; } = string.Empty;
+    public int Cantidad { get; set; }
+    public double Porcentaje { get; set; }
+    public string ColorHex { get; set; } = "#FFFFFF";
+    public double AnchoBarra => Porcentaje * 2.2; // Multiplicador para que la barra crezca en el UI
+}
+
+public class CalendarioStatItem {
+    public string Etiqueta { get; set; } = string.Empty;
+    public int Cantidad { get; set; }
+    public double AlturaBarra { get; set; }
 }

@@ -36,8 +36,10 @@ public partial class MainWindow : Window {
         Log.Information("🏠 MainWindow inicializada");
 
         MainFrame.Navigate(new DashboardView());
-
-        DeleteTypeText.Text = $"Borrado: {(AppConfig.UseLogicalDelete ? "Lógico" : "Físico")}";
+        
+        
+            DeleteTypeText.Text = $"Borrado: {(AppConfig.UseLogicalDelete ? "Lógico" : "Físico")}";
+        
 
         Closing += (s, e) => {
             if (_exitConfirmedViaMenu) return;
@@ -53,6 +55,21 @@ public partial class MainWindow : Window {
             else
                 _exitConfirmedViaMenu = true;
         };
+    }
+    
+    /// <summary>
+    /// Método genérico para navegar pidiendo la vista al ServiceProvider.
+    /// Esto evita errores de recursos y gestiona correctamente los ViewModels.
+    /// </summary>
+    private void NavegarA<T>() where T : Page {
+        try {
+            var view = App.ServiceProvider.GetRequiredService<T>();
+            MainFrame.Navigate(view);
+        } catch (Exception ex) {
+            Log.Error(ex, $"❌ Error al navegar a {typeof(T).Name}");
+            // Fallback en caso de que no esté registrado en el contenedor
+            MainFrame.Navigate(Activator.CreateInstance<T>());
+        }
     }
 
     private void OnNavigateRequested(Page page) {
@@ -106,7 +123,7 @@ public partial class MainWindow : Window {
     }
 
     private void OnGraficosClick(object sender, RoutedEventArgs e) {
-        MainFrame.Navigate(new GraficoView(new GraficosViewModel()));
+        MainFrame.Navigate(new GraficoView());
     }
 
     private void OnBackupClick(object sender, RoutedEventArgs e) {

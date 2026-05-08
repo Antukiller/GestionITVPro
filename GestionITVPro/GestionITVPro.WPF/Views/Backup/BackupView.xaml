@@ -4,21 +4,19 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       mc:Ignorable="d"
-      d:DesignHeight="500" d:DesignWidth="850"
-      Title="Umbrella Corp. - Data Management"
-      Background="#0A0A0A">
+      d:DesignHeight="600" d:DesignWidth="900"
+      Title="Gestión de Datos"
+      Background="#0A0A0C">
 
     <Page.Resources>
-        <!-- ESTILO RESIDENT EVIL PARA BOTONES -->
         <Style x:Key="ResidentButtonStyle" TargetType="Button">
             <Setter Property="Height" Value="45"/>
             <Setter Property="Margin" Value="0,5,0,5"/>
-            <Setter Property="Background" Value="#1A241A"/>
-            <Setter Property="Foreground" Value="#33FF33"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Background" Value="#1A1A23"/>
+            <Setter Property="Foreground" Value="#00F2FF"/> <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="12"/>
-            <Setter Property="BorderBrush" Value="#446644"/>
-            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#25252D"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -26,16 +24,20 @@
                         <Border x:Name="btnBorder" 
                                 Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}">
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="btnBorder" Property="Background" Value="#33FF33"/>
+                                <Setter TargetName="btnBorder" Property="Background" Value="#00F2FF"/>
                                 <Setter Property="Foreground" Value="Black"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="btnBorder" Property="BorderBrush" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -50,64 +52,98 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- PANEL LATERAL -->
-        <Border Grid.Column="0" Background="#111" BorderBrush="#333" BorderThickness="0,0,2,0">
+        <Border Grid.Column="0" Background="#16161D" BorderBrush="#25252D" BorderThickness="0,0,1,0">
             <StackPanel Margin="20">
-                <!-- Logotipo Umbrella -->
-                <Ellipse Width="40" Height="40" Fill="#CC0000" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                <Ellipse Width="40" Height="40" Fill="#00F2FF" HorizontalAlignment="Center" Margin="0,0,0,10">
+                    <Ellipse.Effect>
+                        <DropShadowEffect Color="#00F2FF" BlurRadius="10" ShadowDepth="0"/>
+                    </Ellipse.Effect>
+                </Ellipse>
                 
-                <TextBlock Text="LUIS VIVES CORP." 
-                           Foreground="#AA0000" 
-                           FontSize="10" 
+                <TextBlock Text="GESTIÓN ITV PRO" 
+                           Foreground="White" 
+                           FontSize="12" 
                            FontWeight="Black" 
                            HorizontalAlignment="Center" 
                            Margin="0,0,0,30"/>
                 
-                <TextBlock Text="STARS OPERATIONAL COMMAND" 
+                <TextBlock Text="ADMINISTRACIÓN DE SISTEMA" 
                            Foreground="#666" 
                            FontSize="9" 
                            HorizontalAlignment="Center"
                            Margin="0,0,0,10"/>
                 
-                <Button Content="[ RESTAURAR.EXE ]" Style="{StaticResource ResidentButtonStyle}"/>
-                <Button Content="[ BACKUP.DAT ]" Style="{StaticResource ResidentButtonStyle}"/>
-                <Button Content="[ REFRESCAR.SYS ]" Style="{StaticResource ResidentButtonStyle}"/>
+                <Button Content="[ RESTAURAR DATOS ]" 
+                        Style="{StaticResource ResidentButtonStyle}"
+                        Command="{Binding RestaurarBackupCommand}"/>
                 
-                <Separator Background="#333" Margin="0,20"/>
+                <Button Content="[ GENERAR BACKUP ]" 
+                        Style="{StaticResource ResidentButtonStyle}"
+                        Command="{Binding RealizarBackupCommand}"/>
                 
-                <Button Content="[ PURGAR O EVANGELIZAR ]" Style="{StaticResource ResidentButtonStyle}" 
-                        Foreground="#FF3333" BorderBrush="#880000" Background="#220000"/>
+                <Button Content="[ REFRESCAR LISTA ]" 
+                        Style="{StaticResource ResidentButtonStyle}"
+                        Command="{Binding RefreshCommand}"/>
+                
+                <Separator Background="#25252D" Margin="0,20"/>
+                
+                <Button Content="[ ELIMINAR ARCHIVO ]" 
+                        Style="{StaticResource ResidentButtonStyle}" 
+                        Foreground="#FF4444" BorderBrush="#442222" Background="#221111"
+                        Command="{Binding EliminarBackupsCommand}"/>
             </StackPanel>
         </Border>
 
-        <!-- ÁREA DE CONTENIDO -->
         <Grid Grid.Column="1" Margin="30">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                <TextBlock Text="DATA RECOVERY SYSTEM" FontSize="22" FontFamily="Courier New" 
-                           FontWeight="Bold" Foreground="#CCC"/>
-                <TextBlock Text="Location: Arklay Research Facility" FontSize="10" Foreground="#555"/>
+                <TextBlock Text="MANTENIMIENTO DE COPIAS" FontSize="24" FontWeight="Black" Foreground="White"/>
+                <TextBlock Text="HISTORIAL DE SEGURIDAD DEL SISTEMA" FontSize="10" Foreground="#00F2FF" FontWeight="Bold"/>
             </StackPanel>
 
-            <Border Grid.Row="1" Background="#050805" BorderBrush="#446644" BorderThickness="3" CornerRadius="2">
+            <Border Grid.Row="1" Background="#16161D" BorderBrush="#25252D" BorderThickness="1" CornerRadius="8">
                 <Grid>
-                    <StackPanel VerticalAlignment="Top" Margin="15">
-                        <TextBlock Text="> ACCESSING DATABASE..." Foreground="#33FF33" FontFamily="Courier New" Margin="0,0,0,5"/>
-                        <TextBlock Text="> STATUS: SYSTEM CAUTION" Foreground="#FFCC00" FontFamily="Courier New" Margin="0,0,0,5"/>
-                        <TextBlock Text="> NO FILES CORRUPTED... YET." Foreground="#33FF33" FontFamily="Courier New" Margin="0,0,0,5"/>
+                    <StackPanel Margin="15">
+                        <TextBlock Text="> CONECTADO AL SERVIDOR DE DATOS..." Foreground="#00F2FF" Margin="0,0,0,5"/>
+                        <TextBlock Text="{Binding StatusMessage, StringFormat='> ESTADO: {0}'}" Foreground="White" Opacity="0.7" Margin="0,0,0,15"/>
                         
-                        <ProgressBar IsIndeterminate="True" Width="150" Height="4" HorizontalAlignment="Left" 
-                                     Margin="0,20,0,0" Background="#111" Foreground="#33FF33" BorderThickness="1" BorderBrush="#33FF33"/>
-                    </StackPanel>
+                        <TextBlock Text="SELECCIONE ARCHIVO PARA OPERAR:" Foreground="#888" FontSize="10" Margin="0,10,0,5"/>
+                        
+                        <ListBox ItemsSource="{Binding Backups}" 
+                                 SelectedItem="{Binding SelectedBackup}"
+                                 Background="Transparent" 
+                                 Foreground="White" 
+                                 BorderBrush="#25252D"
+                                 Height="250">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="10,8"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#1AFFFFFF"/>
+                                            <Setter Property="BorderBrush" Value="#00F2FF"/>
+                                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
 
-                    <TextBlock Text="BIOHAZARD" VerticalAlignment="Bottom" HorizontalAlignment="Right" 
-                               FontSize="40" Foreground="#111" FontWeight="Black" Margin="0,0,10,-10"/>
+                        <ProgressBar IsIndeterminate="{Binding IsLoading}" 
+                                     Width="200" Height="2" HorizontalAlignment="Left" 
+                                     Margin="0,20,0,0" Background="Transparent" Foreground="#00F2FF" 
+                                     BorderThickness="0"
+                                     Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    </StackPanel>
                 </Grid>
             </Border>
+            
+            <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Foreground="#444" FontSize="10" Margin="0,10,0,0" HorizontalAlignment="Right"/>
         </Grid>
     </Grid>
 </Page>

@@ -4,6 +4,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+      xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
       mc:Ignorable="d"
       Title="Estadísticas de Citas ITV"
       Background="#0A0A0C">
@@ -14,7 +15,6 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- 1. HEADER -->
         <Border Grid.Row="0" Background="#0F0F12" BorderBrush="#1A1A23" BorderThickness="0,0,0,1">
             <DockPanel Margin="25,25,25,20">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
@@ -49,11 +49,9 @@
             </DockPanel>
         </Border>
 
-        <!-- 2. CONTENIDO -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="25,20,25,25">
             <StackPanel>
 
-                <!-- TARJETAS DE RESUMEN -->
                 <WrapPanel Margin="0,0,0,25">
                     <Border Background="#16161D" CornerRadius="10" Padding="20,15" Margin="0,0,15,15" MinWidth="185" BorderBrush="#222" BorderThickness="1">
                         <StackPanel>
@@ -81,7 +79,6 @@
                     </Border>
                 </WrapPanel>
 
-                <!-- GRID DE GRÁFICOS NATIVOS -->
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -94,78 +91,30 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- G1: TIPO DE MOTOR (Barras Horizontales) -->
                     <Border Grid.Row="0" Grid.Column="0" Background="#0F0F12" CornerRadius="15" Padding="25" BorderBrush="#1A1A23" BorderThickness="2">
                         <StackPanel>
-                            <TextBlock Text="⛽ Distribución por Tipo de Motor" Foreground="#00F2FF" FontWeight="Bold" FontSize="14" Margin="0,0,0,25"/>
-                            <ItemsControl ItemsSource="{Binding MotorStatsList}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Margin="0,0,0,18">
-                                            <DockPanel>
-                                                <TextBlock Text="{Binding Nombre}" Foreground="White" FontWeight="SemiBold"/>
-                                                <TextBlock Text="{Binding Cantidad, StringFormat='({0})'}" Foreground="#444" Margin="8,0,0,0"/>
-                                                <TextBlock Text="{Binding Porcentaje, StringFormat='{}{0:F1}%'}" Foreground="{Binding ColorHex}" HorizontalAlignment="Right" FontWeight="Bold"/>
-                                            </DockPanel>
-                                            <Grid Margin="0,8,0,0">
-                                                <Border Height="10" Background="#1A1A23" CornerRadius="5"/>
-                                                <!-- Barra de progreso manual usando el porcentaje del ViewModel -->
-                                                <Border Height="10" Background="{Binding ColorHex}" CornerRadius="5" HorizontalAlignment="Left">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Width" Value="{Binding AnchoBarra}"/>
-                                                        </Style>
-                                                    </Border.Style>
-                                                </Border>
-                                            </Grid>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <TextBlock Text="⛽ Distribución por Tipo de Motor" Foreground="#00F2FF" FontWeight="Bold" FontSize="14" Margin="0,0,0,15"/>
+                            <lvc:PieChart x:Name="MotorChart" Height="250" LegendPosition="Right" />
                         </StackPanel>
                     </Border>
 
-                    <!-- G2: CALENDARIO (Barras Verticales) -->
                     <Border Grid.Row="0" Grid.Column="2" Background="#0F0F12" CornerRadius="15" Padding="25" BorderBrush="#1A1A23" BorderThickness="2">
                         <StackPanel>
-                            <TextBlock Text="📅 Citas Próximos 7 Días" Foreground="#00F2FF" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
-                            <ItemsControl ItemsSource="{Binding CalendarioStatsList}" HorizontalAlignment="Center">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Height="220"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel VerticalAlignment="Bottom" Margin="8,0">
-                                            <TextBlock Text="{Binding Cantidad}" Foreground="White" HorizontalAlignment="Center" FontSize="11" Margin="0,0,0,8"/>
-                                            <Border Width="35" Height="{Binding AlturaBarra}" Background="#00F2FF" CornerRadius="4,4,0,0">
-                                                <Border.Effect>
-                                                    <DropShadowEffect Color="#00F2FF" BlurRadius="10" ShadowDepth="0" Opacity="0.4"/>
-                                                </Border.Effect>
-                                            </Border>
-                                            <TextBlock Text="{Binding Etiqueta}" Foreground="#555" HorizontalAlignment="Center" Margin="0,8,0,0" FontSize="10"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <TextBlock Text="📅 Citas Próximos 7 Días" Foreground="#00F2FF" FontWeight="Bold" FontSize="14" Margin="0,0,0,15"/>
+                            <lvc:CartesianChart x:Name="CalendarioChart" Height="250" />
                         </StackPanel>
                     </Border>
 
-                    <!-- G3: TARJETA ECO GRANDE -->
                     <Border Grid.Row="2" Grid.Column="0" Background="#0F0F12" CornerRadius="15" Padding="25" BorderBrush="#00FF88" BorderThickness="1">
-                        <Grid>
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <iconPacks:PackIconMaterial Kind="Leaf" Width="40" Height="40" Foreground="#00FF88" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                                <TextBlock Text="IMPACTO AMBIENTAL" Foreground="#555" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center"/>
-                                <TextBlock Text="{Binding PorcentajeVehiculosEco, StringFormat='{}{0:P1} ECO'}" 
-                                           Foreground="White" FontSize="32" FontWeight="Black" HorizontalAlignment="Center"/>
-                                <TextBlock Text="Vehículos Eléctricos e Híbridos" Foreground="#444" HorizontalAlignment="Center"/>
-                            </StackPanel>
-                        </Grid>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <iconPacks:PackIconMaterial Kind="Leaf" Width="40" Height="40" Foreground="#00FF88" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                            <TextBlock Text="IMPACTO AMBIENTAL" Foreground="#555" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding PorcentajeVehiculosEco, StringFormat='{}{0:P1} ECO'}" 
+                                       Foreground="White" FontSize="32" FontWeight="Black" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Vehículos Eléctricos e Híbridos" Foreground="#444" HorizontalAlignment="Center"/>
+                        </StackPanel>
                     </Border>
 
-                    <!-- G4: ESTADO OPERATIVO -->
                     <Border Grid.Row="2" Grid.Column="2" Background="#16161D" CornerRadius="15" Padding="25" BorderBrush="#00F2FF" BorderThickness="1">
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <iconPacks:PackIconMaterial Kind="CalendarClock" Width="48" Height="48" Foreground="#00F2FF" HorizontalAlignment="Center" Margin="0,0,0,15"/>

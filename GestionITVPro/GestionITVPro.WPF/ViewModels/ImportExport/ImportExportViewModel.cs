@@ -41,19 +41,16 @@ public partial class ImportExportViewModel(
         try {
             IsLoading = true;
             StatusMessage = "Exportando datos...";
-
+            
             var dialog = new SaveFileDialog {
                 Filter = "CSV|*.csv",
-                FileName = $"Exportación_{DateTime.Now:yyyyMMdd}"
+                FileName = $"Exportacion_{DateTime.Now:yyyyMMdd}"
             };
 
             if (dialog.ShowDialog() == true) {
                 // Usamos null para los filtros que no queremos aplicar en la exportación
                 // y nombres de parámetros para ir directamente a la paginación
-                var citas = _citasService.GetAll(page: 1, 
-                    pageSize: 1000, 
-                    includeDeleted: false
-                );
+                var citas = _citasService.GetAll(page: 1, pageSize: 1000, includeDeleted: false);
                 var csvPath = Path.Combine(AppConfig.DataFolder, "citas.csv");
                 var result = _importExportService.ExportarDatos(citas, csvPath);
 

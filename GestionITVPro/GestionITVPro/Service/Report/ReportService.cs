@@ -166,17 +166,31 @@ public class ReportService : IReportService {
 
     public Result<bool, DomainError> GuardarInformePdf(string html, string fileName) {
         try {
-            // NOTA: Para generar un PDF real necesitas una librería externa.
-            // Aquí te dejo el placeholder donde invocarías a tu conversor (ej: DinkToPdf o iText)
             _logger.Information("Iniciando conversión de HTML a PDF para {FileName}", fileName);
-        
-            // Simulación:
-            // byte[] pdfBytes = _pdfConverter.Convert(html);
-            // File.WriteAllBytes(fileName, pdfBytes);
-        
+
+            // 1. Crear el objeto convertidor de SelectPdf
+            SelectPdf.HtmlToPdf converter = new SelectPdf.HtmlToPdf();
+
+            // 2. Opciones de configuración (Opcional, para que se vea profesional)
+            converter.Options.PdfPageSize = SelectPdf.PdfPageSize.A4;
+            converter.Options.PdfPageOrientation = SelectPdf.PdfPageOrientation.Portrait;
+            converter.Options.MarginTop = 20;
+            converter.Options.MarginBottom = 20;
+
+            // 3. Convertir el string HTML que recibimos a un documento PDF
+            SelectPdf.PdfDocument doc = converter.ConvertHtmlString(html);
+
+            // 4. Guardar el archivo físicamente en la ruta que eligió el usuario
+            doc.Save(fileName);
+
+            // 5. IMPORTANTE: Cerrar el documento para liberar el archivo y que aparezca en el PC
+            doc.Close();
+
+            _logger.Information("PDF generado y guardado con éxito en {Path}", fileName);
             return Result.Success<bool, DomainError>(true);
         }
         catch (Exception ex) {
+            _logger.Error(ex, "Error crítico al convertir a PDF");
             return Result.Failure<bool, DomainError>(CitaErrors.DatabaseError($"Error en conversión PDF: {ex.Message}"));
         }
     }
