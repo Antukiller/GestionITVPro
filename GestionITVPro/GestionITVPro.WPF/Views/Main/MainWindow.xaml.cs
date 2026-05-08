@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using GestionITVPro.Config;
 using GestionITVPro.WPF;
+using GestionITVPro.WPF.ViewModels;
 using GestionITVPro.WPF.ViewModels.Main;
 using GestionITVPro.WPF.Views.AcercaDe;
 using GestionITVPro.WPF.Views.Backup;
@@ -105,7 +106,7 @@ public partial class MainWindow : Window {
     }
 
     private void OnGraficosClick(object sender, RoutedEventArgs e) {
-        MainFrame.Navigate(new GraficoView());
+        MainFrame.Navigate(new GraficoView(new GraficosViewModel()));
     }
 
     private void OnBackupClick(object sender, RoutedEventArgs e) {

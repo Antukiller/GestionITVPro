@@ -6,6 +6,8 @@ using GestionITVPro.Config;
 using GestionITVPro.Views.Main;
 using GestionITVPro.WPF.Infrastructure;
 using GestionITVPro.WPF.Views.Splash;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Debugging;
@@ -62,6 +64,13 @@ public partial class App : Application {
         Log.Information("Llamando a mainWindow.Show");
         mainWindow.Show();
         base.OnStartup(e);
+        
+        LiveCharts.Configure(config => 
+            config 
+                .AddSkiaSharp() 
+                .AddDefaultMappers() 
+                .AddDarkTheme()
+        );
         
         Log.Information("mainWindow.Show() completado");
     }
