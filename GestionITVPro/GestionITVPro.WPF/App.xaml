@@ -12,17 +12,18 @@
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
             <converters:BoolToSiNoConverter x:Key="BoolToSiNoConverter" />
 
-            <Color x:Key="PrimaryColor">#00F2FF</Color>
-            
-            <SolidColorBrush x:Key="NeonCyanBrush" Color="{StaticResource PrimaryColor}" />
+            <SolidColorBrush x:Key="AccentBrush" 
+                             Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}" />
+            <SolidColorBrush x:Key="AccentTextBrush"
+                             Color="{DynamicResource {x:Static SystemColors.HighlightTextColorKey}}" />
+            <SolidColorBrush x:Key="NeonCyanBrush" Color="#00F2FF" />
             <SolidColorBrush x:Key="DarkBgBrush" Color="#0A0A0C" />
             <SolidColorBrush x:Key="CardBgBrush" Color="#16161D" />
-            
-            <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />
+            <SolidColorBrush x:Key="PrimaryBrush" Color="#00F2FF" />
             <SolidColorBrush x:Key="BackgroundBrush" Color="#0A0A0C" />
             <SolidColorBrush x:Key="SurfaceBrush" Color="#16161D" />
             <SolidColorBrush x:Key="BorderBrush" Color="#1A1A23" />
-            <SolidColorBrush x:Key="PrimaryTransparentBrush" Color="{StaticResource PrimaryColor}" Opacity="0.15" />
+            <SolidColorBrush x:Key="PrimaryTransparentBrush" Color="#00F2FF" Opacity="0.15" />
 
             <Style x:Key="BaseButtonStyle" TargetType="Button">
                 <Setter Property="MinWidth" Value="120" />
@@ -51,9 +52,9 @@
             </Style>
 
             <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
-                <Setter Property="Background" Value="#1A1A23" />
-                <Setter Property="Foreground" Value="{StaticResource NeonCyanBrush}" />
-                <Setter Property="BorderBrush" Value="{StaticResource NeonCyanBrush}" />
+                <Setter Property="Background" Value="{StaticResource CardBgBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
             </Style>
 
             </ResourceDictionary>

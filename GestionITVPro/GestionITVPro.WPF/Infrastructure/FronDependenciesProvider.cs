@@ -6,6 +6,7 @@ using GestionITVPro.WPF.ViewModels.Graficos;
 using GestionITVPro.WPF.ViewModels.ImportExport;
 using GestionITVPro.WPF.ViewModels.Informe;
 using GestionITVPro.WPF.ViewModels.Main;
+using GestionITVPro.WPF.Views.Grafico;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -50,6 +51,7 @@ public static class FrontDependenciesProvider {
         services.AddTransient<BackupViewModel>();
         // ViewModel de Gráficos (visualización de estadísticas)
         services.AddTransient<GraficoViewModel>();
+        services.AddTransient<GraficoView>();
         // ViewModel de Informes (generación de reportes)
         services.AddTransient<InformeViewModel>();
         // ViewModel de Import/Export (importación y exportación de datos)

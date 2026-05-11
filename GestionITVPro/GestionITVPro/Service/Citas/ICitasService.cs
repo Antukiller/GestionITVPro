@@ -47,7 +47,7 @@ public interface ICitasService {
 
     int CountCitas(bool includeDeleted = false);
     
-    int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool incluirEliminados);
+    int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool incluirEliminados, string? motor = null);
 
 
 

@@ -697,6 +697,7 @@ public class CitaEfRepositoryTests {
             r.Should().Be(2);
         }
 
+        [Test]
         public void DeleteAll_DeberiaVaciarRepositorio() {
             // Arrange
             _repository.Create(new Cita {
@@ -715,6 +716,29 @@ public class CitaEfRepositoryTests {
             // Assert
             r.Should().BeTrue();
             _repository.GetAll(1, 10, true, null).Should().BeEmpty();
+        }
+
+        [Test]
+        public void CountCitasFiltradas_IsDeleteIncludeTrue_RetornarSoloEliminados() {
+            // Arrange
+            var fecha = DateTime.UtcNow.Date;
+            _repository.Create(new Cita {
+                Matricula = "1111-AAA", Marca = "BMW", Modelo = "M-4", Cilindrada = 3000,
+                Motor = Motor.Gasolina, DniPropietario = "12345678A", FechaInspeccion = fecha
+            });
+            var v2 = _repository.Create(new Cita {
+                Matricula = "2222-BBB", Marca = "Toyota", Modelo = "Sandero", Cilindrada = 1500,
+                Motor = Motor.Diesel, DniPropietario = "12345678B", FechaInspeccion = fecha
+            }).Value;
+            _repository.Delete(v2.Id);
+
+            // Act
+            var countDeleted = _repository.CountCitasFiltradas(null, fecha.AddDays(-1), fecha.AddDays(1), true);
+            var countActive = _repository.CountCitasFiltradas(null, fecha.AddDays(-1), fecha.AddDays(1), false);
+
+            // Assert
+            countDeleted.Should().Be(1);
+            countActive.Should().Be(1);
         }
     }
 

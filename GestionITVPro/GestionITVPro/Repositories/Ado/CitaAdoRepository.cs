@@ -137,9 +137,13 @@ public class CitaAdoRepository : ICitaRepository {
         
         // 1. Lógica para el Motor (Convertir Texto de la UI a Entero de la DB)
         int motorValue = -1;
-        if (motor != "TODOS") {
-            // Ajusta 'MotorType' al nombre de tu Enum real
-            if (Enum.TryParse<Motor>(motor, true, out var resultadoEnum)) {
+        if (!motor.Equals("TODOS", StringComparison.OrdinalIgnoreCase)) {
+            var motorBusqueda = motor
+                .Replace("DIÉSEL", "Diesel")
+                .Replace("HÍBRIDO", "Hibrido")
+                .Replace("ELÉCTRICO", "Electrico")
+                .Trim();
+            if (Enum.TryParse<Motor>(motorBusqueda, true, out var resultadoEnum)) {
                 motorValue = (int)resultadoEnum;
             }
         }
@@ -149,7 +153,7 @@ public class CitaAdoRepository : ICitaRepository {
             SELECT * FROM Citas 
             WHERE date(FechaInspeccion) >= date(@inicio)
             AND (@fin_val IS NULL OR date(FechaInspeccion) <= date(@fin_val))
-            AND (IsDeleted = 0 OR @inc_del = 1)
+            AND IsDeleted = @inc_del
             AND (@motor_text = 'TODOS' OR Motor = @motor_int) -- Comparación numérica
             AND (@search_val IS NULL OR (
                 LOWER(Matricula) LIKE @search_val OR 
@@ -478,7 +482,7 @@ public class CitaAdoRepository : ICitaRepository {
         return Convert.ToInt32(command.ExecuteScalar()) >= 3;
     }
     
-    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool isDeleteInclude) 
+    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool isDeleteInclude, string? motor = null) 
     {
         using var connection = CreateConnection();
         connection.Open();
@@ -486,10 +490,11 @@ public class CitaAdoRepository : ICitaRepository {
 
         command.CommandText = @"
         SELECT COUNT(*) FROM Citas 
-        WHERE (@IncludeDeleted = 1 OR IsDeleted = 0)
+        WHERE IsDeleted = @IncludeDeleted
           AND date(FechaInspeccion) >= date(@Inicio)
           AND (@Fin IS NULL OR date(FechaInspeccion) <= date(@Fin))
-          AND (@Matricula IS NULL OR Matricula LIKE @MatriculaLike)";
+          AND (@Matricula IS NULL OR Matricula LIKE @MatriculaLike)
+          AND (@Motor IS NULL OR @Motor = '' OR Motor = @MotorValue)";
 
         command.Parameters.AddWithValue("@Inicio", inicio.ToString("yyyy-MM-dd"));
         command.Parameters.AddWithValue("@Fin", (object?)fin?.ToString("yyyy-MM-dd") ?? DBNull.Value);
@@ -497,6 +502,30 @@ public class CitaAdoRepository : ICitaRepository {
         command.Parameters.AddWithValue("@Matricula", (object?)matricula ?? DBNull.Value);
         command.Parameters.AddWithValue("@MatriculaLike", string.IsNullOrWhiteSpace(matricula) ? DBNull.Value : $"%{matricula}%");
 
-        return Convert.ToInt32(command.ExecuteScalar());
+    if (!string.IsNullOrWhiteSpace(motor) && !motor.Equals("TODOS", StringComparison.OrdinalIgnoreCase))
+    {
+        var motorBusqueda = motor
+            .Replace("DIÉSEL", "Diesel")
+            .Replace("HÍBRIDO", "Hibrido")
+            .Replace("ELÉCTRICO", "Electrico")
+            .Trim();
+        if (Enum.TryParse<Motor>(motorBusqueda, true, out var motorEnum))
+        {
+            command.Parameters.AddWithValue("@Motor", 1);
+            command.Parameters.AddWithValue("@MotorValue", (int)motorEnum);
+        }
+        else
+        {
+            command.Parameters.AddWithValue("@Motor", DBNull.Value);
+            command.Parameters.AddWithValue("@MotorValue", DBNull.Value);
+        }
+    }
+    else
+    {
+        command.Parameters.AddWithValue("@Motor", DBNull.Value);
+        command.Parameters.AddWithValue("@MotorValue", DBNull.Value);
+    }
+
+    return Convert.ToInt32(command.ExecuteScalar());
     }
 }

@@ -2,16 +2,13 @@
 using System.Windows;
 using System.Windows.Input;
 
-namespace GestionITVPro.WPF.Views.AcercaDe;
+namespace GestionITVPro.WPF.Views.About;
 
-public partial class AcercaDe : Window {
-    public AcercaDe() {
+public partial class About : Window {
+    public About() {
         InitializeComponent();
     }
     
-    /// <summary>
-    ///     Abre el enlace a GitHub en el navegador o copia al portapapeles.
-    /// </summary>
     private void OnGitHubClick(object sender, RoutedEventArgs e) {
         try {
             Process.Start(new ProcessStartInfo {
@@ -26,9 +23,6 @@ public partial class AcercaDe : Window {
         }
     }
 
-    /// <summary>
-    ///     Cierra la ventana.
-    /// </summary>
     private void OnCerrarClick(object sender, RoutedEventArgs e) {
         Close();
     }

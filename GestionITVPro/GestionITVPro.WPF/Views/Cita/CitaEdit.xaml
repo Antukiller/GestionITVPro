@@ -10,7 +10,7 @@
         Background="#121212" Foreground="White"
         WindowStyle="None" AllowsTransparency="True">
 
-    <Border BorderBrush="#00F2FF" BorderThickness="1" CornerRadius="15" Background="#1A1A1D">
+    <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="15" Background="#1A1A1D">
         <Grid Margin="20">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -19,8 +19,8 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
-                <TextBlock Text="🛠" FontSize="30" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#00F2FF"/>
-                <TextBlock Text="{Binding WindowTitle}" FontSize="24" FontWeight="Bold" VerticalAlignment="Center" Foreground="#00F2FF"/>
+                <TextBlock Text="🛠" FontSize="30" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource AccentBrush}"/>
+                <TextBlock Text="{Binding WindowTitle}" FontSize="24" FontWeight="Bold" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}"/>
             </StackPanel>
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -87,7 +87,7 @@
                         Background="#332222" Foreground="#FF5555" BorderThickness="1"/>
                 <Button Command="{Binding SaveCommand}" Content="💾 GUARDAR CAMBIOS" 
                         Width="180" Height="40" Cursor="Hand"
-                        Background="#00F2FF" Foreground="#121212" FontWeight="Bold"/>
+                        Background="{DynamicResource AccentBrush}" Foreground="#121212" FontWeight="Bold"/>
             </StackPanel>
         </Grid>
     </Border>

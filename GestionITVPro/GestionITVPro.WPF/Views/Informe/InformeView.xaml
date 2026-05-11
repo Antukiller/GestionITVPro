@@ -15,10 +15,10 @@
 
         <!-- 1. HEADER -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,30">
-            <iconPacks:PackIconMaterial Kind="FileChart" Width="40" Height="40" Foreground="#00F2FF"
+            <iconPacks:PackIconMaterial Kind="FileChart" Width="40" Height="40" Foreground="{DynamicResource AccentBrush}"
                                         VerticalAlignment="Center" Margin="0,0,15,0" />
             <StackPanel>
-                <TextBlock Text="MÓDULO DE IMPRESIÓN" Foreground="#00F2FF" FontSize="12" FontWeight="ExtraBold"/>
+                <TextBlock Text="MÓDULO DE IMPRESIÓN" Foreground="{DynamicResource AccentBrush}" FontSize="12" FontWeight="ExtraBold"/>
                 <TextBlock Text="Generación de Informes" Foreground="White" FontSize="28" FontWeight="Black"/>
             </StackPanel>
         </StackPanel>
@@ -50,7 +50,7 @@
 
             <!-- Bloque 1: Informe de Vehículos -->
             <GroupBox Grid.Column="0" Header="INFORME DE VEHÍCULOS" Margin="0,0,10,0"
-                      BorderBrush="#1A1A23" Foreground="#00F2FF" FontWeight="Bold">
+                      BorderBrush="#1A1A23" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold">
                 <StackPanel Margin="15">
                     <TextBlock Text="Listado técnico de vehículos registrados, incluyendo cilindrada y tipo de motor." 
                                TextWrapping="Wrap" Foreground="#888" Margin="0,0,0,20" Height="45"/>
@@ -72,7 +72,7 @@
 
             <!-- Bloque 2: Informe de Citas -->
             <GroupBox Grid.Column="1" Header="INFORME DE CITAS" Margin="10,0,10,0"
-                      BorderBrush="#1A1A23" Foreground="#00F2FF" FontWeight="Bold">
+                      BorderBrush="#1A1A23" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold">
                 <StackPanel Margin="15">
                     <TextBlock Text="Resumen detallado de citas programadas, estados y horas de inspección." 
                                TextWrapping="Wrap" Foreground="#888" Margin="0,0,0,20" Height="45"/>
@@ -94,7 +94,7 @@
 
             <!-- Bloque 3: Rendimiento y Totales -->
             <GroupBox Grid.Column="2" Header="RENDIMIENTO GENERAL" Margin="10,0,0,0"
-                      BorderBrush="#1A1A23" Foreground="#00F2FF" FontWeight="Bold">
+                      BorderBrush="#1A1A23" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold">
                 <StackPanel Margin="15">
                     <TextBlock Text="Análisis estadístico de saturación, tiempos medios y comparativas mensuales." 
                                TextWrapping="Wrap" Foreground="#888" Margin="0,0,0,20" Height="45"/>
@@ -119,7 +119,7 @@
         <Border Grid.Row="3" Background="#16161D" Padding="12,8" CornerRadius="5" Margin="0,20,0,0">
             <Grid>
                 <StackPanel Orientation="Horizontal">
-                    <iconPacks:PackIconMaterial Kind="InformationOutline" Width="14" Height="14" Foreground="#00F2FF" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <iconPacks:PackIconMaterial Kind="InformationOutline" Width="14" Height="14" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <TextBlock Text="{Binding StatusMessage}" Foreground="#AAA" FontSize="12" VerticalAlignment="Center"/>
                 </StackPanel>
                 <TextBlock Text="Listo para exportar" Foreground="#444" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center"/>

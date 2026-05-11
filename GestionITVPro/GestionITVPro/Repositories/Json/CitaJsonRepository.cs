@@ -2,6 +2,7 @@
 using System.Text.Json;
 using CSharpFunctionalExtensions;
 using GestionITVPro.Entity;
+using GestionITVPro.Enums;
 using GestionITVPro.Error.Cita;
 using GestionITVPro.Errors.Common;
 using GestionITVPro.Factory;
@@ -90,7 +91,7 @@ public class CitaJsonRepository : ICitaRepository {
             var consulta = _porId.Values.AsEnumerable();
 
             // 2. Filtros
-            if (!isDeleteInclude) consulta = consulta.Where(c => !c.IsDeleted);
+            consulta = consulta.Where(c => isDeleteInclude ? c.IsDeleted : !c.IsDeleted);
     
             // Filtro de fechas (solo fecha, sin hora para mayor precisión en búsqueda por día)
             consulta = consulta.Where(c => c.FechaInspeccion.Date >= inicio.Date);
@@ -98,8 +99,16 @@ public class CitaJsonRepository : ICitaRepository {
                 consulta = consulta.Where(c => c.FechaInspeccion.Date <= fin.Value.Date);
 
             // Filtro de Motor
-            if (!string.IsNullOrWhiteSpace(motor) && motor.ToUpper() != "TODOS")
-                consulta = consulta.Where(c => c.Motor.ToString().ToUpper() == motor.ToUpper());
+            if (!string.IsNullOrWhiteSpace(motor) && !motor.Equals("TODOS", StringComparison.OrdinalIgnoreCase))
+            {
+                var motorBusqueda = motor
+                    .Replace("DIÉSEL", "Diesel")
+                    .Replace("HÍBRIDO", "Hibrido")
+                    .Replace("ELÉCTRICO", "Electrico")
+                    .Trim();
+                if (Enum.TryParse<Motor>(motorBusqueda, true, out var motorEnum))
+                    consulta = consulta.Where(c => c.Motor == (int)motorEnum);
+            }
 
             // Filtro de texto (Matrícula, DNI, Marca)
             if (!string.IsNullOrWhiteSpace(searchText))
@@ -335,17 +344,34 @@ public class CitaJsonRepository : ICitaRepository {
         return Result.Success<Cita, DomainError>(restored.ToModel()!);
     }
     
-    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool isDeleteInclude) 
+    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool isDeleteInclude, string? motor = null) 
     {
         var consulta = _porId.Values.AsEnumerable();
 
-        if (!isDeleteInclude) consulta = consulta.Where(v => !v.IsDeleted);
+        consulta = consulta.Where(v => isDeleteInclude ? v.IsDeleted : !v.IsDeleted);
 
         consulta = consulta.Where(c => c.FechaInspeccion >= inicio);
         if (fin.HasValue) consulta = consulta.Where(c => c.FechaInspeccion <= fin.Value);
 
         if (!string.IsNullOrWhiteSpace(matricula))
-            consulta = consulta.Where(c => c.Matricula.Contains(matricula, StringComparison.OrdinalIgnoreCase));
+        {
+            var term = matricula.ToLower();
+            consulta = consulta.Where(c =>
+                (c.Matricula != null && c.Matricula.ToLower().Contains(term)) ||
+                (c.DniPropietario != null && c.DniPropietario.ToLower().Contains(term)) ||
+                (c.Marca != null && c.Marca.ToLower().Contains(term)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(motor) && !motor.Equals("TODOS", StringComparison.OrdinalIgnoreCase))
+        {
+            var motorBusqueda = motor
+                .Replace("DIÉSEL", "Diesel")
+                .Replace("HÍBRIDO", "Hibrido")
+                .Replace("ELÉCTRICO", "Electrico")
+                .Trim();
+            if (Enum.TryParse<Motor>(motorBusqueda, true, out var motorEnum))
+                consulta = consulta.Where(c => c.Motor == (int)motorEnum);
+        }
 
         return consulta.Count();
     }

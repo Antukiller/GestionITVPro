@@ -81,7 +81,8 @@ public partial class CitaViewModel : ObservableObject {
     }
 
     partial void OnMostrarEliminadosChanged(bool value) {
-        FilterCitas();
+        PaginaActual = 1;
+        LoadCitas();
     }
 
     partial void OnPaginaActualChanged(int value) {
@@ -100,6 +101,7 @@ public partial class CitaViewModel : ObservableObject {
         EditCommand.NotifyCanExecuteChanged();
         DeleteCommand.NotifyCanExecuteChanged();
         ViewCommand.NotifyCanExecuteChanged();
+        RestoreCommand.NotifyCanExecuteChanged();
     }
     
     
@@ -231,9 +233,8 @@ public partial class CitaViewModel : ObservableObject {
     }
 
     private void ActualizarEstadoPaginacion() {
-        // Llamada al nuevo método del servicio que cuenta en SQL
         TotalRegistros = _citasService.CountCitasFiltradas(
-            SearchText, FechaInicio, FechaFin, MostrarEliminados);
+            SearchText, FechaInicio, FechaFin, MostrarEliminados, MotorSeleccionado);
 
         TotalPaginas = TotalRegistros == 0 ? 1 : (int)Math.Ceiling((double)TotalRegistros / TamanoPagina);
 
@@ -306,14 +307,6 @@ public partial class CitaViewModel : ObservableObject {
     private void Delete() {
         if (SelectedCita == null) return;
 
-        // Solo llamamos a Restore si el usuario activó el check de "Mostrar Eliminados"
-        // y la cita realmente está marcada como borrada.
-        if (MostrarEliminados && SelectedCita.IsDeleted) {
-            Restore();
-            return;
-        }
-    
-        // Mensaje claro que evita confusiones
         var mensaje = "¿Está seguro de que desea eliminar este registro?";
 
         if (!_dialogService.ShowConfirmation(mensaje, "Confirmar Acción"))
@@ -358,13 +351,7 @@ public partial class CitaViewModel : ObservableObject {
         var result = _citasService.Restore(SelectedCita.Id);
 
         if (result.IsSuccess) {
-            SelectedCita.IsDeleted = false;
-
-            var index = _todasLasCitas.FindIndex(e => e.Id == SelectedCita.Id);
-            if (index != -1) _todasLasCitas[index] = _todasLasCitas[index] with { IsDeleted = false };
-
-
-            SelectedCita = null;
+            LoadCitas();
             StatusMessage = "Cita restaurada";
             WeakReferenceMessenger.Default.Send(new CitaCambiadaMesage());
         }

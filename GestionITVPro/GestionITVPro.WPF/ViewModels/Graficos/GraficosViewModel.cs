@@ -1,16 +1,20 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using GestionITVPro.Enums;
+using GestionITVPro.Message;
 using GestionITVPro.Models;
 using GestionITVPro.Service.Citas;
+using GestionITVPro.Service.Report;
 using Serilog;
 using System.Collections.ObjectModel;
 
 namespace GestionITVPro.WPF.ViewModels.Graficos;
 
-public partial class GraficoViewModel : ObservableObject {
+public partial class GraficoViewModel : ObservableObject, IRecipient<CitaCambiadaMesage> {
     private readonly ILogger _logger = Log.ForContext<GraficoViewModel>();
     private readonly ICitasService _citasService;
+    private readonly IReportService _reportService;
 
     [ObservableProperty] private int _totalCitas;
     [ObservableProperty] private int _citasParaHoy;
@@ -19,22 +23,31 @@ public partial class GraficoViewModel : ObservableObject {
     [ObservableProperty] private string _statusMessage = "";
     [ObservableProperty] private DateTime _ultimaCitaProgramada;
 
-    // Usamos ObservableCollection para que la vista se entere de los cambios de la lista
+    [ObservableProperty] private int _citasCompletadas;
+    [ObservableProperty] private int _citasPendientes;
+    [ObservableProperty] private int _citasAtrasadas;
+    [ObservableProperty] private double _porcentajeCompletadas;
+
     public ObservableCollection<MotorStatItem> MotorStatsList { get; } = new();
     public ObservableCollection<CalendarioStatItem> CalendarioStatsList { get; } = new();
 
-    public GraficoViewModel(ICitasService citasService) {
+    public GraficoViewModel(ICitasService citasService, IReportService reportService) {
         _citasService = citasService;
+        _reportService = reportService;
+        WeakReferenceMessenger.Default.Register(this);
+        LoadStatistics();
+    }
+
+    public void Receive(CitaCambiadaMesage message) {
         LoadStatistics();
     }
 
     [RelayCommand]
     private void LoadStatistics() {
         try {
-            var todas = _citasService.GetCitasOrderBy(TipoOrdenamiento.Matricula, 1, 2000, false).ToList();
-            
+            var todas = _citasService.GetCitasOrderBy(TipoOrdenamiento.Matricula, 1, 2000, true).ToList();
+
             if (todas == null || !todas.Any()) {
-                // DATOS DE PRUEBA (Si la base de datos está vacía)
                 TotalCitas = 100;
                 CitasParaHoy = 12;
                 CilindradaMedia = 1600;
@@ -49,6 +62,12 @@ public partial class GraficoViewModel : ObservableObject {
                 PorcentajeVehiculosEco = (double)ecos / TotalCitas;
             }
 
+            var informe = _reportService.GenerarInformeEstadistico(todas ?? new List<Cita>());
+            CitasCompletadas = informe.CitasCompletadas;
+            CitasPendientes = informe.CitasPendientes;
+            CitasAtrasadas = informe.CitasAtrasadas;
+            PorcentajeCompletadas = informe.PorcentajeCompletadas;
+
             CalcularStatsMotores(todas ?? new List<Cita>());
             CalcularStatsCalendario(todas ?? new List<Cita>());
 
@@ -62,9 +81,8 @@ public partial class GraficoViewModel : ObservableObject {
 
     private void CalcularStatsMotores(List<Cita> citas) {
         MotorStatsList.Clear();
-        
+
         if (!citas.Any()) {
-            // Mock data para ver las barras si no hay citas
             MotorStatsList.Add(new MotorStatItem { Nombre = "Gasolina", Cantidad = 45, Porcentaje = 45, ColorHex = "#FFB800" });
             MotorStatsList.Add(new MotorStatItem { Nombre = "Diesel", Cantidad = 30, Porcentaje = 30, ColorHex = "#E44D26" });
             MotorStatsList.Add(new MotorStatItem { Nombre = "Eléctrico", Cantidad = 15, Porcentaje = 15, ColorHex = "#00FF88" });
@@ -88,15 +106,14 @@ public partial class GraficoViewModel : ObservableObject {
 
         for (int i = 0; i < 7; i++) {
             var fecha = DateTime.Today.AddDays(i);
-            int cant = citas.Count(c => c.FechaInspeccion.Date == fecha);
-            
-            // Si no hay datos, inventamos para el gráfico
+            int cant = citas.Count(c => c.FechaInspeccion.Date == fecha && !c.IsDeleted);
+
             if (!citas.Any()) cant = random.Next(2, 12);
 
             CalendarioStatsList.Add(new CalendarioStatItem {
                 Etiqueta = i == 0 ? "HOY" : fecha.ToString("dd/MM"),
                 Cantidad = cant,
-                AlturaBarra = Math.Min(cant * 15, 180) // Factor de escala
+                AlturaBarra = Math.Min(cant * 15, 180)
             });
         }
     }
@@ -108,18 +125,14 @@ public partial class GraficoViewModel : ObservableObject {
         Motor.Hibrido => "#A0FF00",
         _ => "#00F2FF"
     };
-    
-    
-    
 }
 
-// Clases de apoyo (Asegúrate de que estén fuera de la clase principal o en archivos aparte)
 public class MotorStatItem {
     public string Nombre { get; set; } = string.Empty;
     public int Cantidad { get; set; }
     public double Porcentaje { get; set; }
     public string ColorHex { get; set; } = "#FFFFFF";
-    public double AnchoBarra => Porcentaje * 2.2; // Multiplicador para que la barra crezca en el UI
+    public double AnchoBarra => Porcentaje * 2.2;
 }
 
 public class CalendarioStatItem {

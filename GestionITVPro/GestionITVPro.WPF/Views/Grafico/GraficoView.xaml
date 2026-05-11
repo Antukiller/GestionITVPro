@@ -18,17 +18,17 @@
         <Border Grid.Row="0" Background="#0F0F12" BorderBrush="#1A1A23" BorderThickness="0,0,0,1">
             <DockPanel Margin="25,25,25,20">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                    <iconPacks:PackIconMaterial Kind="FileChart" Width="40" Height="40" Foreground="#00F2FF"
+                    <iconPacks:PackIconMaterial Kind="FileChart" Width="40" Height="40" Foreground="{DynamicResource AccentBrush}"
                                                 VerticalAlignment="Center" Margin="0,0,15,0" />
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="INFORME DE GESTIÓN" Foreground="#00F2FF" FontSize="22" FontWeight="ExtraBold"/>
+                        <TextBlock Text="INFORME DE GESTIÓN" Foreground="{DynamicResource AccentBrush}" FontSize="22" FontWeight="ExtraBold"/>
                         <TextBlock Text="ANÁLISIS DE CITAS Y VEHÍCULOS" Foreground="White" FontSize="28" FontWeight="Black" Margin="0,-2,0,0"/>
                     </StackPanel>
                 </StackPanel>
                 
                 <Button Command="{Binding LoadStatisticsCommand}" 
                         HorizontalAlignment="Right" VerticalAlignment="Center"
-                        Background="#1A1A23" Foreground="#00F2FF" BorderBrush="#00F2FF"
+                        Background="#1A1A23" Foreground="{DynamicResource AccentBrush}" BorderBrush="{DynamicResource AccentBrush}"
                         Content="🔄 ACTUALIZAR" Padding="15,8" Cursor="Hand" FontWeight="Bold">
                     <Button.Style>
                         <Style TargetType="Button">
@@ -61,7 +61,7 @@
                     </Border>
                     <Border Background="#16161D" CornerRadius="10" Padding="20,15" Margin="0,0,15,15" MinWidth="185" BorderBrush="#222" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="CITAS PARA HOY" Foreground="#00F2FF" FontSize="10" FontWeight="Bold" />
+                            <TextBlock Text="CITAS PARA HOY" Foreground="{DynamicResource AccentBrush}" FontSize="10" FontWeight="Bold" />
                             <TextBlock Text="{Binding CitasParaHoy}" Foreground="White" FontSize="24" FontWeight="Black" />
                         </StackPanel>
                     </Border>
@@ -93,14 +93,14 @@
 
                     <Border Grid.Row="0" Grid.Column="0" Background="#0F0F12" CornerRadius="15" Padding="25" BorderBrush="#1A1A23" BorderThickness="2">
                         <StackPanel>
-                            <TextBlock Text="⛽ Distribución por Tipo de Motor" Foreground="#00F2FF" FontWeight="Bold" FontSize="14" Margin="0,0,0,15"/>
+                            <TextBlock Text="⛽ Distribución por Tipo de Motor" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" FontSize="14" Margin="0,0,0,15"/>
                             <lvc:PieChart x:Name="MotorChart" Height="250" LegendPosition="Right" />
                         </StackPanel>
                     </Border>
 
                     <Border Grid.Row="0" Grid.Column="2" Background="#0F0F12" CornerRadius="15" Padding="25" BorderBrush="#1A1A23" BorderThickness="2">
                         <StackPanel>
-                            <TextBlock Text="📅 Citas Próximos 7 Días" Foreground="#00F2FF" FontWeight="Bold" FontSize="14" Margin="0,0,0,15"/>
+                            <TextBlock Text="📅 Citas Próximos 7 Días" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" FontSize="14" Margin="0,0,0,15"/>
                             <lvc:CartesianChart x:Name="CalendarioChart" Height="250" />
                         </StackPanel>
                     </Border>
@@ -115,17 +115,41 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Row="2" Grid.Column="2" Background="#16161D" CornerRadius="15" Padding="25" BorderBrush="#00F2FF" BorderThickness="1">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <iconPacks:PackIconMaterial Kind="CalendarClock" Width="48" Height="48" Foreground="#00F2FF" HorizontalAlignment="Center" Margin="0,0,0,15"/>
-                            <TextBlock Text="ÚLTIMA CITA PROGRAMADA" Foreground="#555" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center"/>
-                            <TextBlock Text="{Binding UltimaCitaProgramada, StringFormat='{}{0:dd/MM/yyyy}'}" Foreground="White" FontSize="22" FontWeight="Black" HorizontalAlignment="Center" Margin="0,5"/>
-                            
-                            <Border Background="#3300F2FF" Padding="12,6" CornerRadius="5" Margin="0,15,0,0">
-                                <TextBlock Text="{Binding StatusMessage}" Foreground="#00F2FF" FontWeight="Bold" FontSize="11"/>
-                            </Border>
+                    <Border Grid.Row="2" Grid.Column="2" Background="#16161D" CornerRadius="15" Padding="25" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="📊 ESTADO DE CITAS" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" FontSize="14" Margin="0,0,0,15"/>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center">
+                                    <TextBlock Text="{Binding CitasCompletadas}" Foreground="#00FF88" FontSize="28" FontWeight="Black" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="COMPLETADAS" Foreground="#555" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center">
+                                    <TextBlock Text="{Binding CitasPendientes}" Foreground="{DynamicResource AccentBrush}" FontSize="28" FontWeight="Black" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="PENDIENTES" Foreground="#555" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center">
+                                    <TextBlock Text="{Binding CitasAtrasadas}" Foreground="#FF4444" FontSize="28" FontWeight="Black" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="ATRASADAS" Foreground="#555" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                            <ProgressBar Value="{Binding PorcentajeCompletadas, Mode=OneWay}" Height="8" Margin="0,15,0,0"
+                                         Foreground="#00FF88" Background="#1A1A23" BorderThickness="0"/>
+                            <TextBlock Text="{Binding PorcentajeCompletadas, StringFormat='{}{0:F0}% completado'}" 
+                                       Foreground="#555" FontSize="10" Margin="0,5,0,0"/>
                         </StackPanel>
                     </Border>
+
                 </Grid>
 
                 <Border Height="50" />

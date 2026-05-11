@@ -32,13 +32,9 @@
                 <MenuItem Header="Salir" Click="OnSalirClick" Style="{StaticResource SubMenuTextStyle}"/>
             </MenuItem>
             <MenuItem Header="SISTEMA" Foreground="White">
-                <MenuItem Header="Citas" Click="OnCitasClick" Style="{StaticResource SubMenuTextStyle}"/>
-                <MenuItem Header="Informes" Click="OnInformesClick" Style="{StaticResource SubMenuTextStyle}"/>
-                <MenuItem Header="Gráficos" Click="OnGraficosClick" Style="{StaticResource SubMenuTextStyle}"/>
-                <MenuItem Header="Backup" Click="OnBackupClick" Style="{StaticResource SubMenuTextStyle}"/>
-                <Separator Background="#333"/>
                 <MenuItem Header="Configuración" Click="OnConfiguracionClick" Style="{StaticResource SubMenuTextStyle}"/>
-                <MenuItem Header="Acerca de" Click="OnAcercaDeClick" Style="{StaticResource SubMenuTextStyle}"/>
+                <Separator Background="#333"/>
+                <MenuItem Header="About" Click="OnAboutClick" Style="{StaticResource SubMenuTextStyle}"/>
             </MenuItem>
         </Menu>
 
@@ -51,7 +47,7 @@
             <!-- 2. SIDEBAR (Navegación Lateral) -->
             <Border Grid.Column="0" Background="#0F0F12" BorderBrush="#1A1A23" BorderThickness="0,0,1,0">
                 <StackPanel Margin="15">
-                    <TextBlock Text="NAVEGACIÓN" Foreground="#00F2FF" FontSize="11" FontWeight="Bold" Margin="10,0,0,15"/>
+                    <TextBlock Text="NAVEGACIÓN" Foreground="{DynamicResource AccentBrush}" FontSize="11" FontWeight="Bold" Margin="10,0,0,15"/>
                     
                     <Button Height="50" Background="#1A1A23" BorderThickness="0" Margin="0,5" 
                             Click="OnDashboardClick" ToolTip="Ver Estadísticas">
@@ -68,6 +64,38 @@
                             <TextBlock Text="CITAS" Foreground="White" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+
+                    <Button Height="50" Background="#1A1A23" BorderThickness="0" Margin="0,5" 
+                            Click="OnGraficosClick" ToolTip="Ver Gráficos">
+                        <StackPanel Orientation="Horizontal" Margin="15,0">
+                            <iconPacks:PackIconMaterial Kind="ChartLine" Foreground="White" Width="18" Margin="0,0,12,0"/>
+                            <TextBlock Text="GRÁFICOS" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Height="50" Background="#1A1A23" BorderThickness="0" Margin="0,5" 
+                            Click="OnInformesClick" ToolTip="Generar Informes">
+                        <StackPanel Orientation="Horizontal" Margin="15,0">
+                            <iconPacks:PackIconMaterial Kind="FileDocument" Foreground="White" Width="18" Margin="0,0,12,0"/>
+                            <TextBlock Text="INFORMES" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Height="50" Background="#1A1A23" BorderThickness="0" Margin="0,5" 
+                            Click="OnBackupClick" ToolTip="Gestión de Copias de Seguridad">
+                        <StackPanel Orientation="Horizontal" Margin="15,0">
+                            <iconPacks:PackIconMaterial Kind="BackupRestore" Foreground="White" Width="18" Margin="0,0,12,0"/>
+                            <TextBlock Text="BACKUP" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Height="50" Background="#1A1A23" BorderThickness="0" Margin="0,5" 
+                            Click="OnImportExportClick" ToolTip="Importar y Exportar Datos">
+                        <StackPanel Orientation="Horizontal" Margin="15,0">
+                            <iconPacks:PackIconMaterial Kind="SwapHorizontal" Foreground="White" Width="18" Margin="0,0,12,0"/>
+                            <TextBlock Text="IMPORTAR / EXPORTAR" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Border>
 
@@ -80,7 +108,7 @@
 
                 <StackPanel Grid.Row="0" Margin="0,0,0,15">
                     <TextBlock Text="SISTEMA DE GESTIÓN" Foreground="White" FontSize="24" FontWeight="Black"/>
-                    <TextBlock Text="REGISTRO TÉCNICO DE VEHÍCULOS" Foreground="#00F2FF" FontSize="10" FontWeight="Bold"/>
+                    <TextBlock Text="REGISTRO TÉCNICO DE VEHÍCULOS" Foreground="{DynamicResource AccentBrush}" FontSize="10" FontWeight="Bold"/>
                 </StackPanel>
 
                 <!-- El Frame ahora ocupa todo el centro y cargará tus vistas completas -->

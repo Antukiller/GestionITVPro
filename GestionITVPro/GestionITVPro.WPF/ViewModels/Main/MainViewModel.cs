@@ -7,7 +7,7 @@ using GestionITVPro.Service.Citas;
 using GestionITVPro.Service.Dialogs;
 using GestionITVPro.Service.ImportExport;
 using GestionITVPro.Service.Report;
-using GestionITVPro.WPF.Views.AcercaDe;
+using GestionITVPro.WPF.Views.About;
 using GestionITVPro.WPF.Views.Backup;
 using GestionITVPro.WPF.Views.Cita;
 using GestionITVPro.WPF.Views.Dashboard;
@@ -122,8 +122,8 @@ public partial class MainViewModel(
     }
 
     [RelayCommand]
-    private void MostrarAcercaDe() {
-        var aboutWindow = new AcercaDe();
+    private void MostrarAbout() {
+        var aboutWindow = new About();
         aboutWindow.ShowDialog();
     }
 

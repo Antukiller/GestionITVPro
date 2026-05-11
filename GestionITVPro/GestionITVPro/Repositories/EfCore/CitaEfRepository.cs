@@ -88,11 +88,8 @@ public class CitaEfRepository : ICitaRepository {
        try {
         var consulta = _context.Citas.AsQueryable();
 
-        // 1. IMPORTANTE: Corregir el filtro de borrado (solo los NO borrados)
-        if (!isDeleteInclude) 
-        {
-            consulta = consulta.Where(v => !v.IsDeleted); 
-        }
+        // 1. Filtro de borrado: activos o solo eliminados según el flag
+        consulta = consulta.Where(v => isDeleteInclude ? v.IsDeleted : !v.IsDeleted);
 
         // 2. Filtro por Rango de Fecha de Inspección
         consulta = consulta.Where(c => c.FechaInspeccion >= inicio);
@@ -378,18 +375,39 @@ public class CitaEfRepository : ICitaRepository {
     private int ContarVehiculosPorDni(string dni) => 
         _context.Citas.Count(v => v.DniPropietario == dni && !v.IsDeleted);
     
-    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool isDeleteInclude) 
+    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool isDeleteInclude, string? motor = null) 
     {
         var consulta = _context.Citas.AsQueryable();
 
-        if (!isDeleteInclude) consulta = consulta.Where(v => !v.IsDeleted);
+        consulta = consulta.Where(v => isDeleteInclude ? v.IsDeleted : !v.IsDeleted);
 
         consulta = consulta.Where(c => c.FechaInspeccion >= inicio);
-        if (fin.HasValue) consulta = consulta.Where(c => c.FechaInspeccion <= fin.Value);
+        if (fin.HasValue)
+        {
+            var finDia = fin.Value.Date.AddDays(1).AddTicks(-1);
+            consulta = consulta.Where(c => c.FechaInspeccion <= finDia);
+        }
 
         if (!string.IsNullOrWhiteSpace(matricula))
-            consulta = consulta.Where(c => c.Matricula.Contains(matricula));
+        {
+            var term = matricula.ToLower();
+            consulta = consulta.Where(c =>
+                c.Matricula.ToLower().Contains(term) ||
+                c.DniPropietario.ToLower().Contains(term) ||
+                c.Marca.ToLower().Contains(term));
+        }
 
-        return consulta.Count(); // EF traduce esto a SELECT COUNT(*) en SQL
+        if (!string.IsNullOrWhiteSpace(motor) && !motor.Equals("TODOS", StringComparison.OrdinalIgnoreCase))
+        {
+            var motorBusqueda = motor
+                .Replace("DIÉSEL", "Diesel")
+                .Replace("HÍBRIDO", "Hibrido")
+                .Replace("ELÉCTRICO", "Electrico")
+                .Trim();
+            if (Enum.TryParse<Motor>(motorBusqueda, true, out var motorEnum))
+                consulta = consulta.Where(c => c.Motor == (int)motorEnum);
+        }
+
+        return consulta.Count();
     }
 }

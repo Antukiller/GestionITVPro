@@ -15,10 +15,10 @@
 
         <!-- 1. HEADER (Siguiendo tu estilo de Gestión Académica) -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,30">
-            <iconPacks:PackIconMaterial Kind="DatabaseSync" Width="40" Height="40" Foreground="#00F2FF"
+            <iconPacks:PackIconMaterial Kind="DatabaseSync" Width="40" Height="40" Foreground="{DynamicResource AccentBrush}"
                                         VerticalAlignment="Center" Margin="0,0,15,0" />
             <StackPanel>
-                <TextBlock Text="MANTENIMIENTO DE DATOS" Foreground="#00F2FF" FontSize="12" FontWeight="ExtraBold"/>
+                <TextBlock Text="MANTENIMIENTO DE DATOS" Foreground="{DynamicResource AccentBrush}" FontSize="12" FontWeight="ExtraBold"/>
                 <TextBlock Text="Importar / Exportar Citas" Foreground="White" FontSize="28" FontWeight="Black"/>
             </StackPanel>
         </StackPanel>
@@ -43,7 +43,7 @@
 
             <!-- Exportar -->
             <GroupBox Grid.Column="0" Header="EXPORTAR DATOS" Margin="0,0,12,0" 
-                      BorderBrush="#1A1A23" Foreground="#00F2FF" FontWeight="Bold">
+                      BorderBrush="#1A1A23" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold">
                 <StackPanel Margin="15">
                     <TextBlock Text="Guarda una copia de seguridad de todas las citas en un archivo local." 
                                TextWrapping="Wrap" Foreground="#888" Margin="0,0,0,20"/>
@@ -66,7 +66,7 @@
 
             <!-- Importar -->
             <GroupBox Grid.Column="1" Header="IMPORTAR DATOS" Margin="12,0,0,0"
-                      BorderBrush="#1A1A23" Foreground="#00F2FF" FontWeight="Bold">
+                      BorderBrush="#1A1A23" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold">
                 <StackPanel Margin="15">
                     <TextBlock Text="Carga citas desde archivos externos. Asegúrate de que el formato sea el correcto." 
                                TextWrapping="Wrap" Foreground="#888" Margin="0,0,0,20"/>
@@ -91,7 +91,7 @@
         <!-- 4. BARRA DE ESTADO -->
         <Border Grid.Row="3" Background="#16161D" Padding="10,5" CornerRadius="5" Margin="0,20,0,0">
             <StackPanel Orientation="Horizontal">
-                <iconPacks:PackIconMaterial Kind="InformationOutline" Width="14" Height="14" Foreground="#00F2FF" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <iconPacks:PackIconMaterial Kind="InformationOutline" Width="14" Height="14" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                 <TextBlock Text="{Binding StatusMessage}" Foreground="#AAA" FontSize="12" VerticalAlignment="Center"/>
             </StackPanel>
         </Border>

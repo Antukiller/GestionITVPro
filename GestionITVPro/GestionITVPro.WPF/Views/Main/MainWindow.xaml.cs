@@ -5,7 +5,7 @@ using System.Windows.Input;
 using GestionITVPro.Config;
 using GestionITVPro.WPF;
 using GestionITVPro.WPF.ViewModels.Main;
-using GestionITVPro.WPF.Views.AcercaDe;
+using GestionITVPro.WPF.Views.About;
 using GestionITVPro.WPF.Views.Backup;
 using GestionITVPro.WPF.Views.Cita;
 using GestionITVPro.WPF.Views.Dashboard;
@@ -133,8 +133,8 @@ public partial class MainWindow : Window {
         MainFrame.Navigate(new ImportExportView());
     }
 
-    private void OnAcercaDeClick(object sender, RoutedEventArgs e) {
-        var aboutWindow = new AcercaDe();
+    private void OnAboutClick(object sender, RoutedEventArgs e) {
+        var aboutWindow = new About();
         aboutWindow.Owner = this;
         aboutWindow.ShowDialog();
     }
@@ -203,7 +203,7 @@ public partial class MainWindow : Window {
                     e.Handled = true;
                     break;
                 case Key.A:
-                    OnAcercaDeClick(sender, e);
+                    OnAboutClick(sender, e);
                     e.Handled = true;
                     break;
             }

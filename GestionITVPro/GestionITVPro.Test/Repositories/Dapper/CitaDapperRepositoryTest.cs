@@ -607,6 +607,7 @@ public class CitaDapperRepositoryTest {
             r.Should().Be(2);
         }
 
+        [Test]
         public void DeleteAll_DeberiaVaciarRepositorio() {
             // Arrange
             _repository.Create(new Cita {

@@ -12,9 +12,9 @@
         <Style x:Key="GamerActionButton" TargetType="Button">
             <Setter Property="Height" Value="50"/>
             <Setter Property="Background" Value="#1A1A2E"/>
-            <Setter Property="Foreground" Value="#00F2FF"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="BorderBrush" Value="#00F2FF"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -29,7 +29,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#00F2FF"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource AccentBrush}"/>
                                 <Setter Property="Foreground" Value="Black"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -45,7 +45,7 @@
                 <RowDefinition Height="Auto" /> <RowDefinition Height="Auto" /> <RowDefinition Height="Auto" /> </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,25">
-                <Border Width="55" Height="55" Background="#00F2FF" CornerRadius="12" Margin="0,0,15,0">
+                <Border Width="55" Height="55" Background="{DynamicResource AccentBrush}" CornerRadius="12" Margin="0,0,15,0">
                     <TextBlock Text="📊" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
                 <StackPanel VerticalAlignment="Center">
@@ -62,7 +62,7 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding Informe.TotalCitas}" Foreground="White" FontSize="64" FontWeight="Black">
                                 <TextBlock.Effect>
-                                    <DropShadowEffect Color="#00F2FF" BlurRadius="15" ShadowDepth="0" Opacity="0.4"/>
+                                    <DropShadowEffect Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}" BlurRadius="15" ShadowDepth="0" Opacity="0.4"/>
                                 </TextBlock.Effect>
                             </TextBlock>
                             <TextBlock Text=" REGISTROS" Foreground="#333" FontSize="20" FontWeight="Black" VerticalAlignment="Bottom" Margin="10,0,0,12"/>
@@ -96,11 +96,11 @@
                             <Grid Margin="0,0,0,8">
                                 <TextBlock Text="CITAS FINALIZADAS" Foreground="#AAA" FontSize="12" FontWeight="Bold"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <TextBlock Text="{Binding Informe.CitasCompletadas}" Foreground="#00F2FF" FontWeight="Bold" FontSize="14"/>
+                                    <TextBlock Text="{Binding Informe.CitasCompletadas}" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" FontSize="14"/>
                                     <TextBlock Text="{Binding Informe.PorcentajeCompletadas, StringFormat=' ({0:F0}%)'}" Foreground="#555" FontSize="12" VerticalAlignment="Bottom"/>
                                 </StackPanel>
                             </Grid>
-                            <ProgressBar Value="{Binding Informe.PorcentajeCompletadas, Mode=OneWay}" Height="10" Foreground="#00F2FF" Background="#0A0A0C" BorderThickness="0"/>
+                            <ProgressBar Value="{Binding Informe.PorcentajeCompletadas, Mode=OneWay}" Height="10" Foreground="{DynamicResource AccentBrush}" Background="#0A0A0C" BorderThickness="0"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,0,0,25">

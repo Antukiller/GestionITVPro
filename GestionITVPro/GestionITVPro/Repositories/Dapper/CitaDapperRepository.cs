@@ -86,7 +86,7 @@ public class CitaDapperRepository : ICitaRepository {
         SELECT * FROM Citas 
         WHERE date(FechaInspeccion) >= date(@inicio) 
         AND (@fin IS NULL OR date(FechaInspeccion) <= date(@fin))
-        AND (@isDeleteInclude = 1 OR IsDeleted = 0)
+        AND IsDeleted = @isDeleteInclude
         AND (@motor = 'TODOS' OR Motor = @motorValue)
         AND (@search IS NULL OR (
             LOWER(Matricula) LIKE @search OR 
@@ -95,13 +95,15 @@ public class CitaDapperRepository : ICitaRepository {
         ORDER BY FechaInspeccion ASC
         LIMIT @limit OFFSET @offset";
 
-        // Mapeo de Motor: Si en DB es INTEGER (como en tu EnsureTable), 
-        // necesitamos convertir el string "GASOLINA" a su valor int del Enum.
         int motorValue = 0;
-        if (motor != "TODOS")
+        if (!motor.Equals("TODOS", StringComparison.OrdinalIgnoreCase))
         {
-            // Intentamos parsear el string al Enum MotorType (o como se llame en tu modelo)
-            if (Enum.TryParse<Motor>(motor, true, out var resultadoEnum))
+            var motorBusqueda = motor
+                .Replace("DIÉSEL", "Diesel")
+                .Replace("HÍBRIDO", "Hibrido")
+                .Replace("ELÉCTRICO", "Electrico")
+                .Trim();
+            if (Enum.TryParse<Motor>(motorBusqueda, true, out var resultadoEnum))
             {
                 motorValue = (int)resultadoEnum;
             }
@@ -323,15 +325,30 @@ public class CitaDapperRepository : ICitaRepository {
         }
     }
     
-    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool isDeleteInclude) 
+    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool isDeleteInclude, string? motor = null) 
     {
         // La consulta es casi igual a la de búsqueda, pero solo pedimos el COUNT
-        const string sql = @"
+        var sql = @"
         SELECT COUNT(1) FROM Citas 
-        WHERE (@IncludeDeleted = 1 OR IsDeleted = 0)
+        WHERE IsDeleted = @IncludeDeleted
           AND date(FechaInspeccion) >= date(@Inicio)
           AND (@Fin IS NULL OR date(FechaInspeccion) <= date(@Fin))
           AND (@Matricula IS NULL OR Matricula LIKE @MatriculaLike)";
+
+    int? motorValue = null;
+    if (!string.IsNullOrWhiteSpace(motor) && !motor.Equals("TODOS", StringComparison.OrdinalIgnoreCase))
+    {
+        var motorBusqueda = motor
+            .Replace("DIÉSEL", "Diesel")
+            .Replace("HÍBRIDO", "Hibrido")
+            .Replace("ELÉCTRICO", "Electrico")
+            .Trim();
+        if (Enum.TryParse<Motor>(motorBusqueda, true, out var motorEnum))
+        {
+            motorValue = (int)motorEnum;
+            sql += " AND Motor = @MotorValue";
+        }
+    }
 
         try 
         {
@@ -340,7 +357,8 @@ public class CitaDapperRepository : ICitaRepository {
                 Fin = fin?.ToString("yyyy-MM-dd"),
                 IncludeDeleted = isDeleteInclude ? 1 : 0,
                 Matricula = string.IsNullOrWhiteSpace(matricula) ? null : matricula,
-                MatriculaLike = string.IsNullOrWhiteSpace(matricula) ? null : $"%{matricula}%"
+                MatriculaLike = string.IsNullOrWhiteSpace(matricula) ? null : $"%{matricula}%",
+                MotorValue = motorValue
             };
 
             // ExecuteScalar devuelve el primer valor de la primera fila (el COUNT)

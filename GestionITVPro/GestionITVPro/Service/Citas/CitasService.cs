@@ -136,12 +136,10 @@ public class CitasService(
         return repository.CountCita(includeDeleted);
     }
 
-    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool incluirEliminados) 
+    public int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool incluirEliminados, string? motor = null) 
     {
         _logger.Debug("Service: Contando citas filtradas para paginación");
-    
-        // Llamada directa al repositorio (sea ADO, Dapper o EF)
-        return repository.CountCitasFiltradas(matricula, inicio, fin, incluirEliminados);
+        return repository.CountCitasFiltradas(matricula, inicio, fin, incluirEliminados, motor);
     }
 
     // Funciones Auxiliares

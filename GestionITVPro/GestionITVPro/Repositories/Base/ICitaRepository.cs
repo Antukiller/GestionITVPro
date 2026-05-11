@@ -69,7 +69,7 @@ public interface ICitaRepository {
     /// </summary>
     int CountCita(bool includeDeleted = false);
 
-    int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool incluirEliminados);
+    int CountCitasFiltradas(string? matricula, DateTime inicio, DateTime? fin, bool incluirEliminados, string? motor = null);
     
     /// <summary>
     ///     Restaura un vehiculo eliminado lógicamente (IsDeleted = false, DeletedAt = null).
