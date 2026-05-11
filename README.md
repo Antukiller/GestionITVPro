@@ -1,10 +1,10 @@
 # 🏎️ GestionITV Pro: The Next Generation of Vehicle Inspection
 
-[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Architecture: Clean](https://img.shields.io/badge/Architecture-Clean-brightgreen)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+[![Build Status](https://img.shields.io/badge/Build-v1.0--preview-brightgreen)](https://github.com/Antukiller/GestionITVPro)
+[![Framework](https://img.shields.io/badge/.NET-10-blueviolet)](https://dotnet.microsoft.com/download)
 
-**GestionITV Pro** no es un software de gestión más; es el estándar de oro para las estaciones de inspección técnica del siglo XXI. Diseñado para ofrecer **seguridad, rapidez y una experiencia de usuario impecable**.
+**GestionITV Pro** no es un software de gestión más; es el estándar de oro para las estaciones de inspección técnica del siglo XXI. Diseñado bajo los principios de **Clean Architecture** y **DDD**, ofrece seguridad, rapidez y una experiencia de usuario impecable.
 
 ---
 
@@ -34,10 +34,11 @@ En un mercado donde el tiempo es oro y la seguridad no es negociable, nuestra pl
 
 Hemos seleccionado las herramientas más robustas del mercado para construir una base indestructible:
 
-* **Core:** [C# 14](https://learn.microsoft.com/en-us/dotnet/csharp/) & [.NET 10](https://dotnet.microsoft.com/)
-* **Testing Framework:** NUnit + FluentAssertions
-* **Estructura:** DDD (Domain Driven Design) & Clean Architecture
-* **Control de Versiones:** Git Flow (Main, Dev, Features)
+* **Lenguaje:** C# 14
+* **Framework:** .NET 10 (Preview)
+* **Testing:** NUnit + Moq + FluentAssertions
+* **Arquitectura:** DDD (Domain Driven Design) & Clean Architecture
+* **Persistencia:** Repository Pattern con soporte para Mocking y Caché.
 
 ---
 
@@ -45,31 +46,6 @@ Hemos seleccionado las herramientas más robustas del mercado para construir una
 
 Para poner en marcha su estación de inspección, simplemente siga estos pasos:
 
-1.  **Clonar el repositorio:**
-    ```bash
-    git clone [https://github.com/Antukiller/GestionITVPro.git](https://github.com/Antukiller/GestionITVPro.git)
-    ```
-2.  **Restaurar dependencias:**
-    ```bash
-    dotnet restore
-    ```
-3.  **Ejecutar el sistema:**
-    ```bash
-    dotnet run --project GestionITVPro
-    ```
-
----
-
-## 🤝 Soporte y Contribuciones
-
-¿Quieres mejorar la seguridad vial con nosotros? ¡Eres bienvenido!
-1. Crea un **Fork** del proyecto.
-2. Crea una rama para tu mejora (`git checkout -b feature/MejoraIncreible`).
-3. Envía un **Pull Request** a nuestra rama `dev`.
-
----
-
-<p align="center">
-  <b>Desarrollado con ❤️ por <a href="https://github.com/Antukiller">Antukiller</a></b><br>
-  <i>"Llevando la seguridad vial al siguiente nivel tecnológico"</i>
-</p>
+1. **Clonar el repositorio:**
+   ```bash
+   git clone [https://github.com/Antukiller/GestionITVPro.git](https://github.com/Antukiller/GestionITVPro.git)
